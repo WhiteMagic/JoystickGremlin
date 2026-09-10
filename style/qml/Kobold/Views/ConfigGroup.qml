@@ -1,11 +1,11 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import Qt.labs.qmlmodels
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
 
 import Gremlin.Config
 import Kobold.Controls
@@ -129,9 +129,8 @@ ColumnLayout {
                         text: model.value
 
                         readOnly: true
-                        // Text is set programmatically by the dialogs below, so this can't use
-                        // onTextEdited; guard against re-writing the value the binding just
-                        // supplied, or the reentrant dataChanged causes a binding loop.
+                        // Text is set programmatically by the dialogs below, so this
+                        // can't use onTextEdited.
                         onTextChanged: () => { if (model.value !== text) { model.value = text } }
                     }
                     Button {

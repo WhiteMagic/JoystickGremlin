@@ -8,7 +8,6 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Kobold.Foundation
-
 import "helpers.js" as Helpers
 
 Window {
@@ -17,7 +16,6 @@ Window {
     minimumWidth: Metrics.dp(900)
     minimumHeight: Metrics.dp(500)
 
-    // Local to this file -- the device-list sidebar's width range, not a shared design concept.
     readonly property int deviceListMinWidth: Metrics.dp(250)
     readonly property int deviceListMaxWidth: Metrics.dp(400)
 
@@ -25,8 +23,8 @@ Window {
         "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
         minimumWidth, minimumHeight
     )
-    // True until Component.onCompleted -- suppresses the save that would
-    // otherwise fire from the initial x/y/width/height binding evaluation.
+    // True until Component.onCompleted, suppresses saving geometry information before
+    // restoring saved values.
     property bool _restoringGeometry: true
 
     x: _geom.x
@@ -55,11 +53,20 @@ Window {
         _restoringGeometry = false
     }
 
+    // Saves window geometry after a short delay, to avoid saving geometry while it is
+    // still actively being changed.
     Timer {
         id: _geometrySaveTimer
         interval: 500
         repeat: false
-        onTriggered: _geom.save(_inputViewer.x, _inputViewer.y, _inputViewer.width, _inputViewer.height)
+        onTriggered: {
+            _geom.save(
+                _inputViewer.x,
+                _inputViewer.y,
+                _inputViewer.width,
+                _inputViewer.height
+            )
+        }
     }
 
     onXChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
@@ -114,15 +121,8 @@ Window {
 
         // Dynamic scrollview that contains dynamically generated widgets.
         ScrollView  {
-            id: _dynamicScroll
-
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            Component.onCompleted: () => {
-                _dynamicScroll.contentItem.boundsMovement = Flickable.StopAtBounds
-                _dynamicScroll.contentItem.boundsBehavior = Flickable.StopAtBounds
-            }
 
             ColumnLayout {
                 id: _stateDisplay
@@ -144,8 +144,8 @@ Window {
             required property string name
             required property string guid
 
-            // Variable holding references to the widgets visualizing device
-            // input states.
+            // Variable holding references to the widgets visualizing device input
+            // states.
             property var widget_btn_hat
             property var widget_axis_temp
             property var widget_axis_cur
@@ -184,8 +184,6 @@ Window {
                                 guid,
                                 name
                             )
-                            // Creation failed -- don't leave the box claiming a
-                            // visualization that isn't there.
                             checked = !!widget_axis_temp
                         } else if(widget_axis_temp) {
                             widget_axis_temp.destroy()

@@ -128,16 +128,12 @@ Window {
                 id: _overwriteNonEmpty
 
                 text: "Overwrite non-empty physical inputs"
-
-                onToggled: () => { overwriteNonEmpty = checked }
             }
 
             CheckBox {
                 id: _repeatDevices
 
                 text: "Repeat vJoy devices"
-
-                onToggled: () => { repeatVJoy = checked }
             }
         }
 
@@ -169,6 +165,7 @@ Window {
                 Layout.rightMargin: Metrics.gapM
 
                 text: "Select devices, options and then click the button."
+                horizontalAlignment: Text.AlignRight
             }
 
             ToolButton {

@@ -4,17 +4,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Kobold.Foundation
 
 import Gremlin.Device
+import Kobold.Foundation
 
-// Public plugin-facing kit component: vJoy output device + input picker. Same API/wiring as
-// the legacy qml/VJoySelector.qml (VJoyDevices model, setInitialState/setState,
-// currentSelectionChanged/currentValuesChanged), but built from plain Kobold ComboBoxes --
-// no Universal-styled TooltipComboBox, no Base/Compact split (deleted app-wide), no hover
-// tooltip. Kobold's own ComboBox popup already fast-scrolls large lists (the same
-// wheel-step-3-per-tick technique the legacy ComboBoxScrollableEntries used), so nothing is
-// lost for the 100+ entry vJoy device/input lists this exists to handle.
+// UI item used to select a vJoy input, this is intended to be used everywhere a vJoy
+// input needs to be selected.
 Item {
     id: root
 
@@ -53,9 +48,6 @@ Item {
         anchors.right: parent.right
         spacing: Metrics.gapM
 
-        // Natural, content-driven width -- not stretched to fill whatever row they end
-        // up in (vertical/horizontal space is precious; these show short labels like
-        // "vJoy Device 1" / "Axis 1", not paragraphs).
         ComboBox {
             id: _deviceCombo
 
@@ -72,12 +64,10 @@ Item {
             onActivated: root.updateState()
         }
 
-        Text {
+        Label {
             visible: !_vjoy.hasValidVJoyDevices
             text: "No vJoy devices available."
             color: Theme.error
-            font.family: FontType.sans
-            font.pixelSize: Metrics.textBody
         }
     }
 }

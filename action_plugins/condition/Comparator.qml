@@ -10,8 +10,7 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// The comparator UI for a single condition row -- which controls show depends on
-// the comparator's runtime type (button press/release, axis range, hat direction).
+// Provides the UI element for a single condition row.
 Item {
     id: root
 
@@ -49,7 +48,7 @@ Item {
                     from: -1.0
                     to: _upper.value
                     stepSize: 0.05
-                    decimals: 4
+                    decimals: Metrics.preciseDecimalPlaces
                     value: root.comparator.lowerLimit
 
                     onValueModified: { root.comparator.lowerLimit = value }
@@ -63,7 +62,7 @@ Item {
                     from: _lower.value
                     to: 1.0
                     stepSize: 0.05
-                    decimals: 4
+                    decimals: Metrics.preciseDecimalPlaces
                     value: root.comparator.upperLimit
 
                     onValueModified: { root.comparator.upperLimit = value }

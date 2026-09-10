@@ -7,15 +7,13 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
-// Visualizes the inputs and information about their associated actions
-// contained in a Device instance.
+// Visualizes the inputs configured for keyboard keys.
 Rectangle {
     color: Theme.bgAlt
 
-    // List of all existing inputs.
     ColumnLayout {
         id: _content
 
@@ -48,9 +46,6 @@ Rectangle {
                     icon.name: "delete"
                     padding: Metrics.gapS
 
-                    // Lazily-instantiated (Loader-created) Components don't
-                    // see the delegate's own required properties by bare
-                    // name -- go through the id instead.
                     onClicked: () => { _inputList.model.deleteInput(_row.index) }
                 }
             }
@@ -70,13 +65,13 @@ Rectangle {
 
         InputCaptureButton {
             Layout.fillWidth: true
-            Layout.leftMargin: Metrics.gapM
-            Layout.rightMargin: Metrics.gapM
-            Layout.bottomMargin: Metrics.gapL
+            Layout.margins: Metrics.gapL
+
+            text: "Add Key"
 
             variant: "bordered"
             fillColor: Theme.bg
-            text: "Add Key"
+
             callback: (inputs) => { _inputList.model.addKey(inputs) }
             multipleInputs: false
             eventTypes: ["key"]

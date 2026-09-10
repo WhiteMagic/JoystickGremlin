@@ -3,13 +3,15 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.ToolTip {
     id: control
 
     delay: 500
-    // T.ToolTip supplies no default position -- that's the style's job here.
+
+    // T.ToolTip supplies no default position.
     x: parent ? Math.round((parent.width - width) / 2) : 0
     y: -implicitHeight - Metrics.gapS
     leftPadding: Metrics.gapM
@@ -28,7 +30,6 @@ T.ToolTip {
         wrapMode: Text.WordWrap
     }
 
-    // No shadow, no elevation (R2): opaque fill + 1px line border, same as Menu/ComboBox popups.
     background: Rectangle {
         color: Theme.bgAlt
         border.width: Metrics.hairline

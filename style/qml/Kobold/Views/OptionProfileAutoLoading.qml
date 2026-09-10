@@ -144,8 +144,8 @@ Item {
 
             anchors.fill: parent
 
-            // Buttons to select the profile and executable file for the entry
-            // as well as enable/disable the entry and delete it.
+            // Buttons to select the profile and executable file for the entry as well
+            // as enable/disable the entry and delete it.
             RowLayout {
                 Button {
                     text: "Select Profile"
@@ -199,8 +199,8 @@ Item {
                 onTextChanged: () => { if (model.profile !== text) { model.profile = text } }
             }
 
-            // Executable path field with button to enable editing to support
-            // usage of regular expressions.
+            // Executable path field with button to enable editing to support usage of
+            // regular expressions.
             RowLayout {
                 TextField {
                     id: _executable

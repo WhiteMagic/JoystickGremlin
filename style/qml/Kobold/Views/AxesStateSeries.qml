@@ -1,15 +1,17 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import QtCharts
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtCharts
 
 import Gremlin.Device
 import Kobold.Foundation
 
+// Visualizes a chart showing the temporal evolution of a device's axes. This is used
+// in the input viewer tool.
 Item {
     id: _root
 
@@ -86,8 +88,6 @@ Item {
                 backgroundColor: Theme.bg
                 plotAreaColor: Theme.bg
 
-                // QtCharts defaults to its own light theme -- every label, grid line and
-                // axis below has to be re-tokenised or the chart is unreadable on a dark scheme.
                 legend {
                     labelColor: Theme.fg
                     font.family: FontType.sans

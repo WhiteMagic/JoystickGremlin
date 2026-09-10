@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.CheckBox {
@@ -15,7 +16,6 @@ T.CheckBox {
     font.family: FontType.sans
     font.pixelSize: Metrics.textBody
 
-    // R4/SPEC §7: checked = accent border + accent tick, never a filled box.
     indicator: Rectangle {
         implicitWidth: Metrics.icon
         implicitHeight: Metrics.icon

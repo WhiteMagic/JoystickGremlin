@@ -7,10 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 
 import Gremlin.Profile
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
-// Renders individual actions and provide support for drag & drop.
+// Renders individual actions and provides support for drag & drop.
 Item {
     id: root
 
@@ -74,10 +74,10 @@ Item {
 
                     onEntered: (drag) => { _propose(drag) }
                     onPositionChanged: (drag) => { _propose(drag) }
-                    onExited: () => { DragSession.removeDropAreaCandidate(root, _entry.index) }
+                    onExited: { DragSession.removeDropAreaCandidate(root, _entry.index) }
 
-                    // Sends this drop area to the DragSession to decide which
-                    // indicator is selected.
+                    // Sends this drop area to the DragSession to decide which indicator
+                    // is selected.
                     function _propose(drag) {
                         DragSession.addDropAreaCandidate(
                             Math.abs(drag.y + y),
@@ -99,8 +99,8 @@ Item {
                     isOpen: root._activeDropIndex === _entry.index
                 }
 
-                // Visualize the action itself including the possible child
-                // actions within.
+                // Visualize the action itself including the possible child actions
+                // within.
                 ActionNode {
                     id: _node
 
@@ -114,9 +114,8 @@ Item {
             }
         }
 
-        // Drop target at the bottom of a list, allowing insertion into an empty
-        // list or at the end of one. This only becomes visible during an active
-        // drag event.
+        // Drop target at the bottom of a list, allowing insertion into an empty list or
+        // at the end of one. This only becomes visible during an active drag event.
         Item {
             id: _defaultTarget
 
@@ -149,7 +148,9 @@ Item {
 
                 onEntered: (drag) => { _propose(drag) }
                 onPositionChanged: (drag) => { _propose(drag) }
-                onExited: () => { DragSession.removeDropAreaCandidate(root, root._actions.length) }
+                onExited: {
+                    DragSession.removeDropAreaCandidate(root, root._actions.length)
+                }
 
                 function _propose(drag) {
                     DragSession.addDropAreaCandidate(
@@ -210,8 +211,8 @@ Item {
             }
         ]
 
-        // Visual indicator for a possible, but not active, drop slot with that has
-        // no associated action header.
+        // Visual indicator for a possible, but not active, drop slot with that has no
+        // associated action header.
         Item {
             id: _emptyDropIndicator
 

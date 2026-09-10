@@ -6,10 +6,7 @@ import QtQuick.Controls
 
 import Gremlin.Device
 
-// Replaces qml/LogicalDeviceSelector.qml, which loaded Base.TooltipComboBox /
-// Compact.TooltipComboBox -- both from the now-deleted theme/Gremlin kit. There is
-// only one Kobold style, so the old base/compact variant switch is gone too: a
-// single stock ComboBox, already reskinned by the Kobold style.
+// UI element to select a logical device input.
 Item {
     id: root
 

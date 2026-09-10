@@ -27,7 +27,7 @@ Button {
         border.color: Theme.line
         radius: Metrics.radius
 
-        // Two-channel selection, matching InputButton: fill + accent left bar.
+        // Renders a button with an accent makr on the left if active.
         Rectangle {
             visible: _sectionSelector.currentIndex == index
             width: Metrics.accentMark

@@ -4,20 +4,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Kobold.Foundation
-import Kobold.Controls
 
-// SPEC §8 action row (28px): [chevron][type icon][name][TriggerMode?][error?][remove].
-// The type icon doubles as the drag handle -- there is no separate drag column. The name
-// field's always-present transparent border (line + bgAlt on hover) is the app's one
-// sanctioned R1 exception; nothing else on this row reacts to a row-wide hover -- each
-// control answers for itself.
-//
-// Deliberately model-agnostic: plain properties/signals only, no ActionModel coupling, so
-// a future caller (Phase 7) can wire it to real data without changing this file.
+import Kobold.Controls
+import Kobold.Foundation
+
+// An action's row showing general action information and control actions. The action
+// icon acts as the drag handle for the entire action.
 Item {
     id: root
 
+    // Variables storing the action's state.
     property bool expanded: true
     property string iconPath: ""
     property string name: ""
@@ -27,13 +23,12 @@ Item {
     property bool hasError: false
     property string errorHint: ""
     property int depth: 0
-    // The Item that should actually move during a drag -- set by the caller (the row
-    // itself has no opinion on what "the row" means to its parent's layout).
+
+    // Reference to the action the row controls. Required for the drag & drop system.
     property Item dragTarget: null
-    // Exposed so the caller can drive `dragTarget.Drag.active` -- declaring
-    // `drag.target` alone does not do that automatically.
     readonly property alias dragActive: _dragArea.drag.active
 
+    // Signals emitted to change and synchronize the action's state.
     signal toggleExpandedRequested()
     signal nameEdited(string text)
     signal activateOnPressEdited(bool value)
@@ -52,26 +47,16 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Metrics.gapS
 
-        // Stateless trigger, not checkable -- `expanded` is the caller's own property
-        // (round-tripped explicitly through toggleExpandedRequested), not something a
-        // checkable button's internal toggle state should own or fight over.
+        // Toggles the action between collapsed and expanded state.
         ToolButton {
-            id: _chevron
-
             icon.name: "chevron-down"
             rotation: root.expanded ? 0 : -90
 
-            onClicked: root.toggleExpandedRequested()
+            onClicked: { root.toggleExpandedRequested() }
         }
 
-        // Plugin-authored icon, tinted to `fg` only (never a switchable role, unlike
-        // AppIcon) via the dedicated `action-icon` image provider -- a separate
-        // provider from AppIcon's `icon` one, since `root.iconPath` is a `file:///...`
-        // URI onto an arbitrary plugin's icon.svg (core or user-authored), not a name
-        // in the bundled :/style-icons/ set.
+        // Icon visually indicating the type of action.
         Image {
-            id: _typeIcon
-
             source: root.iconPath
                 ? "image://action-icon/" + root.iconPath + "?c="
                     + Theme.fg.toString().slice(-6) + "&px=" + Metrics.icon
@@ -90,9 +75,8 @@ Item {
                 cursorShape: Qt.OpenHandCursor
                 drag.target: root.dragTarget
                 drag.axis: Drag.YAxis
-                // Last moment the drop claim exists: MouseArea emits `released` before it
-                // clears drag.active, and that clear cancels the internal drag, sending a
-                // DragLeave that withdraws the claim.
+
+                // Handle dropping of the action, resolving the drag & drop interaction.
                 onReleased: {
                     if (_dragArea.drag.active) {
                         root.dropRequested()
@@ -101,14 +85,11 @@ Item {
             }
         }
 
+        // Action name field, shows an editable textfield on hover.
         Item {
-            id: _nameField
-
             Layout.fillWidth: true
             Layout.minimumWidth: Metrics.controlHeight * 4
             implicitHeight: Metrics.controlHeight
-
-            readonly property bool hovered: _nameHover.hovered
 
             HoverHandler {
                 id: _nameHover
@@ -117,16 +98,12 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: Metrics.radius
-                color: _nameField.hovered ? Theme.bgAlt : "transparent"
+                color: _nameHover.hovered ? Theme.bgAlt : "transparent"
                 border.width: Metrics.hairline
-                // Always present -- reserved even at rest -- so nothing resizes on hover
-                // (SPEC §8's one sanctioned R1 exception).
-                border.color: _nameField.hovered ? Theme.line : "transparent"
+                border.color: _nameHover.hovered ? Theme.line : "transparent"
             }
 
             TextInput {
-                id: _nameInput
-
                 anchors.fill: parent
                 anchors.leftMargin: Metrics.gapS
                 anchors.rightMargin: Metrics.gapS
@@ -139,23 +116,21 @@ Item {
                 font.pixelSize: Metrics.textBody
                 selectByMouse: true
 
-                onEditingFinished: root.nameEdited(text)
+                onEditingFinished: { root.nameEdited(text) }
             }
         }
 
         ActivationToggle {
             visible: root.showTriggerMode
 
-            pressChecked: root.activateOnPress
-            releaseChecked: root.activateOnRelease
+            pressChecked: { root.activateOnPress }
+            releaseChecked: { root.activateOnRelease }
 
-            onPressCheckedEdited: (value) => root.activateOnPressEdited(value)
-            onReleaseCheckedEdited: (value) => root.activateOnReleaseEdited(value)
+            onPressCheckedEdited: (value) => { root.activateOnPressEdited(value) }
+            onReleaseCheckedEdited: (value) => { root.activateOnReleaseEdited(value) }
         }
 
         AppIcon {
-            id: _errorIcon
-
             visible: root.hasError
             name: "error"
             role: "error"
@@ -170,7 +145,7 @@ Item {
 
         ToolButton {
             icon.name: "delete"
-            onClicked: root.removeRequested()
+            onClicked: { root.removeRequested() }
         }
     }
 }

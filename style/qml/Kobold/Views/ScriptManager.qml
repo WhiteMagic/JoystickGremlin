@@ -1,18 +1,16 @@
 ﻿// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import Qt.labs.qmlmodels
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
 
 import Gremlin.Script
 import Kobold.Controls
 import Kobold.Foundation
-
 import "helpers.js" as Helpers
-
 
 Item {
     id: _root
@@ -23,7 +21,7 @@ Item {
     readonly property int configMinWidth:     Metrics.dp(600)
     readonly property int pathWidthReserve:   Metrics.dp(400)
 
-    // Dialog to select a script to add
+    // Dialog to select a script to add.
     FileDialog {
         id: _selectScript
 
@@ -40,7 +38,7 @@ Item {
         }
     }
 
-    // Dialog to rename a script
+    // Dialog to rename a script.
     TextInputDialog {
         id: _renameScriptDialog
 
@@ -122,8 +120,6 @@ Item {
 
             ToolTip {
                 text: _path.text
-                // Set an upper width of the tooltip to force word wrap on
-                // long texts.
                 width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverPath.hovered
                 delay: 500
@@ -149,8 +145,6 @@ Item {
 
             ToolTip {
                 text: _name.text
-                // Set an upper width of the tooltip to force word wrap on
-                // long texts.
                 width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverName.hovered
                 delay: 500

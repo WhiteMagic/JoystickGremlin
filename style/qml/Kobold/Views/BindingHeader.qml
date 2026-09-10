@@ -4,28 +4,20 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Kobold.Foundation
-import Kobold.Controls
 
 import Gremlin.Profile
+import Kobold.Controls
+import Kobold.Foundation
 
-// SPEC §8 binding header: [grip][description][Treat as][Add action, bordered][!][x]. Live
-// replacement for the general header row of the legacy
-// qml/InputItemBindingConfigurationHeader.qml. The axis/hat virtual-button UI is not part of
-// this row's grammar (SPEC §8 doesn't mention it) -- it stays a sibling Loader in
-// qml/InputItemBinding.qml, unchanged.
-// The grip is a real drag handle for whole-sequence reordering (InputConfiguration.qml owns
-// the drop zones); the ghost image is this row alone, never the tree below it -- a sequence's
-// action tree can be very tall and the drag visual must stay compact.
+// Header of an action sequence, containing a drag handle, the description of the
+// sequence and the ability to add actions.
 Item {
     id: root
 
     property InputItemBindingModel inputBinding
     property InputItemModel inputItemModel
 
-    // Gates Drag.active so the OS drag never starts before grabToImage()'s
-    // async callback has set Drag.imageSource -- otherwise a fast flick can
-    // cross the drag threshold before the ghost image exists.
+    // Ensures a drag cannot start before the image is ready.
     property bool _imageReady: false
 
     implicitHeight: Metrics.rowAction

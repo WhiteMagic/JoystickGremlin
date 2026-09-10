@@ -6,8 +6,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.Profile
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
 Item {
     id: root
@@ -18,7 +18,7 @@ Item {
     property Item dragEntry: null
 
     // Stores the action's expanded state before a drag event.
-    property var _expandedStateToRestore: null
+    property var _dragExpandedRestoreState: null
 
     // Temporary width modifiers of the dragged action such that it visually fits into
     // the drop indicators.
@@ -31,12 +31,12 @@ Item {
     // Ensure the action is drawn above everything else during a drag.
     z: Drag.active ? 1 : 0
 
-    // During a drag the action is collapsed to just the header and than moved by the
-    // user. For the opening and closing of drop indicators to work the action item is
-    // reparented to an overlay that is on top of the entire UI.
+    // During a drag the action is collapsed to just the header. For the opening and
+    // closing of drop indicators to work the action item is reparented to an overlay
+    // that is on top of the entire UI.
     states: State {
-        // Needs root to be used, otherwise drag won't react correctly and the action
-        // is not rendered correctly above everything else.
+        // Needs to specify root to be used, otherwise drag won't react correctly and
+        // the action is not rendered correctly above everything else.
         name: "dragging"
         when: root.Drag.active
 
@@ -60,8 +60,8 @@ Item {
     Drag.dragType: Drag.Internal
     Drag.source: root.dragEntry
     Drag.keys: ["action"]
-    // The position which triggers with a drop area is positioned in the center
-    // of the ActionRow to provide the same behavior when dragging up or down.
+    // The position which triggers with a drop area is positioned in the center of the
+    // ActionRow to provide the same behavior when dragging up or down.
     Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: _header.height / 2
 
@@ -70,7 +70,7 @@ Item {
         // The action is collapsed during the drag and resized to fit the currently
         // active drop indicator. The DragSession handler is also initialized here.
         if (Drag.active) {
-            _expandedStateToRestore = action.expanded
+            _dragExpandedRestoreState = action.expanded
             action.expanded = false
             _dragLeftInset = Metrics.gapS
             _dragRightInset = Metrics.gapS
@@ -81,9 +81,9 @@ Item {
         else {
             _dragLeftInset = 0
             _dragRightInset = 0
-            if (_expandedStateToRestore !== null) {
-                action.expanded = _expandedStateToRestore
-                _expandedStateToRestore = null
+            if (_dragExpandedRestoreState !== null) {
+                action.expanded = _dragExpandedRestoreState
+                _dragExpandedRestoreState = null
             }
             Qt.callLater(() => { height = Qt.binding(() => implicitHeight) })
             DragSession.end()

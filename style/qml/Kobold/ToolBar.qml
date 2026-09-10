@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.ToolBar {
@@ -13,7 +14,6 @@ T.ToolBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
         implicitHeight: Metrics.toolbar
         color: Theme.bgAlt

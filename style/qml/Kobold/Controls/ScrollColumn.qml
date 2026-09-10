@@ -4,14 +4,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+
 import Kobold.Foundation
 
-// Vertical scroller that realizes all of its content immediately, unlike ScrollList
-// (ListView), which creates/destroys delegates as they enter/leave the viewport. Use
-// this instead of ScrollList when content is built asynchronously (e.g. a Loader
-// resolving via Qt.createComponent) -- ListView-style virtualization re-triggers that
-// async settle every time a delegate scrolls into view, which thrashes contentHeight.
-// Only suitable for modest item counts, since nothing here is virtualized.
+// Behaves similar to a ListView, however, does not perform delegate destruction and
+// reuse based on visibility. This is necessary for instances where items should not
+// be destroyed or recreated.
 Flickable {
     id: _flickable
 
@@ -33,8 +31,6 @@ Flickable {
     flickableDirection: Flickable.VerticalFlick
     boundsBehavior: Flickable.StopAtBounds
 
-    // See ScrollList for the rationale behind pixel-based, magnitude-scaled wheel
-    // scrolling instead of index-jump scrolling.
     WheelHandler {
         onWheel: (event) => {
             const delta = -(event.angleDelta.y / 120) * _flickable.wheelStep

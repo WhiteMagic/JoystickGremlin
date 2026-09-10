@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.MenuBar {
@@ -22,7 +23,6 @@ T.MenuBar {
         }
     }
 
-    // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
         implicitHeight: Metrics.menuFooterHeight
         color: Theme.bgAlt

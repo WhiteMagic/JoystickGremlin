@@ -12,25 +12,15 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
-//
-// The step list is explicitly NOT an action container (SPEC §8: "Macro steps are NOT
-// child actions -- render them as a table, or the UI is lying."). It is a hand-built
-// table: header row + hairline rule, flat 0-spacing `MacroStepRow`s, row-edge-band drop
-// targets via the public `RowDropBand`. Each cell holds a live control
-// (InputCaptureButton, ButtonStateSelector, spin boxes, selectors) rather than display
-// text, so the rows are built here instead of driven from a string model.
 ColumnLayout {
     id: root
 
     required property MacroModel action
 
-    readonly property int stepTypeColumnWidth: Metrics.controlHeight * 5
-    // Reserves the scrollbar's own width plus a visible gap so step rows stop
-    // short of it instead of butting up against the track.
-    readonly property int stepListScrollGutter: Metrics.gapM * 2
+    readonly property int actionHeaderWidth: Metrics.controlHeight * 5
+    readonly property int actionScrollbarWidth: Metrics.gapM * 2
 
-    readonly property var stepTypes: [
+    readonly property var actionTypes: [
         {value: "joystick", text: "Joystick"},
         {value: "key", text: "Keyboard"},
         {value: "logical-device", text: "Logical device"},
@@ -42,14 +32,16 @@ ColumnLayout {
 
     spacing: Metrics.gapM
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | Repeat configuration
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     RowLayout {
         Layout.fillWidth: true
         spacing: Metrics.gapM
 
-        Label { text: "Repeat mode" }
+        Label {
+            text: "Repeat mode"
+        }
 
         ComboBox {
             id: _repeatMode
@@ -77,7 +69,7 @@ ColumnLayout {
             from: 0
             to: 3600
             stepSize: 0.1
-            decimals: 2
+            decimals: Metrics.defaultDecimalPlaces
             value: root.action.repeatDelay
 
             onValueModified: { root.action.repeatDelay = value }
@@ -111,14 +103,16 @@ ColumnLayout {
         }
     }
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | Action step record and add controls.
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     RowLayout {
         Layout.fillWidth: true
         spacing: Metrics.gapM
 
-        Label { text: "Record inputs" }
+        Label {
+            text: "Record inputs"
+        }
 
         CheckBox {
             text: "Keyboard"
@@ -180,26 +174,27 @@ ColumnLayout {
 
         AddActionMenuButton {
             variant: "bordered"
-            text: "Add step"
-            model: root.stepTypes.map((entry) => entry.text)
+            text: "Add action"
+            model: root.actionTypes.map((entry) => entry.text)
 
             onActionRequested: (name) => {
-                root.action.addAction(root.stepTypes.find((entry) => entry.text === name).value)
+                root.action.addAction(
+                    root.actionTypes.find((entry) => entry.text === name).value
+                )
             }
         }
     }
 
-    // Recessed well: bgAlt behind, individual step rows keep the standard
-    // bg fill so they read as cards sitting inside the list.
+    // Styled to appear as a backdrop for the list of actions.
     Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(_stepList.contentHeight, 400) + 2 * Metrics.gapS
+        Layout.preferredHeight: Math.min(_actionList.contentHeight, 400) + 2 * Metrics.gapS
 
         color: Theme.bgAlt
         radius: Metrics.radius * 2
 
         ScrollList {
-            id: _stepList
+            id: _actionList
 
             anchors.fill: parent
             anchors.margins: Metrics.gapS
@@ -212,12 +207,12 @@ ColumnLayout {
             delegate: _delegateChooser
 
             Connections {
-                target: _stepList.model
+                target: _actionList.model
 
                 function onActionAdded() {
-                    // Reposition the view at the bottom of the list when a step is
+                    // Reposition the view at the bottom of the list when an action is
                     // added but not when one is removed.
-                    Qt.callLater(_stepList.positionViewAtEnd)
+                    Qt.callLater(_actionList.positionViewAtEnd)
                 }
             }
         }
@@ -232,7 +227,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "joystick"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Joystick"
 
                 detailItem: RowLayout {
@@ -267,7 +262,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "key"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Keyboard"
 
                 detailItem: RowLayout {
@@ -294,7 +289,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "logical-device"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Logical device"
 
                 detailItem: RowLayout {
@@ -336,7 +331,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "mouse-button"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Mouse button"
 
                 detailItem: RowLayout {
@@ -363,7 +358,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "mouse-motion"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Mouse motion"
 
                 detailItem: RowLayout {
@@ -399,7 +394,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "pause"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "Pause"
 
                 detailItem: RowLayout {
@@ -424,7 +419,7 @@ ColumnLayout {
         DelegateChoice {
             roleValue: "vjoy"
 
-            MacroStepRow {
+            MacroActionRow {
                 stepLabel: "vJoy"
 
                 detailItem: RowLayout {
@@ -527,12 +522,9 @@ ColumnLayout {
         onActivated: { modelData.hatDirection = currentValue }
     }
 
-    // A single flat step row: drag handle, step-type label, step-specific detail
-    // content, delete button. Deliberately an Item, not a layout, so the
-    // `RowDropBand`s below can overlay it -- `ActionNode`'s rows use a plain-Item
-    // root for the same reason.
-    component MacroStepRow: Item {
-        id: _stepRow
+    // Renders the contents of a single action including control elements.
+    component MacroActionRow: Item {
+        id: _actionRow
 
         property string stepLabel: ""
         property alias detailItem: _detailLoader.sourceComponent
@@ -545,10 +537,10 @@ ColumnLayout {
         implicitHeight: _cells.implicitHeight + 2 * Metrics.gapS
         // Reserve the scrollbar's gutter on the right so the row stays visually
         // disconnected from the track instead of butting up against it.
-        width: ListView.view ? ListView.view.width - root.stepListScrollGutter : implicitWidth
+        width: ListView.view ? ListView.view.width - root.actionScrollbarWidth : implicitWidth
         height: implicitHeight
 
-        Drag.active: _dragArea.drag.active && _stepRow._imageReady
+        Drag.active: _dragArea.drag.active && _actionRow._imageReady
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
@@ -593,25 +585,22 @@ ColumnLayout {
 
                     anchors.fill: parent
                     cursorShape: Qt.OpenHandCursor
-                    drag.target: _stepRow
+                    drag.target: _actionRow
                     drag.axis: Drag.YAxis
 
                     onPressed: {
-                        _stepRow._imageReady = false
-                        _stepRow.grabToImage((result) => {
-                            _stepRow.Drag.imageSource = result.url
-                            _stepRow._imageReady = true
+                        _actionRow._imageReady = false
+                        _actionRow.grabToImage((result) => {
+                            _actionRow.Drag.imageSource = result.url
+                            _actionRow._imageReady = true
                         })
                     }
                 }
             }
 
-            Text {
-                Layout.preferredWidth: root.stepTypeColumnWidth
-                text: _stepRow.stepLabel
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
+            Label {
+                Layout.preferredWidth: root.actionHeaderWidth
+                text: _actionRow.stepLabel
             }
 
             Loader {

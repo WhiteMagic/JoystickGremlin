@@ -10,13 +10,13 @@ import Gremlin.Device
 import Kobold.Controls
 import Kobold.Foundation
 
+// Visualizes the state of a device's buttons and hats inside the input viewer tool.
 Item {
     id: _root
 
     property string deviceGuid
     property string title
 
-    // Local to this file -- single consumer, not a shared design concept.
     readonly property int buttonSize:   Metrics.dp(40)
     readonly property int buttonRadius: Metrics.even(10)
 
@@ -89,8 +89,6 @@ Item {
 
                 model: _button_state
                 delegate: Component {
-                    // A readout, not a control -- nothing here is clickable, so it is a
-                    // plain rectangle rather than a Button the user cannot press.
                     Rectangle {
                         id: _button
 

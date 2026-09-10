@@ -9,22 +9,24 @@ import QtQuick.Shapes
 
 import Kobold.Foundation
 
+// Visual display of a hat's state as a set of eight triangles arranged in a circle.
 Item {
     id: _root
-
-    height: Metrics.dp(200)
-    width: Metrics.dp(200)
 
     property point currentValue
     property string text
     property int currentIndex: -1
 
-    // Side length of an equilateral direction marker, and the height that follows from it.
+    readonly property int spatialExtent: Metrics.dp(200)
+    // Side length and height of an equilateral triangle used to render a hat direction.
     readonly property int markerSide: Metrics.dp(12)
     readonly property real markerHeight: markerSide * Math.sqrt(3) / 2
-    // Distance from centre to each marker's centre, leaving room for the label.
+    // Distance from centre to each direction marker's center.
     readonly property real ringRadius:
         Math.min(width, height) / 2 - markerSide / 2 - Metrics.gapS
+
+    height: spatialExtent
+    width: spatialExtent
 
     onCurrentValueChanged: function()
     {
@@ -68,7 +70,8 @@ Item {
             x: _root.width / 2 + _root.ringRadius * Math.sin(angle) - width / 2
             y: _root.height / 2 - _root.ringRadius * Math.cos(angle) - height / 2
 
-            // Drawn pointing north; index 0 is north and each step is 45 degrees clockwise.
+            // Drawn pointing north, index 0 is north and each step is 45 degrees
+            // clockwise.
             rotation: index * 45
 
             preferredRendererType: Shape.CurveRenderer

@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.ComboBox {
@@ -38,8 +39,7 @@ T.ComboBox {
         border.color: control.activeFocus || control.popup.visible ? Theme.accent : Theme.line
     }
 
-    // Popup rule shared with Menu (SPEC/architecture: opaque fill, 1px line border,
-    // zero shadow -- the classic place a shadow sneaks in).
+    // Popup: opaque fill, 1px line border, zero shadow.
     popup: T.Popup {
         y: control.height
         width: control.width
@@ -88,13 +88,6 @@ T.ComboBox {
 
         contentItem: Text {
             leftPadding: Metrics.gapM
-            // `model[control.textRole]` covers named-role models (QAbstractItemModel,
-            // including single-role ones like TTSVoiceSelectionModel/ThemeSelectionModel
-            // -- for those, `modelData` is the bare role value, not an object, so
-            // `modelData[control.textRole]` silently resolves to undefined).
-            // `modelData[control.textRole]` covers a JS array of plain objects
-            // (e.g. `modeHierarchy.validParents(name)` in DialogManageModes.qml),
-            // where there is no `model[role]` accessor, only `modelData`.
             text: control.textRole
                 ? (model[control.textRole] !== undefined
                     ? model[control.textRole]

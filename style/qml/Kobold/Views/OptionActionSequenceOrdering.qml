@@ -68,9 +68,7 @@ Item {
             height: parent.height
 
             property int index: model.index
-            // Gates Drag.active so the OS drag never starts before grabToImage()'s
-            // async callback has set Drag.imageSource -- otherwise a fast flick can
-            // cross the drag threshold before the ghost image exists.
+            // Don't start dragging before the visual is ready.
             property bool _imageReady: false
 
             Drag.active: _dragArea.drag.active && _item._imageReady
@@ -95,7 +93,7 @@ Item {
                     drag.target: _item
                     drag.axis: Drag.YAxis
 
-                    // Create an image of the object being dragged for visualization
+                    // Create an image of the object being dragged for visualization.
                     onPressed: () => {
                         _item._imageReady = false
                         _item.grabToImage((result) => {

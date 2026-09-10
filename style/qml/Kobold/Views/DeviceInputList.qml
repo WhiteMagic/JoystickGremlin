@@ -7,11 +7,11 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
-// Visualizes the inputs and information about their associated actions
-// contained in a Device instance.
+// Visualizes a device's inputs and information about actions associated with them.
+// Rendered in the left panel of the main UI.
 Rectangle {
     id: _root
 
@@ -39,7 +39,7 @@ Rectangle {
         }
     }
 
-    // List of all the inputs available on the device
+    // List of all the inputs available on the device.
     ScrollList {
         id: _inputList
 
@@ -58,7 +58,7 @@ Rectangle {
             height: Metrics.rowInput
 
             selected: index === _inputList.currentIndex
-            onClicked: () => { _inputList.currentIndex = index }
+            onClicked: { _inputList.currentIndex = index }
         }
 
         footer: Item {
@@ -66,14 +66,14 @@ Rectangle {
             height: Metrics.gapM
         }
 
-        Component.onCompleted: () => {
+        Component.onCompleted: {
             uiState.setCurrentInput(
                 device.inputIdentifier(currentIndex),
                 currentIndex
             )
         }
 
-        onCurrentIndexChanged: () => {
+        onCurrentIndexChanged: {
             uiState.setCurrentInput(
                 device.inputIdentifier(currentIndex),
                 currentIndex

@@ -9,11 +9,13 @@ SpinBox     SpinBox.qml
 DoubleSpinBox DoubleSpinBox.qml
 ComboBox    ComboBox.qml
 RangeSlider RangeSlider.qml
+ProgressBar ProgressBar.qml
 Menu        Menu.qml
 MenuItem    MenuItem.qml
 MenuBar     MenuBar.qml
 MenuBarItem MenuBarItem.qml
 ScrollBar   ScrollBar.qml
+ScrollView  ScrollView.qml
 ToolTip     ToolTip.qml
 TabBar      TabBar.qml
 TabButton   TabButton.qml

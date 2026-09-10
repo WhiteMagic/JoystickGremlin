@@ -4,11 +4,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+
 import Kobold.Foundation
 
-// Public plugin-facing kit component: a labelled numeric range -- two mono-font value fields
-// either side of a RangeSlider. Prop-in/signal-out, like the app's other reusable components
-// (ActionRow, ActivationToggle, SlotHeader) -- never writes back to its own input properties.
+// Shows a slider with two handles, used to indicate a range. On either side of the
+// slider value readouts are shown that also control the range slider's handles.
 RowLayout {
     id: root
 

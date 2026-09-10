@@ -7,8 +7,8 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
 // Visualizes the inputs and information about their associated actions
 // contained in the LogicalDevice system.
@@ -68,12 +68,6 @@ Rectangle {
                     icon.name: "edit"
                     padding: Metrics.gapS
 
-                    // Lazily-instantiated (Loader-created) Components don't
-                    // see the delegate's own required properties by bare
-                    // name -- go through the id instead. "label" is the
-                    // model's raw rename/delete key, distinct from the
-                    // display-only "name" InputButton already carries, so it
-                    // isn't part of InputButton's own data contract.
                     onClicked: () => {
                         const label = _inputList.model.labelAt(_row.index)
                         _textInput.text = label
@@ -108,24 +102,21 @@ Rectangle {
         // Control to add new logical device input instances.
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Metrics.gapM
-            Layout.rightMargin: Metrics.gapM
-            Layout.bottomMargin: Metrics.gapM
+            Layout.margins: Metrics.gapL
 
             AddActionMenuButton {
                 Layout.fillWidth: true
 
-                variant: "bordered"
-                implicitHeight: Metrics.rowAction
                 text: "Add input"
                 model: ["Axis", "Button", "Hat"]
-                // This pane is already bgAlt (_root.color above) -- raise both the button
-                // fill and the popup to bg so neither blends into the page behind it.
+
+                variant: "bordered"
+                implicitHeight: Metrics.rowAction
+
+                // Adjust colors to match with the left panel, and open upwards.
                 fillColor: Theme.bg
                 menuColor: Theme.bg
                 menuMatchesWidth: true
-                // This control sits at the bottom of the input list -- pop the choices up
-                // so the button stays the lowest thing on screen.
                 menuOpensUpward: true
 
                 onActionRequested: (name) => {
