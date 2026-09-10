@@ -11,7 +11,6 @@ import Kobold.Composites
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -22,11 +21,8 @@ ColumnLayout {
     RowLayout {
         spacing: Metrics.gapM
 
-        Text {
+        Label {
             text: "Timeout (sec)"
-            color: Theme.fg
-            font.family: FontType.sans
-            font.pixelSize: Metrics.textBody
         }
 
         DoubleSpinBox {
@@ -39,7 +35,7 @@ ColumnLayout {
             onValueModified: { root.action.timeout = value }
         }
 
-        Item { Layout.fillWidth: true }
+        Spacer {}
 
         Button {
             text: "Add chain sequence"
@@ -66,7 +62,7 @@ ColumnLayout {
                 SlotHeader {
                     Layout.fillWidth: true
 
-                    label: "Sequence " + _sequence.index
+                    label: "Sequence " + (_sequence.index + 1)
                     actionNames: root.action.compatibleActions
 
                     onActionRequested: (name) => {

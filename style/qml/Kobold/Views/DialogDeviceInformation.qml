@@ -7,8 +7,8 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
-import Kobold.Foundation
 import Kobold.Controls
+import Kobold.Foundation
 
 Window {
     id: _root

@@ -4,8 +4,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
+// Visualize all physical devices as part of the DeviceList element. Overrides a
+// standard tabbar to allow mouse wheel interaction.
 T.TabBar {
     id: control
 
@@ -14,11 +17,7 @@ T.TabBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    // Scroll-affordance state for external arrow buttons -- true only while
-    // there is more content to reveal in that direction. Read through
-    // contentItem (a TabBar/Flickable property) rather than an id, so this
-    // stays a same-scope self-reference instead of reaching into the nested
-    // ListView.
+    // Directions scrolling is possible for external control via buttons.
     property bool canScrollBackward: !contentItem.atXBeginning
     property bool canScrollForward: !contentItem.atXEnd
 
@@ -39,10 +38,10 @@ T.TabBar {
         preferredHighlightEnd: width - Metrics.tabStrip
 
 
+        // Reacts only to mouse scroll wheel events to change the visible area.
         MouseArea {
             anchors.fill: parent
 
-            // Scroll the view without the need for a modifier.
             onWheel: function(evt) {
                 if(parent.contentWidth < parent.width) {
                     return
@@ -58,8 +57,7 @@ T.TabBar {
                 }
             }
 
-            // Ignore all other events and thus pass then  to the
-            // underlying ListView.
+            // Ignore all other events and thus pass then  to the underlying ListView.
             onClicked: (mouse) => mouse.accepted = false
             onPressed: (mouse) => mouse.accepted = false
             onReleased: (mouse) => mouse.accepted = false

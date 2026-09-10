@@ -11,7 +11,6 @@ import Kobold.Composites
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -22,18 +21,15 @@ ColumnLayout {
     RowLayout {
         spacing: Metrics.gapM
 
-        Text {
+        Label {
             text: "Toggle delay (sec)"
-            color: Theme.fg
-            font.family: FontType.sans
-            font.pixelSize: Metrics.textBody
         }
 
         DoubleSpinBox {
             from: 0
             to: 100
             stepSize: 0.05
-            decimals: 2
+            decimals: Metrics.defaultDecimalPlaces
             value: root.action.delay
 
             onValueModified: { root.action.delay = value }

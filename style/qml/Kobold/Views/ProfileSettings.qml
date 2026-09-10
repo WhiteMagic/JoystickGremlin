@@ -1,11 +1,11 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import Qt.labs.qmlmodels
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
 
 import Gremlin.Profile
 import Kobold.Controls
@@ -27,12 +27,6 @@ Item {
         // Ensure the content doesn't cause horizontal scrolling.
         contentWidth: availableWidth
         padding: Metrics.gapL
-
-        // Disable annoying mobile device scrolling behaviors.
-        ScrollBar.vertical.interactive: true
-        Component.onCompleted: {
-            contentItem.boundsMovement = Flickable.StopAtBounds
-        }
 
         ColumnLayout {
             anchors.fill: parent

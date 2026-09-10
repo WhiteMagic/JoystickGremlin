@@ -3,16 +3,13 @@
 
 import QtQuick
 import QtQuick.Layouts
+
 import Kobold.Foundation
 
-// SPEC §8, the crux of the tree grammar: an action's config, slot headers and child actions
-// all sit one 16px step in from its header, sharing one 1px guide. A guide exists only to
-// group child actions -- no children, no visible line -- but the 1px is still reserved so a
-// config-only body aligns pixel-for-pixel with a guided sibling and the even grid holds.
-// Test: cover the labels and you must still see where each slot starts.
-//
-// The guide sits at Metrics.indent / 2, not flush left -- that's where ActionRow's chevron
-// (controlHeight-wide, icon centered) points, and the guide is that chevron's plumb line.
+// Visual guide to the left of action rows, visualizing indentation levels similar to
+// a file system tree. The guide is only shown for actions that have children and for
+// all but the inner-most level. The guide line itself is aligned with the collapse /
+// expand icon of the action.
 RowLayout {
     id: root
 
@@ -37,10 +34,6 @@ RowLayout {
         id: _content
 
         Layout.fillWidth: true
-        // The guide itself stays flush against the header above (fillHeight on the
-        // guide Rectangle) -- only the content is inset, so the header-to-first-row
-        // gap matches the row-to-row gap used inside the content (Metrics.gapM),
-        // without floating the guide's own top away from the header's icon.
         Layout.topMargin: Metrics.gapM - Metrics.actionRowInset
         spacing: Metrics.gapM
     }

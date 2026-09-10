@@ -10,13 +10,14 @@ import Gremlin.Device
 import Kobold.Controls
 import Kobold.Foundation
 
+// Visualizes the current state of a device's axes through a set of bars that indicate
+// the current value of each axis. This is used in the input viewer tool.
 Item {
     id: _root
 
     property string deviceGuid
     property string title
 
-    // Local to this file -- single consumer, not a shared design concept.
     readonly property int axisColumnWidth: Metrics.dp(60)
     readonly property int axisBarHeight:   Metrics.dp(100)
     readonly property int axisBarSize:     Metrics.dp(20)
@@ -84,11 +85,11 @@ Item {
 
                         text: "Axis " +  identifier
                     }
-                    BetterProgressBar {
+                    ProgressBar {
                         Layout.fillHeight: true
                         Layout.alignment: Qt.AlignHCenter
 
-                        orientation: BetterProgressBar.Orientation.Vertical
+                        orientation: Qt.Vertical
                         barSize: _root.axisBarSize
                         height: _root.axisBarHeight
 

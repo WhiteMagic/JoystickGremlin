@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.TabButton {
@@ -25,7 +26,6 @@ T.TabButton {
         verticalAlignment: Text.AlignVCenter
     }
 
-    // Active = 2px accent underline + bgSelected (SPEC §10). Never accent-filled.
     background: Rectangle {
         color: control.checked ? Theme.bgSelected : control.hovered ? Theme.bgHover : Theme.bgAlt
 

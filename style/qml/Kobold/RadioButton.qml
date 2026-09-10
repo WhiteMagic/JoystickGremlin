@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.RadioButton {
@@ -15,7 +16,6 @@ T.RadioButton {
     font.family: FontType.sans
     font.pixelSize: Metrics.textBody
 
-    // R4/SPEC §7: checked = accent ring + accent dot, never a filled box.
     indicator: Rectangle {
         implicitWidth: Metrics.icon
         implicitHeight: Metrics.icon

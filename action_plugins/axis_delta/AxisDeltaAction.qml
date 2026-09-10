@@ -11,7 +11,6 @@ import Kobold.Composites
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -30,16 +29,16 @@ ColumnLayout {
             from: 0.0001
             to: 2.0
             stepSize: 0.05
-            decimals: 4
+            decimals: Metrics.preciseDecimalPlaces
             value: root.action.changeThreshold
 
             onValueModified: { root.action.changeThreshold = value }
         }
     }
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | Positive change actions
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     SlotHeader {
         Layout.fillWidth: true
 
@@ -56,9 +55,9 @@ ColumnLayout {
         containerName: "positive"
     }
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | Negative change actions
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     SlotHeader {
         Layout.fillWidth: true
 

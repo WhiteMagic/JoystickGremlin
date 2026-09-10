@@ -39,9 +39,6 @@ ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
         }
 
-        // Absorbs whatever width the (capped) control area below doesn't
-        // use, so that area still ends up flush against the row's right
-        // edge instead of leaving dead space after it.
         Spacer {}
 
         Item {

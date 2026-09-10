@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.TabBar {
@@ -21,7 +22,6 @@ T.TabBar {
         snapMode: ListView.SnapToItem
     }
 
-    // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
         color: Theme.bgAlt
     }

@@ -8,6 +8,7 @@ import QtQuick.Window
 
 import Kobold.Foundation
 
+// Simple dialog providing a text input field.
 Window {
     id: _root
 

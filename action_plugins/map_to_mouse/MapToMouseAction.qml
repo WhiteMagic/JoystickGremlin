@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -116,7 +115,7 @@ ColumnLayout {
                 from: 0
                 to: 60
                 stepSize: 1.0
-                decimals: 1
+                decimals: Metrics.defaultDecimalPlaces
                 value: root.action.timeToMaxSpeed
 
                 onValueModified: { root.action.timeToMaxSpeed = value }
@@ -244,7 +243,7 @@ ColumnLayout {
                 from: 0
                 to: 30
                 stepSize: 1.0
-                decimals: 1
+                decimals: Metrics.defaultDecimalPlaces
                 value: root.action.timeToMaxSpeed
 
                 onValueModified: { root.action.timeToMaxSpeed = value }

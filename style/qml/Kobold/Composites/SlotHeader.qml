@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
-import Kobold.Foundation
-import Kobold.Controls
 
-// SPEC §8 slot header (24px): scaffolding, not content. The only thing that says "actions
-// live below me." Accent is never used here -- it would repeat per slot.
+import Kobold.Controls
+import Kobold.Foundation
+
+// Header indicating a child action group within an aciton. Allows adding new actions
+// to the slot's group.
 Item {
     id: root
 
@@ -24,10 +26,9 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Metrics.gapM
 
-        Text {
+        Label {
             text: root.label
             color: Theme.fgMuted
-            font.family: FontType.sans
             font.pixelSize: Metrics.textDetail
         }
 

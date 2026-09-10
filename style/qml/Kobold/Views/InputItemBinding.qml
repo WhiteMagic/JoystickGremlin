@@ -1,19 +1,17 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import QtQml.Models
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtQml.Models
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-
-import Kobold.Foundation
 import Kobold.Composites
+import Kobold.Foundation
 import Kobold.Views
-
 
 // SPEC §8: sequences are independent trees, separated by space -- never a rule between them
 // (that's the ListView's job in qml/InputConfiguration.qml). Vertical separation from

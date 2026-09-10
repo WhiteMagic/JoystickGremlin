@@ -12,8 +12,9 @@ import Gremlin.Profile
 import Kobold.Foundation
 import Kobold.Composites
 
+
 Item {
-    id: _root
+    id: root
 
     required property DualAxisDeadzoneModel action
 
@@ -22,9 +23,9 @@ Item {
     implicitHeight: _content.height
 
     Connections {
-        target: _root.action
+        target: root.action
         function onModelChanged() {
-            _root.deadzoneModel.currentValue = _root.action.deadzone
+            root.deadzoneModel.currentValue = root.action.deadzone
         }
     }
 
@@ -35,7 +36,7 @@ Item {
         title: "Rename action"
 
         onAccepted: (value) => {
-            _root.action.label = value
+            root.action.label = value
             visible = false
         }
     }
@@ -52,33 +53,35 @@ Item {
             ComboBox {
                 id: _deadzoneSelection
                 Layout.fillWidth: true
-                model: _root.deadzoneModel
+                model: root.deadzoneModel
                 textRole: "label"
                 valueRole: "value"
 
                 Component.onCompleted: () => {
-                    currentIndex = _root.deadzoneModel.currentSelectionIndex
+                    currentIndex = root.deadzoneModel.currentSelectionIndex
                 }
                 Connections {
-                    target: _root.deadzoneModel
+                    target: root.deadzoneModel
                     function onSelectionChanged() {
-                        _deadzoneSelection.currentIndex = _root.deadzoneModel.currentSelectionIndex
+                        _deadzoneSelection.currentIndex =
+                            root.deadzoneModel.currentSelectionIndex
                     }
                 }
                 onActivated: () => {
-                    _root.deadzoneModel.currentValue = currentValue
-                    _root.action.deadzone = currentValue
+                    root.deadzoneModel.currentValue = currentValue
+                    root.action.deadzone = currentValue
                 }
             }
 
             Button {
                 text: "New instance"
-                onClicked: () => { _root.action.newDeadzone() }
+                onClicked: () => { root.action.newDeadzone() }
             }
+
             ToolButton {
                 icon.name: "edit"
                 onClicked: () => {
-                    _renameDialog.text = _root.action.label
+                    _renameDialog.text = root.action.label
                     _renameDialog.visible = true
                 }
             }
@@ -87,78 +90,88 @@ Item {
         RowLayout {
             spacing: Metrics.gapL
 
-            Label { text: "Inner deadzone" }
-
-            DoubleSpinBox {
-                from: 0.0
-                to: 1.0
-                stepSize: 0.05
-                decimals: 4
-                value: _root.action.innerDeadzone
-
-                onValueModified: { _root.action.innerDeadzone = value }
+            Label {
+                text: "Inner deadzone"
             }
 
-            Label { text: "Outer deadzone" }
+            DoubleSpinBox {
+                from: 0.0
+                to: 1.0
+                stepSize: 0.05
+                decimals: Metrics.preciseDecimalPlaces
+                value: root.action.innerDeadzone
+
+                onValueModified: { root.action.innerDeadzone = value }
+            }
+
+            Label {
+                text: "Outer deadzone"
+            }
 
             DoubleSpinBox {
                 from: 0.0
                 to: 1.0
                 stepSize: 0.05
-                decimals: 4
-                value: _root.action.outerDeadzone
+                decimals: Metrics.preciseDecimalPlaces
+                value: root.action.outerDeadzone
 
-                onValueModified: { _root.action.outerDeadzone = value }
+                onValueModified: { root.action.outerDeadzone = value }
             }
         }
 
         RowLayout {
             spacing: Metrics.gapL
 
-            Label { text: "First axis" }
-            InputAssignButton {
-                valueLabel: _root.action.axis1.isValid
-                    ? _root.action.axis1.label
-                    : "Not assigned -- open the second axis and add this dual axis deadzone instance there to assign it."
-                isAssigned: _root.action.axis1.isValid
-                onClicked: () => { _root.action.axis1 = uiState.currentInput }
+            Label {
+                text: "First axis"
             }
 
-            Label { text: "Second axis" }
             InputAssignButton {
-                valueLabel: _root.action.axis2.isValid
-                    ? _root.action.axis2.label
-                    : "Not assigned -- open the first axis and add this dual axis deadzone instance there to assign it."
-                isAssigned: _root.action.axis2.isValid
-                onClicked: () => { _root.action.axis2 = uiState.currentInput }
+                valueLabel: root.action.axis1.isValid
+                    ? root.action.axis1.label
+                    : "Not assigned"
+                isAssigned: root.action.axis1.isValid
+                onClicked: () => { root.action.axis1 = uiState.currentInput }
+            }
+
+            Label {
+                text: "Second axis"
+            }
+
+            InputAssignButton {
+                valueLabel: root.action.axis2.isValid
+                    ? root.action.axis2.label
+                    : "Not assigned"
+                isAssigned: root.action.axis2.isValid
+                onClicked: () => { root.action.axis2 = uiState.currentInput }
             }
         }
 
         SlotHeader {
             Layout.fillWidth: true
             label: "First axis actions"
-            actionNames: _root.action.compatibleActions
-            onActionRequested: (name) => { _root.action.appendAction(name, "first") }
+            actionNames: root.action.compatibleActions
+            onActionRequested: (name) => { root.action.appendAction(name, "first") }
         }
 
         ActionList {
             Layout.fillWidth: true
 
-            containerOwner: _root.action
+            containerOwner: root.action
             containerName: "first"
         }
 
         SlotHeader {
             Layout.fillWidth: true
             label: "Second axis actions"
-            actionNames: _root.action.compatibleActions
-            onActionRequested: (name) => { _root.action.appendAction(name, "second") }
+            actionNames: root.action.compatibleActions
+            onActionRequested: (name) => { root.action.appendAction(name, "second") }
         }
 
         ActionList {
             Layout.fillWidth: true
 
-            containerOwner: _root.action
+            containerOwner: root.action
             containerName: "second"
         }
     }

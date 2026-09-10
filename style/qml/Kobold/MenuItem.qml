@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
 T.MenuItem {
@@ -10,9 +11,8 @@ T.MenuItem {
 
     implicitHeight: Metrics.rowAction
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
-    // Menu's contentItem is a ListView -- it never stretches its delegates on its own, so
-    // without this every item falls back to its own label width and the hover/selection
-    // fill stops short of the popup's edge.
+    // Menu's contentItem is a ListView, so without this every item falls back to its
+    // own label width and the hover/selection.
     width: ListView.view ? ListView.view.width : implicitWidth
     spacing: Metrics.gapM
 
@@ -29,7 +29,6 @@ T.MenuItem {
         elide: Text.ElideRight
     }
 
-    // Checkable menu items: accent tick, never a filled box (R4) -- same rule as CheckBox.
     indicator: Item {
         visible: control.checkable
         implicitWidth: Metrics.icon

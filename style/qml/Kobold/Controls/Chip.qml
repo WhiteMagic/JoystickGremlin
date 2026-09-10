@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
+
 import Kobold.Foundation
 
-// A flat structure label (SPEC §9): full action names, no icons, no
-// abbreviations. `overflow` marks the trailing "+n" chip.
+// Small label rendered inside a tight box, used to show actions assigned to an input.
 Rectangle {
     id: root
 

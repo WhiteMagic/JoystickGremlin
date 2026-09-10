@@ -4,8 +4,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Expanding filler for a RowLayout or ColumnLayout, picking the fill
-// direction from the immediate parent so callers don't have to.
+// Expanding filler for a RowLayout or ColumnLayout, picking the fill direction
+// automatically from the immediate parent.
 Item {
     Layout.fillWidth: parent instanceof RowLayout
     Layout.fillHeight: parent instanceof ColumnLayout

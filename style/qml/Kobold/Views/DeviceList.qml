@@ -8,11 +8,10 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Profile
-
 import Kobold.Foundation
 
-// Render buttons for all input devices and the logical device as well as the
-// scripts and profile settings tabs.
+// Horizontal bar showing all available physical inputs as well as the logical device
+// and keyboard.
 Item {
     id: _root
 

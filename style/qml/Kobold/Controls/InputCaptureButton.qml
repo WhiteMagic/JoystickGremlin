@@ -1,49 +1,117 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import QtQml.StateMachine as DSM
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import QtQml.StateMachine as DSM
-
 import Gremlin.Util
 import Kobold.Foundation
 
-// Replaces qml/InputListener.qml's Compact.RecordButton (gone) with a plain Kobold
-// ToolButton, and its ad-hoc Popup body with the standard opaque bgAlt + 1px line
-// popup treatment (R2: no shadow). The InputListenerModel/state-machine logic
-// driving the actual capture is unchanged -- this is a reskin, not a rebuild.
-//
-// Two chrome variants share the same capture logic, same split AddActionMenuButton.qml
-// uses for its ghost/bordered pair: "ghost" (default) is the original small icon + plain
-// label, no chrome at rest; "bordered" is one obvious bordered push-button surface for
-// standalone CTAs (e.g. a list's trailing "Add Key" button).
-Item {
-    id: root
+// UI element triggering the recording of user inputs. Upon pressing of the button a
+// popup appears providing information and feedback. The two available stylings differ
+// in their background only:
+// - ghost: no chrome at rest, an edge on hover
+// - bordered: an ordinary button fill with a border
+ToolButton {
+    id: control
 
+    // Options used to configure the recording behavior.
     property alias eventTypes: _listener.eventTypes
     property alias multipleInputs: _listener.multipleInputs
-    property alias text: _label.text
     property var callback
+
+    // Style selection, "ghost" or "bordered". The background color of the button can
+    // also be configured.
     property string variant: "ghost"
-    // Bordered variant's own fill -- a caller on a bgAlt pane (e.g. KeyboardInputList) wants
-    // the button raised to bg instead of blending into it.
     property color fillColor: Theme.bgAlt
 
-    readonly property bool bordered: root.variant === "bordered"
+    readonly property bool bordered: variant === "bordered"
+    readonly property bool ghostActive: !bordered && (hovered || down)
 
-    implicitWidth: root.bordered ? _button.implicitWidth : _row.implicitWidth
+    text: "Record Inputs"
+
+    // Setting icon.name would collapse the style's implicitWidth to a square, the icon
+    // is part of the contentItem instead.
     implicitHeight: Metrics.controlHeight
+    implicitWidth: leftPadding + implicitContentWidth + rightPadding
 
+    // Adjust dimensions to allow icon and borders to be shown.
+    leftPadding: bordered ? Metrics.gapM : Metrics.gapS
+    rightPadding: bordered ? Metrics.gapM : Metrics.gapS
+    topPadding: 0
+    bottomPadding: 0
+
+    onClicked: { _popup.open() }
+
+    contentItem: RowLayout {
+        spacing: Metrics.gapM
+
+        Spacer {}
+
+        AppIcon {
+            Layout.alignment: Qt.AlignVCenter
+            name: "assign"
+            role: control.enabled ? "fg" : "fgDisabled"
+        }
+
+        Label {
+            id: _label
+
+            Layout.fillHeight: true
+            text: control.text
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+
+            ToolTip {
+                text: _label.text
+                width: Metrics.tooltipWidth(contentWidth)
+                visible: _hoverHandler.hovered
+                delay: 500
+            }
+
+            HoverHandler {
+                id: _hoverHandler
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            }
+        }
+
+        Spacer {}
+    }
+
+    // The only place the variant is read.
+    background: Rectangle {
+        radius: Metrics.radius
+        color: !control.bordered ? "transparent"
+             : !control.enabled  ? Theme.bgAlt
+             : control.down      ? Theme.bgSelected
+             : control.hovered   ? Theme.bgHover
+             :                     control.fillColor
+        border.width: Metrics.hairline
+        border.color: control.bordered || control.ghostActive ? Theme.line : "transparent"
+
+        Rectangle {
+            visible: control.visualFocus
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: parent.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.accent
+        }
+    }
+
+    // Model responsible to handle the actual user input capture.
     InputListenerModel {
         id: _listener
 
         onListeningTerminated: function(inputs) {
-            root.callback(inputs)
+            control.callback(inputs)
         }
     }
 
+    // State machine driving the recording and popup visibility.
     DSM.StateMachine {
         id: _stateMachine
 
@@ -83,105 +151,7 @@ Item {
         }
     }
 
-    RowLayout {
-        id: _row
-
-        visible: !root.bordered
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: Metrics.gapM
-
-        ToolButton {
-            icon.name: "assign"
-            onClicked: () => { _popup.open() }
-        }
-
-        Text {
-            id: _label
-
-            Layout.fillWidth: true
-            text: "Record Inputs"
-            color: Theme.fg
-            font.family: FontType.sans
-            font.pixelSize: Metrics.textBody
-            elide: Text.ElideRight
-
-            ToolTip {
-                text: _label.text
-                width: Metrics.tooltipWidth(contentWidth)
-                visible: _hoverHandler.hovered
-                delay: 500
-            }
-
-            HoverHandler {
-                id: _hoverHandler
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            }
-        }
-    }
-
-    // "bordered": whole surface is the click target, an ordinary bordered push-button
-    // (see Kobold/Button.qml) with the icon folded into its contentItem instead of split
-    // out as a separate icon-only ToolButton.
-    ToolButton {
-        id: _button
-
-        visible: root.bordered
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        text: root.text
-        onClicked: () => { _popup.open() }
-
-        // Item wrapper, not a bare RowLayout -- a RowLayout used directly as contentItem
-        // keeps its own top-left-packed natural size instead of being vertically centered
-        // by the control (see AddActionMenuButton.qml).
-        contentItem: Item {
-            implicitWidth: _buttonRow.implicitWidth
-            implicitHeight: Metrics.controlHeight
-
-            RowLayout {
-                id: _buttonRow
-
-                anchors.centerIn: parent
-                spacing: Metrics.gapM
-
-                AppIcon {
-                    name: "assign"
-                    role: _button.enabled ? "fg" : "fgDisabled"
-                }
-
-                Text {
-                    text: _button.text
-                    color: _button.enabled ? Theme.fg : Theme.fgDisabled
-                    font.family: FontType.sans
-                    font.pixelSize: Metrics.textBody
-                    elide: Text.ElideRight
-                }
-            }
-        }
-
-        background: Rectangle {
-            radius: Metrics.radius
-            color: !_button.enabled ? Theme.bgAlt
-                 : _button.down     ? Theme.bgSelected
-                 : _button.hovered  ? Theme.bgHover
-                 :                    root.fillColor
-            border.width: Metrics.hairline
-            border.color: Theme.line
-
-            Rectangle {
-                visible: _button.visualFocus
-                anchors.fill: parent
-                anchors.margins: -2
-                radius: parent.radius
-                color: "transparent"
-                border.width: 2
-                border.color: Theme.accent
-            }
-        }
-    }
-
+    // Popup that appears when user input recording is active.
     Popup {
         id: _popup
 

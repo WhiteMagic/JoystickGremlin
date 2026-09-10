@@ -1,24 +1,17 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+import Qt.labs.qmlmodels
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
 
 import Gremlin.Profile
 import Gremlin.Script
-
 import Kobold.Controls
 import Kobold.Foundation
 
-
-// Wrapper Item, not a bare ScrollList -- a ScrollList placed directly as a
-// SplitView child has its geometry driven by the SplitView itself, so
-// anchors.fill/leftMargin/topMargin on the list (the DeviceInputList.qml
-// pattern) need a plain Item parent to anchor against. ScriptManager.qml
-// sets `.model` on this component from the outside, hence the alias.
 Item {
     id: _root
 
@@ -238,8 +231,6 @@ Item {
 
                         ToolTip {
                             text: parent.currentText
-                            // Set an upper width of the tooltip to force word wrap
-                            // on long selection names.
                             width: Metrics.tooltipWidth(contentWidth)
                             visible: _hoverHandler.hovered
                             delay: 500
@@ -367,8 +358,6 @@ Item {
 
                 ToolTip {
                     id: _tooltip
-                    // Set an upper width of the tooltip to force word wrap on
-                    // long description texts.
                     width: Metrics.tooltipWidth(contentWidth)
                     visible: _hoverHandler.hovered
                     delay: 500

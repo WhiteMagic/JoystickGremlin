@@ -14,7 +14,6 @@ import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 import Kobold.Views
-
 import "helpers.js" as Helpers
 
 ApplicationWindow {
@@ -24,14 +23,15 @@ ApplicationWindow {
     minimumWidth: Metrics.dp(1300)
     minimumHeight: Metrics.dp(700)
     visible: true
+    color: Theme.bg
     id: _root
 
     Component.onCompleted: () => {
         _restoringGeometry = false
     }
 
-    // The single quit path, used by the File menu and the tray icon alike.
-    // Quitting never goes via close(), which the tray turns into a hide.
+    // The only application termination path, use by both standard UI interaction as
+    // well as the system tray.
     function quitGremlin() {
         if (backend.profileContainsUnsavedChanges) {
             _saveBeforeQuitDialog.open()
@@ -40,8 +40,7 @@ ApplicationWindow {
         }
     }
 
-    // Bigger icon/control size for the merged menu bar / toolbar strip (Metrics.toolbar, 34px) --
-    // every other ToolButton in the app keeps the shared default.
+    // Customize dimensions combined menu and toolbar.
     readonly property int _headerControlSize: Metrics.dp(28)
     readonly property int _headerIconSize: Metrics.dp(18)
 
@@ -49,8 +48,8 @@ ApplicationWindow {
         "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
         minimumWidth, minimumHeight
     )
-    // True until Component.onCompleted -- suppresses the save that would
-    // otherwise fire from the initial x/y/width/height binding evaluation.
+
+    // Prevent startup overwriting persisted geometry information.
     property bool _restoringGeometry: true
 
     x: _geom.x
@@ -58,13 +57,15 @@ ApplicationWindow {
     width: _geom.width
     height: _geom.height
 
+    // Persists window geometry after a short delay to save once changes stop.
     Timer {
         id: _geometrySaveTimer
         interval: 500
         repeat: false
-        // restart(), not start() -- a drag-resize fires many changes in a
-        // row and each one must push the save deadline out, not be ignored.
-        onTriggered: _geom.save(_root.x, _root.y, _root.width, _root.height)
+
+        onTriggered: () => {
+            _geom.save(_root.x, _root.y, _root.width, _root.height)
+        }
     }
 
     onXChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
@@ -118,6 +119,7 @@ ApplicationWindow {
 
     FileDialog {
         id: _saveProfileFileDialog
+
         title: "Please choose a file"
 
         property bool quitAfterSave: false
@@ -137,6 +139,7 @@ ApplicationWindow {
 
     FileDialog {
         id: _loadProfileFileDialog
+
         title: "Please choose a file"
 
         acceptLabel: "Open"
@@ -149,7 +152,7 @@ ApplicationWindow {
         }
     }
 
-    // Single merged menu bar / toolbar / mode selector strip.
+    // Single merged menu bar, toolbar, and mode selector.
     header: ToolBar {
         id: _toolbar
 
@@ -232,10 +235,6 @@ ApplicationWindow {
                             Helpers.createComponent("DialogManageModes.qml", _root)
                         }
                     }
-                    // MenuItem {
-                    //     text: qsTr("Input Repeater")
-                    //     //onTriggered: Helpers.createComponent(".qml")
-                    // }
                     MenuItem {
                         text: qsTr("Input Viewer")
                         onTriggered: () => {
@@ -274,12 +273,6 @@ ApplicationWindow {
                             Helpers.createComponent("DialogOptions.qml", _root)
                         }
                     }
-                    // MenuItem {
-                    //     text: qsTr("Log Display")
-                    //     onTriggered: () => {
-                    //         Helpers.createComponent("DialogLogDisplay.qml")
-                    //     }
-                    // }
                 }
 
                 // Help menu.
@@ -298,6 +291,8 @@ ApplicationWindow {
             Item {
                 Layout.preferredWidth: Metrics.gapL * 2
             }
+
+            // Toolbar section.
             ToolButton {
                 icon.name: "new_profile"
                 controlSize: _root._headerControlSize
@@ -376,6 +371,7 @@ ApplicationWindow {
 
             Spacer {}
 
+            // Mode selector drop down selection.
             Label {
                 Layout.rightMargin: Metrics.gapM
 
@@ -397,30 +393,11 @@ ApplicationWindow {
                 Component.onCompleted: () => {
                     currentIndex = find(uiState.currentMode)
                 }
-
-                // TODO: Complete this to have modes show hierarchy information
-                // delegate: ItemDelegate {
-                //     required property var model
-                //     required property int index
-                //     required property string name
-                //     required property int depth
-                //
-                //     width: _modeSelector.width
-                //     contentItem: JGText {
-                //         text: "  ".repeat(depth) + name
-                //
-                //         font: _modeSelector.font
-                //         elide: Text.ElideRight
-                //         verticalAlignment: Text.AlignVCenter
-                //     }
-                //     highlighted: _modeSelector.highlightedIndex === index
-                // }
             }
         }
     }
 
-    // Plain adjacency readout (SPEC §10): three facts side by side, no
-    // divergence warning/icon/tone -- Editing != Executing mode is routine.
+    // Footer showing status and the active as well as editing mode.
     footer: Rectangle {
         id: _footer
 
@@ -444,21 +421,18 @@ ApplicationWindow {
             Row {
                 spacing: Metrics.gapS
 
-                Text {
+                Label {
                     text: qsTr("Status:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: Helpers.selectText(
                             backend.gremlinActive, qsTr("Active"), qsTr("Not Running")
                         ) +
                         Helpers.selectText(
                             backend.gremlinActive & backend.gremlinPaused, qsTr(" (Paused)"), ""
                         )
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }
@@ -467,16 +441,13 @@ ApplicationWindow {
             Row {
                 spacing: Metrics.gapS
 
-                Text {
+                Label {
                     text: qsTr("Executing:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: backend.currentMode
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }
@@ -486,16 +457,13 @@ ApplicationWindow {
                 spacing: Metrics.gapS
                 Layout.fillWidth: true
 
-                Text {
+                Label {
                     text: qsTr("Editing:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: uiState.currentMode
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }
@@ -578,15 +546,11 @@ ApplicationWindow {
 
         Item {
             Layout.fillWidth: true
-            // Nested Layouts default fillHeight to true, which would let
-            // this row compete with the SplitView below for vertical
-            // space and get vertically centered in the leftover gap.
             Layout.fillHeight: false
+
             implicitHeight: _tabStripRow.implicitHeight
 
-            // Backs the whole strip in bgAlt so the scroll-affordance
-            // buttons (transparent at rest) blend with DeviceTabBar's own
-            // bgAlt fill instead of showing the window's bg through.
+            // Visually connect the input selection, device, and toolbar.
             Rectangle {
                 anchors.fill: parent
                 color: Theme.bgAlt
@@ -598,8 +562,6 @@ ApplicationWindow {
                 anchors.fill: parent
                 spacing: 0
 
-                // Only active while there are more devices to scroll to in that
-                // direction -- these are a scroll affordance, not a selector.
                 ToolButton {
                     icon.name: "tab_left"
                     Layout.fillHeight: true
@@ -630,19 +592,15 @@ ApplicationWindow {
                     onClicked: () => { _deviceList.nextTab() }
                 }
 
-                // Groups the device tabs from Scripts/Settings (SPEC \u00A710); grouping
-                // alone carries the meaning -- no greying, no icons on either side.
                 Rectangle {
                     Layout.preferredWidth: Metrics.hairline
                     Layout.fillHeight: true
-                    Layout.topMargin: Metrics.gapS
-                    Layout.bottomMargin: Metrics.gapS
-                    Layout.leftMargin: Metrics.gapM
-                    Layout.rightMargin: Metrics.gapM
+                    Layout.margins: Metrics.gapS
 
                     color: Theme.line
                 }
 
+                // Scripts and settings tabs.
                 DeviceTabBar {
                     Component.onCompleted: () => { _scriptButton.checked = false }
 
@@ -683,7 +641,7 @@ ApplicationWindow {
             }
         }
 
-        // Separates the device/Scripts/Settings tab row from the panels below.
+        // Separates the device seletion bar from the panels below.
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: Metrics.hairline
@@ -691,8 +649,8 @@ ApplicationWindow {
             color: Theme.line
         }
 
-        // Main UI which contains the active device's inputs on the left and
-        // actions assigned to the currently selected input on the right.
+        // Main UI which contains the active device's inputs on the left and actions
+        // assigned to the currently selected input on the right.
         SplitView {
             id: _splitView
 
@@ -703,7 +661,7 @@ ApplicationWindow {
             clip: true
             orientation: Qt.Horizontal
 
-            // List of the currently selected device's inputs.
+            // List currently selected joystick device inputs (left panel).
             DeviceInputList {
                 id: _deviceInputList
 
@@ -713,7 +671,7 @@ ApplicationWindow {
                 device: _deviceModel
             }
 
-            // List of logical device inputs.
+            // List logical device inputs (left panel).
             LogicalDevice {
                 id: _logicalDeviceList
 
@@ -726,6 +684,7 @@ ApplicationWindow {
                 }
             }
 
+            // List keyboard inputs (left panel).
             KeyboardInputList {
                 id: _keyboardInputList
 
@@ -733,9 +692,14 @@ ApplicationWindow {
                 SplitView.minimumWidth: Metrics.leftPaneMin
             }
 
-            // List of the actions associated with the currently selected input.
+            // List of the actions associated with the currently selected
+            // input (right panel).
             InputConfiguration {
                 id: _inputConfigurationPanel
+
+                SplitView.fillWidth: true
+                SplitView.fillHeight: true
+                SplitView.minimumWidth: Metrics.rightPaneMin
 
                 visible: !["scripts", "settings"].includes(uiState.currentTab)
 
@@ -745,10 +709,6 @@ ApplicationWindow {
                         uiState.currentInputIndex
                     )
                 }
-
-                SplitView.fillWidth: true
-                SplitView.fillHeight: true
-                SplitView.minimumWidth: Metrics.rightPaneMin
             }
         }
 

@@ -3,11 +3,9 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
-// Flagged spec deviation: the filled span between the two handles uses Theme.accent, which
-// isn't in SPEC §3's enumerated "accent's complete inventory" -- a necessary extension, since
-// there's no other way to show a *selected range* with only 11 tokens. Confirmed with the user.
 T.RangeSlider {
     id: control
 

@@ -3,11 +3,10 @@
 
 import QtQuick
 import QtQuick.Controls
+
 import Kobold.Foundation
 
-// Vertical list with pixel-based wheel scrolling. Named "ScrollList", never "ListView" --
-// a bare "ListView" defined in this module would be silently shadowed by QtQuick's own
-// ListView wherever a consumer also imports QtQuick.
+// Vertical list with pixel-based wheel scrolling to handle long lists consistently.
 ListView {
     id: _list
 
@@ -26,14 +25,9 @@ ListView {
     flickableDirection: Flickable.VerticalFlick
     boundsBehavior: Flickable.StopAtBounds
 
-    // Pixel wheel scroll, tunable via wheelStep -- replaces index-jump scrolling, which
-    // only worked for short, uniform-height rows and hard-errors on a delegate taller
-    // than the viewport (positionViewAtIndex has nothing to move to).
-    //
-    // angleDelta is scaled, not just signed: precision touchpads emit many small,
-    // fractional-of-120 events per second instead of one +-120 "notch" per click, and
-    // applying a full wheelStep to every one of those regardless of magnitude made fast
-    // scrolling massively overshoot and slam into the clamped bounds -- read as bouncing.
+    // Scroll events are converted into amount of pixels to move the underlying content.
+    // The amount scrolled is tunable via wheelStep. This overrides the default scroll
+    // behavior of the ListView as it is unsuitable for lists with many entries.
     WheelHandler {
         onWheel: (event) => {
             const delta = -(event.angleDelta.y / 120) * _list.wheelStep

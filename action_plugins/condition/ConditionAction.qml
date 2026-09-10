@@ -12,7 +12,6 @@ import Kobold.Composites
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -20,14 +19,16 @@ ColumnLayout {
 
     spacing: Metrics.gapM
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | Logical condition setup
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     RowLayout {
         Layout.fillWidth: true
         spacing: Metrics.gapM
 
-        Label { text: "When" }
+        Label {
+            text: "When"
+        }
 
         ComboBox {
             id: _logicalOperatorSelector
@@ -43,7 +44,9 @@ ColumnLayout {
             onActivated: { root.action.logicalOperator = currentValue }
         }
 
-        Label { text: "of the following conditions are met" }
+        Label {
+            text: "of the following conditions are met"
+        }
 
         Spacer {}
 
@@ -69,9 +72,9 @@ ColumnLayout {
         delegate: _conditionDelegate
     }
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | True actions
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     SlotHeader {
         Layout.fillWidth: true
 
@@ -88,9 +91,9 @@ ColumnLayout {
         containerName: "true"
     }
 
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     // | False actions
-    // +-------------------------------------------------------------------
+    // +--------------------------------------------------------------------------------
     SlotHeader {
         Layout.fillWidth: true
 
@@ -132,10 +135,9 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: Metrics.gapM
 
-            Text {
+            Label {
                 text: conditionName
                 color: Theme.fgMuted
-                font.family: FontType.sans
                 font.pixelSize: Metrics.textDetail
             }
 

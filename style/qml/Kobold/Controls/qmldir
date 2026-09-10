@@ -16,7 +16,6 @@ RowDropBand         RowDropBand.qml
 Chip                Chip.qml
 TreeIndent          TreeIndent.qml
 ActivationToggle    ActivationToggle.qml
-BetterProgressBar   BetterProgressBar.qml
 TextInputDialog     TextInputDialog.qml
 InputBehavior       InputBehavior.qml
 HatView             HatView.qml

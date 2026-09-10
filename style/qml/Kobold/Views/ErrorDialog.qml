@@ -50,13 +50,6 @@ Popup {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            // Fix scrollbar behavior.
-            ScrollBar.vertical.interactive: true
-            ScrollBar.horizontal.interactive: true
-            Component.onCompleted: () => {
-                contentItem.boundsMovement = Flickable.StopAtBounds
-            }
-
             TextArea {
                 text: root.detailedText
                 selectByMouse: true

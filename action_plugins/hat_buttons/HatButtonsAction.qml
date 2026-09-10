@@ -11,7 +11,6 @@ import Kobold.Composites
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -22,11 +21,8 @@ ColumnLayout {
     RowLayout {
         spacing: Metrics.gapM
 
-        Text {
+        Label {
             text: "Button mode"
-            color: Theme.fg
-            font.family: FontType.sans
-            font.pixelSize: Metrics.textBody
         }
 
         RadioButton {

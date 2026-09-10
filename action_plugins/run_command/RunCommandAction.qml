@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -26,7 +25,6 @@ ColumnLayout {
         Label {
             id: _executableLabel
 
-            // Aligns with _argumentsLabel below -- within this action only.
             Layout.preferredWidth: Math.max(_executableLabel.implicitWidth, _argumentsLabel.implicitWidth)
 
             text: "Executable"

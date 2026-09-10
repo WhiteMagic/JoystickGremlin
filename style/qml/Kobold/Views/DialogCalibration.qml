@@ -13,11 +13,10 @@ import Kobold.Foundation
 Window {
     id: _calibrationDialog
 
-    minimumWidth: Metrics.dp(850)
-    maximumWidth: Metrics.dp(850)
+    minimumWidth: Metrics.dp(700)
+    maximumWidth: Metrics.dp(700)
     minimumHeight: Metrics.dp(600)
 
-    // Local to this file -- CalibrationItem delegate layout, not a shared design concept.
     readonly property int rawLabelWidth:     Metrics.dp(75)
     readonly property int valueFieldWidth:   Metrics.dp(100)
     readonly property int progressBarHeight: Metrics.dp(30)
@@ -28,6 +27,7 @@ Window {
     title: "Calibration"
 
 
+    // Ensure selecting the activated input in the UI is correctly enabled and disabled.
     Connections {
         target: _calibrationDialog
 
@@ -56,9 +56,9 @@ Window {
         RowLayout {
             Layout.bottomMargin: Metrics.gapL
             Layout.topMargin: Metrics.gapL
+            Layout.rightMargin: Metrics.gapM
 
             Label {
-                Layout.preferredWidth: Metrics.dp(150)
                 text: "Device to calibrate"
             }
 
@@ -70,6 +70,8 @@ Window {
                 valueRole: "guid"
                 implicitContentWidthPolicy: ComboBox.WidestText
             }
+
+            Spacer {}
         }
 
         ScrollList {
@@ -93,7 +95,7 @@ Window {
 
     component CalibrationItem : ColumnLayout {
 
-        // Specify all properties we need from the model
+        // Specify all properties we need from the model.
         required property int index
         required property string identifier
         required property int calibratedValue
@@ -106,9 +108,10 @@ Window {
         required property bool unsavedChanges
         required property var model
 
-        // Display axis name and current raw value and axis type
+        // Header of an individual axis calibration item.
         RowLayout {
             Layout.rightMargin: Metrics.gapL
+            spacing: Metrics.gapM
 
             Label {
                 Layout.fillWidth: true
@@ -132,14 +135,10 @@ Window {
             }
 
             Label {
-                Layout.preferredWidth: _calibrationDialog.valueFieldWidth
-
                 text: "With center"
                 horizontalAlignment: Text.AlignRight
             }
             CheckBox {
-                Layout.preferredWidth: _calibrationDialog.valueFieldWidth
-
                 text: checked ? "Yes" : "No"
                 checked: model.withCenter
                 onToggled: {
@@ -148,16 +147,15 @@ Window {
             }
         }
 
-
+        // Live axis readout visually and numerically.
         RowLayout {
-
             Layout.rightMargin: Metrics.gapL
 
-            // Show live axis sliders and calibration values
+            // Show live axis sliders and calibration values.
             ColumnLayout {
                 Layout.fillWidth: true
 
-                BetterProgressBar {
+                ProgressBar {
                     id: _progressRaw
 
                     Layout.preferredHeight: _calibrationDialog.progressBarHeight
@@ -167,7 +165,8 @@ Window {
                     from: -32768
                     to: 32767
                 }
-                BetterProgressBar {
+
+                ProgressBar {
                     id: _progressCalibrated
 
                     Layout.preferredHeight: _calibrationDialog.progressBarHeight
@@ -178,11 +177,8 @@ Window {
                     to: 32767
                 }
 
-                Rectangle {
-                    Layout.fillHeight: true
-                }
+                Spacer {}
 
-                // Show calibration values
                 RowLayout {
                     CalibrationSpinBox {
                         id: _sbLow
@@ -193,8 +189,9 @@ Window {
 
                         onValueModified: model.low = Qt.binding(() => value)
                     }
-                    Spacer {
-                    }
+
+                    Spacer {}
+
                     CalibrationSpinBox {
                         id: _sbCLow
 
@@ -205,6 +202,7 @@ Window {
 
                         onValueModified: model.centerLow = Qt.binding(() => value)
                     }
+
                     CalibrationSpinBox {
                         id: _sbCHigh
 
@@ -215,8 +213,9 @@ Window {
 
                         onValueModified: model.centerHigh = Qt.binding(() => value)
                     }
-                    Spacer {
-                    }
+
+                    Spacer {}
+
                     CalibrationSpinBox {
                         id: _sbHigh
 
@@ -229,25 +228,26 @@ Window {
                 }
             }
 
-            // Buttons to control calibration
+            // Buttons to control calibration.
             ColumnLayout {
-                Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
+                Layout.minimumWidth: _calibrationDialog.buttonColumnWidth
+                Layout.maximumWidth: _calibrationDialog.buttonColumnWidth
                 Layout.alignment: Qt.AlignBottom
 
                 RowLayout {
-                    ToolButton {
+                    Button {
                         Layout.fillWidth: true
 
-                        icon.name: "reset"
+                        text: "Reset"
 
-                        onClicked: () => _axisView.model.reset(index)
+                        onClicked: () => { _axisView.model.reset(index) }
                     }
-                    ToolButton {
+                    Button {
                         Layout.fillWidth: true
 
                         icon.name: "save_profile"
 
-                        onClicked: () => _axisView.model.save(index)
+                        onClicked: () => { _axisView.model.save(index) }
 
                         Rectangle {
                             visible: unsavedChanges
@@ -264,7 +264,8 @@ Window {
                 Button {
                     id: _btnCenterCalibration
 
-                    Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
+                    Layout.fillWidth: true
+
                     text: "Calibrate center"
                     visible: model.withCenter
 
@@ -274,13 +275,16 @@ Window {
                         _btnExtremaCalibration.checked = false
                     }
                 }
+
                 Spacer {
                     visible: !model.withCenter
                 }
+
                 Button {
                     id: _btnExtremaCalibration
 
-                    Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
+                    Layout.fillWidth: true
+
                     text: "Calibrate extrema"
 
                     checkable: true
@@ -292,11 +296,7 @@ Window {
             }
         }
 
-        // Spacer at the bottom to leave some empty space below the ListView
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Metrics.gapM
-        }
+        Spacer {}
     }
 
     component CalibrationSpinBox : SpinBox {

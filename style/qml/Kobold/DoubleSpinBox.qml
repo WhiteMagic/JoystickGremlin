@@ -3,30 +3,22 @@
 
 import QtQuick
 import QtQuick.Templates as T
+
 import Kobold.Foundation
 
-// Native Qt 6.11 double-valued spin box (QtQuick.Templates/DoubleSpinBox) -- real
-// from/to/value/stepSize doubles plus a decimals property, no scaled-integer emulation
-// needed (that hack is what the old qml/FloatSpinBox.qml existed for).
 T.DoubleSpinBox {
     id: control
 
     implicitHeight: Metrics.controlHeight
     implicitWidth: Metrics.controlHeight * 4
 
-    // Every historical caller of the old FloatSpinBox needed typed entry, not just
-    // +/- stepping -- unlike the plain integer SpinBox.qml, editable is on by default.
     editable: true
+    wheelEnabled: true
 
-    // Inset the content item between the two indicators -- padding on the TextInput
-    // itself only insets its glyphs, not its hit region, which otherwise spans the full
-    // control width and swallows clicks meant for the indicator buttons underneath it.
     leftPadding: down.indicator ? down.indicator.width : 0
     rightPadding: up.indicator ? up.indicator.width : 0
 
-    wheelEnabled: true
-
-    // Fixed-width numeric readout (SPEC §5): mono, not sans.
+    // Fixed-width numeric readout.
     font.family: FontType.mono
     font.pixelSize: Metrics.textBody
 

@@ -38,7 +38,6 @@ Window {
         id: _tools
     }
 
-
     ColumnLayout {
         id: _content
 
@@ -101,17 +100,16 @@ Window {
                         anchors.rightMargin: Metrics.gapM
                         spacing: Metrics.gapM
 
-                        Text {
+                        Label {
                             Layout.fillWidth: true
 
                             text: _delegate.name
-                            color: Theme.fg
                             font: _physicalDeviceSelection.font
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Text {
+                        Label {
                             text: _delegate.guid
                             color: Theme.fgMuted
                             font.family: FontType.mono
@@ -121,7 +119,9 @@ Window {
                     }
 
                     background: Rectangle {
-                        color: _delegate.highlighted ? Theme.bgSelected : _delegate.hovered ? Theme.bgHover : "transparent"
+                        color: _delegate.highlighted
+                                ? Theme.bgSelected
+                                    : _delegate.hovered ? Theme.bgHover : "transparent"
                     }
                 }
             }
@@ -129,6 +129,16 @@ Window {
 
         RowLayout {
             Layout.topMargin: Metrics.gapM
+
+            Label {
+                id: _statusMessage
+
+                Layout.fillWidth: true
+                Layout.rightMargin: Metrics.gapM
+
+                text: "Select devices, then click the button."
+                horizontalAlignment: Text.AlignRight
+            }
 
             Button {
                 text: "Swap Bindings"
@@ -138,15 +148,6 @@ Window {
                         _physicalDeviceSelection.currentValue
                     )
                 }
-            }
-
-            Label {
-                id: _statusMessage
-
-                Layout.fillWidth: true
-                Layout.leftMargin: Metrics.gapM
-
-                text: "Select devices, then click the button."
             }
         }
     }
