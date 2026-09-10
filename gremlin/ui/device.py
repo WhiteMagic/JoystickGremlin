@@ -59,15 +59,9 @@ def _generate_action_sequence_descriptor(item: InputItem) -> str:
 def _collect_action_icons(action: AbstractActionData, icons: list[str]) -> None:
     icons.append(action.icon)
     if action.tag == "map-to-vjoy":
-        type_lookup = {
-            InputType.JoystickAxis: "A",
-            InputType.JoystickButton: "B",
-            InputType.JoystickHat: "H",
-            InputType.Invalid: "I",
-        }
         icons[-1] += (
             f",{action.vjoy_device_id},"
-            f"{type_lookup[action.vjoy_input_type]},"
+            f"{InputType.to_letter(action.vjoy_input_type)},"
             f"{action.vjoy_input_id}"
         )
     for selector in action._valid_selectors():
@@ -88,6 +82,22 @@ def _description_from_item(item: InputItem) -> str:
         return " / ".join(labels)
     else:
         return ""
+
+
+def _action_labels_from_item(item: InputItem) -> list[str]:
+    """Returns the labels of every bound action across all of the item's sequences.
+
+    A sequence's root is an invisible container (action_label always "Root") whose
+    children are the actually bound actions; an empty/unbound sequence has no
+    children and contributes nothing.
+    """
+    if not item:
+        return []
+    labels = []
+    for seq in item.action_sequences:
+        assert seq.root_action is not None
+        labels.extend(child.chip_label for child in seq.root_action.get_actions()[0])
+    return labels
 
 
 @ta.QmlElement
@@ -181,6 +191,7 @@ class InputIdentifier(QtCore.QObject):
 class DeviceListModel(QtCore.QAbstractListModel):
     """Model containing basic information about all connected devices."""
 
+    deviceTypeChanged = QtCore.Signal()
     selectedIndexChanged = QtCore.Signal()
 
     roles = {
@@ -268,7 +279,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
             self._devices = device_initialization.joystick_devices()
         self.endResetModel()
 
-    def _change_device_type(self, types: str) -> None:
+    def _set_device_type(self, types: str) -> None:
         """Sets which device types are going to be used.
 
         Valid options are:
@@ -283,16 +294,29 @@ class DeviceListModel(QtCore.QAbstractListModel):
         self._device_types = types
         self._reload_devices()
 
-    @QtCore.Property(int, notify=selectedIndexChanged)
-    def selectedIndex(self) -> int:
+    def _get_device_type(self) -> str:
+        return self._device_types
+
+    def _get_selected_index(self) -> int:
         return self._selected_index
 
-    @selectedIndex.setter
-    def selectedIndex(self, index: int) -> None:
+    def _set_selected_index(self, index: int) -> None:
         if 0 <= index < len(self._devices) and index != self._selected_index:
             self._selected_index = index
+            self.selectedIndexChanged.emit()
 
-    deviceType = QtCore.Property(str, fset=_change_device_type)
+    deviceType = QtCore.Property(
+        str,
+        fget=_get_device_type,
+        fset=_set_device_type,
+        notify=deviceTypeChanged,
+    )
+    selectedIndex = QtCore.Property(
+        int,
+        fget=_get_selected_index,
+        fset=_set_selected_index,
+        notify=selectedIndexChanged,
+    )
 
 
 @ta.QmlElement
@@ -309,6 +333,7 @@ class Device(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
     }
 
     deviceChanged = QtCore.Signal()
@@ -319,9 +344,13 @@ class Device(QtCore.QAbstractListModel):
         self._device: dill.DeviceSummary | None = None
         self._device_mapping: dict[str, str] | None = None
         self._mode: str = "Default"
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
 
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
+        signal.configChanged.connect(self._config_changed_cb)
 
     @QtCore.Slot(int)
     def refreshInput(self, index: int) -> None:
@@ -335,6 +364,16 @@ class Device(QtCore.QAbstractListModel):
     @QtCore.Slot(str)
     def setMode(self, mode: str) -> None:
         self._mode = mode
+        self._refresh_all_rows()
+
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self._refresh_all_rows()
+
+    def _refresh_all_rows(self) -> None:
         self.dataChanged.emit(
             self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
         )
@@ -372,7 +411,7 @@ class Device(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -397,6 +436,9 @@ class Device(QtCore.QAbstractListModel):
             case "description":
                 input_item = self._get_input_item(input_info)
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                input_item = self._get_input_item(input_info)
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -465,6 +507,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 7: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -472,10 +515,14 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
         self._logical = LogicalDevice()
         self._mode: str = "Default"
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
 
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
         signal.logicalDeviceModified.connect(self._full_refresh)
+        signal.configChanged.connect(self._config_changed_cb)
 
     @QtCore.Slot(str)
     def createInput(self, type_str: str) -> None:
@@ -513,9 +560,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     @QtCore.Slot(str)
     def setMode(self, mode: str) -> None:
         self._mode = mode
-        self.dataChanged.emit(
-            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
-        )
+        self._refresh_all_rows()
 
     @QtCore.Slot(int)
     def refreshInput(self, index: int) -> None:
@@ -530,6 +575,18 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         self.beginResetModel()
         self.endResetModel()
 
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self._refresh_all_rows()
+
+    def _refresh_all_rows(self) -> None:
+        self.dataChanged.emit(
+            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
+        )
+
     def _get_guid(self) -> str:
         return str(self._logical.device_guid)
 
@@ -542,7 +599,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -572,6 +629,8 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -606,6 +665,11 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
         return identifier
 
+    @QtCore.Slot(int, result=str)
+    def labelAt(self, index: int) -> str:
+        """Returns the label of the input at the given row index."""
+        return self._index_to_input(index).label
+
     def _name(self, identifier: tuple[InputType, int]) -> str:
         return f"{InputType.to_string(identifier[0]).capitalize()} {identifier[1]:d}"
 
@@ -635,7 +699,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    guid = QtCore.Property(str, fget=_get_guid)
+    guid = QtCore.Property(str, fget=_get_guid, constant=True)
 
 
 @ta.QmlElement
@@ -682,6 +746,9 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
+    def _get_valid_types(self) -> list[str]:
+        return [InputType.to_string(entry) for entry in self._valid_types]
+
     def _set_valid_types(self, valid_types: list[str]) -> None:
         type_list = sorted(
             [InputType.to_enum(entry) for entry in valid_types], key=lambda x: x.value
@@ -713,7 +780,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         if index != self._current_index:
             input = self._logical.inputs_of_type(self._valid_types)[index]
             self._current_identifier = InputIdentifier(
-                LogicalDevice().device_guid, input.type, input.id, parent=self
+                LogicalDevice.device_guid, input.type, input.id, parent=self
             )
             self._current_index = index
             self.selectionChanged.emit()
@@ -723,7 +790,9 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         self.beginResetModel()
         self.endResetModel()
 
-    validTypes = QtCore.Property(list, fset=_set_valid_types, notify=inputsChanged)
+    validTypes = QtCore.Property(
+        list, fget=_get_valid_types, fset=_set_valid_types, notify=inputsChanged
+    )
 
     currentIdentifier = QtCore.Property(
         InputIdentifier,
@@ -751,19 +820,33 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
+        signal.configChanged.connect(self._config_changed_cb)
 
     def _profile_changed_cb(self) -> None:
         self._profile = shared_state.current_profile
         self.beginResetModel()
         self.endResetModel()
+
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self.dataChanged.emit(
+            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
+        )
 
     def _event_to_key(self, event: event_handler.Event) -> keyboard.Key:
         return keyboard.key_from_code(*event.identifier)
@@ -819,7 +902,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -841,6 +924,8 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -1537,6 +1622,11 @@ class AxisCalibration(QtCore.QAbstractListModel):
             self._state[index]["withCenter"],
         )
 
+    def _get_guid(self) -> str:
+        if self._device is None:
+            return ""
+        return str(self._device.device_guid)
+
     def _set_guid(self, guid: str) -> None:
         if self._device is not None and guid == str(self._device.device_guid):
             return
@@ -1552,7 +1642,6 @@ class AxisCalibration(QtCore.QAbstractListModel):
         self._active_calibrations = []
         self._initialize_state()
         self.deviceChanged.emit()
-        self.modelReset.emit()
         self.endResetModel()
 
     def _initialize_state(self) -> None:
@@ -1644,7 +1733,7 @@ class AxisCalibration(QtCore.QAbstractListModel):
             # Signal that the model has changed for a UI update
             self.emit_update(index)
 
-    guid = QtCore.Property(str, fset=_set_guid, notify=deviceChanged)
+    guid = QtCore.Property(str, fget=_get_guid, fset=_set_guid, notify=deviceChanged)
 
 
 Configuration().register(
@@ -1663,8 +1752,8 @@ Configuration().register(
     "general",
     "action-sequence-information",
     PropertyType.Selection,
-    "Full",
+    "Chips",
     "Defines how action sequences associated with inputs are displayed.",
-    {"valid_options": ["Full", "Count"]},
+    {"valid_options": ["Chips", "Count"]},
     True,
 )

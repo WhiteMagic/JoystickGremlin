@@ -4,25 +4,18 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import QtQuick.Controls.Universal
 import QtQuick.Shapes
-import Qt.labs.qmlmodels
-
-import QtCharts
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Foundation
+import Kobold.Controls
 
 import "render_helpers.js" as RH
 
 
 Item {
-    id: _root
+    id: root
 
     property ResponseCurveModel action
     property Deadzone deadzone: action.deadzone
@@ -63,7 +56,7 @@ Item {
         let new_x = RH.clamp(map2x(cp_handle.x, evt.x), -1.0, 1.0)
         let new_y = RH.clamp(map2y(cp_handle.y, evt.y ), -1.0, 1.0)
 
-        // Ensure the points at either end cannot be moved away from the edge
+        // Ensure the points at either end cannot be moved away from the edge.
         if (index === 0) {
             new_x = -1.0
         }
@@ -71,15 +64,14 @@ Item {
             new_x = 1.0
         }
 
-        // In symmetry mode moving the center point, if there is one is
-        // not allowed
-        if (_root.action.isSymmetric && _repeater.count % 2 !== 0 &&
+        // In symmetry mode moving the center point, if there is one is not allowed.
+        if (root.action.isSymmetric && _repeater.count % 2 !== 0 &&
             index * 2 + 1 === _repeater.count)
         {
             return null
         }
 
-        // Prevent moving control point past neighoring ones
+        // Prevent moving control point past neighoring ones.
         let new_u = RH.clamp(map2u(new_x), -handleOffset, _vis.size + handleOffset)
         let new_v = RH.clamp(map2v(new_y), -handleOffset, _vis.size + handleOffset)
 
@@ -94,22 +86,21 @@ Item {
             new_x = map2x(cp_handle.x, null)
         }
 
-        // Move the actual marker
+        // Move the actual marker.
         cp_handle.x = new_u
         cp_handle.y = new_v
 
-        // Handle symmetry mode, no need to update model as
-        // the code does this behind the scenes with the
-        // model update below
-        if (_root.action.isSymmetric) {
+        // Handle symmetry mode, no need to update model as the code does this behind
+        // the scenes with the model update below.
+        if (root.action.isSymmetric) {
             let mirror = _repeater.itemAt(_repeater.count - index - 1).item
             mirror.x = map2u(-new_x, null)
             mirror.y = map2v(-new_y, null)
 
         }
 
-        // Return the computed new [x, y] coordinates in [-1, 1] to use on the
-        // model side of things
+        // Return the computed new [x, y] coordinates in [-1, 1] to use on the model
+        // side of things.
         return [new_x, new_y]
     }
 
@@ -119,9 +110,16 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        // Various controls to configure curve editing
+        spacing: Metrics.gapM
+
+        // Curve editing controls.
         RowLayout {
             Layout.fillWidth: true
+            spacing: Metrics.gapM
+
+            Label {
+                text: "Curve type"
+            }
 
             ComboBox {
                 Layout.preferredWidth: 200
@@ -129,29 +127,30 @@ Item {
                 model: ["Piecewise Linear", "Cubic Spline", "Cubic Bezier Spline"]
 
                 Component.onCompleted: () => {
-                    currentIndex = find(_root.action.curveType)
+                    currentIndex = find(root.action.curveType)
                 }
-                onActivated: () => { _root.action.curveType = currentText }
+                onActivated: () => { root.action.curveType = currentText }
             }
 
             Button {
                 text: "Invert Curve"
 
-                onClicked: () => { _root.action.invertCurve() }
+                onClicked: () => { root.action.invertCurve() }
             }
 
             CheckBox {
                 text: "Symmetric"
 
-                checked: _root.action.isSymmetric
+                checked: root.action.isSymmetric
 
-                onToggled: () => { _root.action.isSymmetric = checked }
+                onToggled: () => { root.action.isSymmetric = checked }
             }
         }
 
-        // Response curve widget
+        // Response curve widget.
         RowLayout {
             Layout.preferredWidth: 475
+            spacing: Metrics.gapL
 
             Item {
                 id: _vis
@@ -170,12 +169,12 @@ Item {
                     height: _vis.size
                     x: _vis.border
                     y: _vis.border
-                    source: Style.isDarkMode ? "grid_dark.svg" : "grid.svg"
+                    source: Theme.appearance === "dark" ? "grid_dark.svg" : "grid.svg"
 
                     Rectangle {
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: Style.foreground
+                        border.color: Theme.line
                         border.width: 1
                     }
                 }
@@ -192,7 +191,7 @@ Item {
                     preferredRendererType: Shape.CurveRenderer
 
                     ShapePath {
-                        strokeColor: "#808080"
+                        strokeColor: Theme.line
 
                         strokeWidth: 2
                         fillColor: "transparent"
@@ -221,8 +220,8 @@ Item {
                     model: action.controlPoints
 
                     delegate: Component {
-                        // Pick the correct control visualization to load and pass
-                        // the repeater reference in.
+                        // Pick the correct control visualization to load and pass the
+                        // repeater reference in.
                         Loader {
                             Component.onCompleted: () => {
                                 let url = modelData.hasHandles ? "HandleControl.qml" : "PointControl.qml"
@@ -241,6 +240,8 @@ Item {
 
             GridLayout {
                 columns: 2
+                columnSpacing: Metrics.gapM
+                rowSpacing: Metrics.gapS
 
                 Label {
                     Layout.preferredWidth: 30
@@ -248,17 +249,17 @@ Item {
                     text: "X"
                 }
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     id: _coordX
 
-                    minValue: -1.0
-                    maxValue: 1.0
+                    from: -1.0
+                    to: 1.0
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: _root.action.selectedPointCoord.x
+                    decimals: Metrics.preciseDecimalPlaces
+                    value: root.action.selectedPointCoord.x
 
                     onValueModified: (newValue) => {
-                        _root.action.updateSelectedPoint(newValue, _coordY.value)
+                        root.action.updateSelectedPoint(newValue, _coordY.value)
                     }
                 }
 
@@ -266,26 +267,17 @@ Item {
                     text: "Y"
                 }
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     id: _coordY
 
-                    minValue: -1.0
-                    maxValue: 1.0
+                    from: -1.0
+                    to: 1.0
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: _root.action.selectedPointCoord.y
+                    decimals: Metrics.preciseDecimalPlaces
+                    value: root.action.selectedPointCoord.y
 
                     onValueModified: (newValue) => {
-                        _root.action.updateSelectedPoint(_coordX.value, newValue)
-                    }
-                }
-
-                Connections {
-                    target: _root.action
-
-                    function onSelectedPointChanged() {
-                        _coordX.value = _root.action.selectedPointCoord.x
-                        _coordY.value = _root.action.selectedPointCoord.y
+                        root.action.updateSelectedPoint(_coordX.value, newValue)
                     }
                 }
             }
@@ -296,8 +288,10 @@ Item {
         }
 
         RowLayout {
+            spacing: Metrics.gapL
+
             // Lower half axis.
-            NumericalRangeSlider {
+            NumericRangeSlider {
                 id: _lowerDeadzone
 
                 from: -1.0
@@ -305,14 +299,14 @@ Item {
                 firstValue: deadzone.low
                 secondValue: deadzone.centerLow
                 stepSize: 0.05
-                decimals: 3
+                decimals: Metrics.preciseDecimalPlaces
 
-                onFirstValueChanged: () => { deadzone.low = firstValue }
-                onSecondValueChanged: () => { deadzone.centerLow = secondValue }
+                onFirstValueEdited: (value) => { deadzone.low = value }
+                onSecondValueEdited: (value) => { deadzone.centerLow = value }
             }
 
             // Upper half axis.
-            NumericalRangeSlider {
+            NumericRangeSlider {
                 id: _upperDeadzone
 
                 from: 0.0
@@ -320,10 +314,10 @@ Item {
                 firstValue: deadzone.centerHigh
                 secondValue: deadzone.high
                 stepSize: 0.05
-                decimals: 3
+                decimals: Metrics.preciseDecimalPlaces
 
-                onFirstValueChanged: () => { deadzone.centerHigh = firstValue }
-                onSecondValueChanged: () => { deadzone.high = secondValue }
+                onFirstValueEdited: (value) => { deadzone.centerHigh = value }
+                onSecondValueEdited: (value) => { deadzone.high = value }
             }
         }
     }

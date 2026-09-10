@@ -3,11 +3,11 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Shapes
 
-import Gremlin.Style
+import Kobold.Foundation
 import "render_helpers.js" as RH
+
 
 Rectangle {
     id: _control
@@ -23,7 +23,7 @@ Rectangle {
     height: offset * 2
     radius: offset
 
-    color: action.selectedPoint === index ? Style.accent : Style.medColor
+    color: action.selectedPoint === index ? Theme.accent : Theme.line
 
     function updateHandle(handle, evt, side) {
         // Compute new data values.
@@ -67,7 +67,7 @@ Rectangle {
 
         // Left control handle line.
         ShapePath {
-            strokeColor: modelData.hasLeft ? "#808080" : "transparent"
+            strokeColor: modelData.hasLeft ? Theme.line : "transparent"
 
             startX: offset
             startY: offset
@@ -80,7 +80,7 @@ Rectangle {
 
         // Right control handle line.
         ShapePath {
-            strokeColor: modelData.hasRight ? "#808080" : "transparent"
+            strokeColor: modelData.hasRight ? Theme.line : "transparent"
 
             startX: offset
             startY: offset
@@ -97,14 +97,14 @@ Rectangle {
 
             visible: modelData.hasLeft
 
-            x: ((modelData.handleLeft.x - modelData.center.x) / 2.0) * _vis.size
-            y: -((modelData.handleLeft.y - modelData.center.y) / 2.0) * _vis.size
+            x: modelData.hasLeft ? ((modelData.handleLeft.x - modelData.center.x) / 2.0) * _vis.size : 0
+            y: modelData.hasLeft ? -((modelData.handleLeft.y - modelData.center.y) / 2.0) * _vis.size : 0
 
             width: offset * 2
             height: offset * 2
 
-            color: Style.background
-            border.color: action.selectedPoint === index ? Style.accent : Style.medColor
+            color: Theme.bg
+            border.color: action.selectedPoint === index ? Theme.accent : Theme.line
             border.width: 2
 
             MouseArea {
@@ -134,8 +134,8 @@ Rectangle {
             width: offset * 2
             height: offset * 2
 
-            color: Style.background
-            border.color: action.selectedPoint === index ? Style.accent : Style.medColor
+            color: Theme.bg
+            border.color: action.selectedPoint === index ? Theme.accent : Theme.line
             border.width: 2
 
             MouseArea {

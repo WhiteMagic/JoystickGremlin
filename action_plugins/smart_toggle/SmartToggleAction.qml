@@ -1,66 +1,54 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import QtQuick.Controls.Universal
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Composites
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+ColumnLayout {
+    id: root
 
-    property SmartToggleModel action
+    required property SmartToggleModel action
 
-    implicitHeight: _content.height
+    spacing: Metrics.gapM
 
-    // Show all child nodes
-    ColumnLayout {
-        id: _content
+    RowLayout {
+        spacing: Metrics.gapM
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        RowLayout {
-            Label {
-                text: "Toggle delay"
-            }
-            FloatSpinBox {
-                minValue: 0
-                maxValue: 100
-                value: _root.action.delay
-                stepSize: 0.05
-
-                onValueModified: (newValue) => {
-                    _root.action.delay = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "children"); }
-            }
+        Label {
+            text: "Toggle delay (sec)"
         }
 
-        Repeater {
-            model: _root.action.getActions("children")
+        DoubleSpinBox {
+            from: 0
+            to: 100
+            stepSize: 0.05
+            decimals: Metrics.defaultDecimalPlaces
+            value: root.action.delay
 
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "children"
-
-                Layout.fillWidth: true
-            }
+            onValueModified: { root.action.delay = value }
         }
+    }
+
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Actions"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "children") }
+    }
+
+    ActionList {
+        Layout.fillWidth: true
+
+        containerOwner: root.action
+        containerName: "children"
     }
 }

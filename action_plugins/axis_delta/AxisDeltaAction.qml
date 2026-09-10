@@ -3,140 +3,74 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Composites
+import Kobold.Foundation
 
-Item {
-    id: _root
 
-    property AxisDeltaModel action
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property AxisDeltaModel action
 
-    ColumnLayout {
-        id: _content
+    spacing: Metrics.gapM
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    RowLayout {
+        spacing: Metrics.gapM
 
-        // +-------------------------------------------------------------------
-        // | Threshold configuration
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Change threshold"
-            }
-
-            FloatSpinBox {
-                minValue: 0.0001
-                maxValue: 2.0
-                stepSize: 0.05
-                decimals: Style.decimalsPrecise
-                value: _root.action.changeThreshold
-
-                onValueModified: (newValue) => {
-                    _root.action.changeThreshold = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
+        Label {
+            text: "Change threshold"
         }
 
-        // +-------------------------------------------------------------------
-        // | Positive change actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Positive change"
-            }
+        DoubleSpinBox {
+            from: 0.0001
+            to: 2.0
+            stepSize: 0.05
+            decimals: Metrics.preciseDecimalPlaces
+            value: root.action.changeThreshold
 
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "positive"); }
-            }
-        }
-
-        HorizontalDivider {
-            id: _positiveDivider
-
-            Layout.fillWidth: true
-
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
-        }
-
-        Repeater {
-            model: _root.action.getActions("positive")
-
-            delegate: ActionNode {
-                Layout.fillWidth: true
-
-                action: modelData
-                parentAction: _root.action
-                containerName: "positive"
-            }
-        }
-
-        // +-------------------------------------------------------------------
-        // | Negative change actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Negative change"
-            }
-
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "negative"); }
-            }
-        }
-
-        HorizontalDivider {
-            id: _negativeDivider
-
-            Layout.fillWidth: true
-
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
-        }
-
-        Repeater {
-            model: _root.action.getActions("negative")
-
-            delegate: ActionNode {
-                Layout.fillWidth: true
-
-                action: modelData
-                parentAction: _root.action
-                containerName: "negative"
-            }
+            onValueModified: { root.action.changeThreshold = value }
         }
     }
 
-    ActionDragDropArea {
-        target: _positiveDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "positive");
-        }
+    // +--------------------------------------------------------------------------------
+    // | Positive change actions
+    // +--------------------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Positive change"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "positive") }
     }
 
-    ActionDragDropArea {
-        target: _negativeDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "negative");
-        }
+    ActionList {
+        Layout.fillWidth: true
+
+        containerOwner: root.action
+        containerName: "positive"
+    }
+
+    // +--------------------------------------------------------------------------------
+    // | Negative change actions
+    // +--------------------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Negative change"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "negative") }
+    }
+
+    ActionList {
+        Layout.fillWidth: true
+
+        containerOwner: root.action
+        containerName: "negative"
     }
 }

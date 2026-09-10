@@ -3,85 +3,72 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    id: _root
 
-    property RunCommandModel action
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property RunCommandModel action
 
-    ColumnLayout {
-        id: _content
+    spacing: Metrics.gapS
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Metrics.gapM
 
-        RowLayout {
-            Layout.fillWidth: true
+        Label {
+            id: _executableLabel
 
-            Label {
-                Layout.preferredWidth: 110
+            Layout.preferredWidth: Math.max(_executableLabel.implicitWidth, _argumentsLabel.implicitWidth)
 
-                text: "Executable"
-            }
-
-            JGTextField {
-                id: _executable
-
-                Layout.fillWidth: true
-
-                text: null !== _root.action ? _root.action.executable : ""
-                placeholderText: null !== _root.action
-                    ? "Path to the program to run."
-                    : null
-
-                selectByMouse: true
-
-                onTextChanged: () => {
-                    if (null !== _root.action && _root.action.executable !== text) {
-                        _root.action.executable = text
-                    }
-                }
-            }
-
-            Button {
-                text: "Select File"
-
-                onClicked: () => { _fileDialog.open() }
-            }
+            text: "Executable"
         }
 
-        RowLayout {
+        TextField {
+            id: _executable
+
             Layout.fillWidth: true
 
-            Label {
-                Layout.preferredWidth: 110
+            text: root.action.executable
+            placeholderText: "Path to the program to run"
+            selectByMouse: true
 
-                text: "Arguments"
-            }
+            onTextChanged: { root.action.executable = text }
+        }
 
-            JGTextField {
-                Layout.fillWidth: true
+        Button {
+            text: "Select file"
 
-                text: null !== _root.action ? _root.action.arguments : ""
-                placeholderText: "Arguments split on spaces; quote values containing spaces."
+            onClicked: { _fileDialog.open() }
+        }
+    }
 
-                selectByMouse: true
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Metrics.gapM
 
-                onTextChanged: () => {
-                    if (null !== _root.action && _root.action.arguments !== text) {
-                        _root.action.arguments = text
-                    }
-                }
-            }
+        Label {
+            id: _argumentsLabel
+
+            Layout.preferredWidth: Math.max(_executableLabel.implicitWidth, _argumentsLabel.implicitWidth)
+
+            text: "Arguments"
+        }
+
+        TextField {
+            Layout.fillWidth: true
+
+            text: root.action.arguments
+            placeholderText: "Arguments split on spaces; quote values containing spaces"
+            selectByMouse: true
+
+            onTextChanged: { root.action.arguments = text }
         }
     }
 
@@ -89,9 +76,9 @@ Item {
         id: _fileDialog
 
         nameFilters: ["Executables (*.exe *.bat *.cmd)", "All files (*)"]
-        title: "Select an Executable"
+        title: "Select an executable"
 
-        onAccepted: () => {
+        onAccepted: {
             _executable.text = selectedFile.toString().substring("file:///".length)
         }
     }

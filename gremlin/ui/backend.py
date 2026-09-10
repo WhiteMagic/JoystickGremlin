@@ -41,6 +41,7 @@ from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
 from gremlin.ui.util import to_local_path
+from gremlin.ui.window_geometry import WindowGeometry
 
 QML_IMPORT_NAME = "Gremlin.UI"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -58,7 +59,6 @@ class UIState(QtCore.QObject):
     inputChanged = QtCore.Signal()
     modeChanged = QtCore.Signal()
     tabChanged = QtCore.Signal()
-    themeRevisionChanged = QtCore.Signal()
     selectIndex = QtCore.Signal(int)
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -68,7 +68,6 @@ class UIState(QtCore.QObject):
         self._current_input = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
-        self._theme_revision = 0
 
         event_handler.EventListener().device_change_event.connect(self._device_change)
         signal.profileChanged.connect(self._device_change)
@@ -120,11 +119,6 @@ class UIState(QtCore.QObject):
             self._current_tab = tab
             self.tabChanged.emit()
 
-    @QtCore.Slot()
-    def bumpThemeRevision(self) -> None:
-        self._theme_revision += 1
-        self.themeRevisionChanged.emit()
-
     @QtCore.Property(str, notify=deviceChanged)
     def currentDevice(self) -> str:
         return str(self._current_device).upper()
@@ -144,15 +138,6 @@ class UIState(QtCore.QObject):
     @QtCore.Property(str, notify=tabChanged)
     def currentTab(self) -> str:
         return self._current_tab
-
-    @QtCore.Property(int, notify=themeRevisionChanged)
-    def themeRevision(self) -> int:
-        """Counter bumped whenever the theme colours change.
-
-        Image sources that bake in a theme colour append it so a theme change
-        alters the URL and the image is re-requested in the new colour.
-        """
-        return self._theme_revision
 
     def __str__(self) -> str:
         cur_input = self._current_input.get(
@@ -187,13 +172,14 @@ class Backend(QtCore.QObject):
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self._last_error = ""
-        self._action_state = {}
         self.runner = code_runner.CodeRunner()
         self.ui_state = UIState(self)
         self.process_monitor = process_monitor.ProcessMonitor()
         self.process_monitor.start()
 
         self.joystick_change_monitor = device_helpers.JoystickInputSignificant()
+
+        self._current_input_item_model: InputItemModel | None = None
 
         # Hookup various mode change related callbacks
         mm = mode_manager.ModeManager()
@@ -435,7 +421,12 @@ class Backend(QtCore.QObject):
                 self.ui_state.currentMode,
                 True,
             )
-            return InputItemModel(item, enumeration_index, self)
+            if self._current_input_item_model is not None:
+                self._current_input_item_model.dispose()
+                self._current_input_item_model.deleteLater()
+            model = InputItemModel(item, enumeration_index, self)
+            self._current_input_item_model = model
+            return model
         except error.ProfileError:
             pass
 
@@ -447,38 +438,30 @@ class Backend(QtCore.QObject):
     def resumeInputHighlighting(self) -> None:
         shared_state.set_suspend_input_highlighting(False)
 
-    @QtCore.Slot(str, int, result=bool)
-    def isActionExpanded(self, uuid_str: str, index: int) -> bool:
-        """Returns whether or not a specific action is expanded in the UI.
+    @QtCore.Slot(str, int, int, int, int, result=WindowGeometry)
+    def windowGeometry(
+        self,
+        name: str,
+        defaultWidth: int,
+        defaultHeight: int,
+        minWidth: int,
+        minHeight: int,
+    ) -> WindowGeometry:
+        """Returns the persisted (or defaulted) geometry for a window.
 
         Args:
-            uuid: uuid of the action
-            index: index of the particular action
+            name: config entry name, e.g. "main-window-geometry"
+            defaultWidth: width to fall back to if nothing was persisted
+            defaultHeight: height to fall back to if nothing was persisted
+            minWidth: minimum width the window accepts, used for validation
+            minHeight: minimum height the window accepts, used for validation
 
         Returns:
-            True if the action is expanded, False otherwise
+            A WindowGeometry object exposing x/y/width/height and a save() slot.
         """
-        return self._action_state.get((uuid.UUID(uuid_str), index), True)
-
-    @QtCore.Slot(str, int, bool)
-    def setIsActionExpanded(self, uuid_str: str, index: int, is_expanded: bool) -> None:
-        """Sets a specific action's expanded state.
-
-        Args:
-            uuid: uuid of the action
-            index: index of the particular action
-            is_expanded: True if the action is expanded, False otherwise
-        """
-        self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
-
-    @QtCore.Property(bool, notify=propertyChanged)
-    def useDarkMode(self) -> bool:
-        """Returns whether or not dark mode is enabled.
-
-        Returns:
-            True if dark mode is enabled, False otherwise
-        """
-        return self.config.value("global", "general", "dark-mode")
+        return WindowGeometry(
+            self.config, name, defaultWidth, defaultHeight, minWidth, minHeight, self
+        )
 
     @QtCore.Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> list[str]:

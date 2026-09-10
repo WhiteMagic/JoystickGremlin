@@ -286,6 +286,10 @@ class InputItemBindingModel(QtCore.QObject):
     rootActionChanged = QtCore.Signal()
     inputTypeChanged = QtCore.Signal()
     userFeedbackChanged = QtCore.Signal()
+    # Carries the AbstractActionData whose expansion state changed. The same action can
+    # sit at several places in one tree, and every model holding that instance has to
+    # update in the same event, so the change is broadcast rather than emitted locally.
+    expansionChanged = QtCore.Signal(object)
 
     def __init__(
         self,
@@ -307,6 +311,15 @@ class InputItemBindingModel(QtCore.QObject):
         self._child_lookup = {}
         self._container_index_lookup = {}
         self._create_action_models()
+
+    def dispose(self) -> None:
+        """Disconnects from global signals and disposes all action models."""
+        try:
+            signal.inputItemChanged.disconnect(self._check_user_feedback)
+        except RuntimeError:
+            pass
+        for model in self._action_models.values():
+            model.dispose()
 
     def _create_action_models(self) -> None:
         # Disconnect stale models so they stop reacting to behaviorChanged
@@ -369,6 +382,21 @@ class InputItemBindingModel(QtCore.QObject):
             index = self._index_lookup[index]
         return self._child_lookup.get((index.index, container), [])
 
+    def has_child_actions(self, index: SequenceIndex | int) -> bool:
+        """Returns whether the given action has children in any of its containers.
+
+        Generic across container-naming schemes ("children", "true"/"false", ...) since
+        it inspects `_child_lookup` directly rather than needing to know a specific
+        plugin's container names.
+        """
+        if isinstance(index, int):
+            index = self._index_lookup[index]
+        return any(
+            actions
+            for (parent_index, _container), actions in self._child_lookup.items()
+            if parent_index == index.index
+        )
+
     def get_action_model_by_sidx(self, sidx: int) -> ActionModel:
         if sidx not in self._index_lookup:
             raise GremlinError(f"No action with sequence index {sidx} exists")
@@ -402,58 +430,113 @@ class InputItemBindingModel(QtCore.QObject):
             raise GremlinError(f"No action with provided index: {index}")
         return self._action_models[self._index_lookup[index]]._data
 
-    def move_action(
-        self, source_idx: int, target_idx: int, container: str | None = None
-    ) -> None:
-        """Moves the source action to the spot after the target action.
+    def _is_descendant_of(
+        self, candidate: SequenceIndex, ancestor: SequenceIndex
+    ) -> bool:
+        """Returns whether candidate is the ancestor itself or in its subtree.
 
-        If a container name is given then the source action will be appended to
-        the container with the given name of the target action.
+        Args:
+            candidate: sequence index of the action to look for
+            ancestor: sequence index of the action whose subtree is searched
+
+        Returns:
+            True if candidate is ancestor or one of its descendants, False
+            otherwise
+        """
+        pending = [ancestor.index]
+        while pending:
+            current = pending.pop()
+            if current == candidate.index:
+                return True
+            for (parent_index, _container), models in self._child_lookup.items():
+                if parent_index == current:
+                    pending.extend(model.sequence_index.index for model in models)
+        return False
+
+    def can_move_action(self, source_idx: int, target_idx: int) -> bool:
+        """Returns whether the source action may be moved onto the target action.
 
         Args:
             source_idx: sequence index of the action to move
-            target_idx: sequence index of the action after which to place the
-                moved action
-            container: name of the container to insert the action into
+            target_idx: sequence index of the action to move onto
+
+        Returns:
+            False if the target is the source itself or inside the source's own
+            subtree, or if either index is unknown, True otherwise
         """
-        s_model = self.get_action_model_by_sidx(source_idx)
-        t_model = self.get_action_model_by_sidx(target_idx)
-
-        s_parent_identifier = (
-            s_model.sequence_index.parent_index,
-            s_model.sequence_index.container_name,
-        )
-        t_parent_identifier = (
-            t_model.sequence_index.parent_index,
-            t_model.sequence_index.container_name,
+        try:
+            source_model = self.get_action_model_by_sidx(source_idx)
+            target_model = self.get_action_model_by_sidx(target_idx)
+        except GremlinError:
+            return False
+        return not self._is_descendant_of(
+            target_model.sequence_index, source_model.sequence_index
         )
 
-        if container is not None:
-            self.remove_action(s_model.sequence_index, False)
-            self.append_action(s_model.action_data, t_model.sequence_index, container)
-        else:
-            # If source and target are in the same container special care has to
-            # be taken to ensure removal and insertion happen in a valid order
-            move_performed = False
-            if s_parent_identifier == t_parent_identifier:
-                # Determine container indices of the source and target actions
-                s_lid = self.get_action_container_index(s_model.sequence_index)
-                t_lid = self.get_action_container_index(t_model.sequence_index)
+    def move_action(
+        self, source_idx: int, parent_idx: int, container: str, position: int
+    ) -> None:
+        """Moves the source action to a boundary within the target container.
 
-                # Perform the action that affects a change in the rear part
-                # of the container
-                if s_lid < t_lid:
-                    move_performed = True
-                    self.append_action(s_model.action_data, t_model.sequence_index)
-                    self.remove_action(s_model.sequence_index, False)
+        The position is a boundary index into the container as it stands before
+        the move: position 0 places the action above the container's current
+        first entry, position len(container) appends it.
 
-            # This is the default case if the source and target actions are part
-            # of different parent actions or containers. Also, if the source
-            # action is after the target action, performing the removal first
-            # is safe.
-            if not move_performed:
-                self.remove_action(s_model.sequence_index, False)
-                self.append_action(s_model.action_data, t_model.sequence_index)
+        Args:
+            source_idx: sequence index of the action to move
+            parent_idx: sequence index of the action owning the target container
+            container: name of the container to move the action into
+            position: boundary index within the target container
+        """
+        source_model = self.get_action_model_by_sidx(source_idx)
+        parent_model = self.get_action_model_by_sidx(parent_idx)
+
+        # Relinking an action below itself detaches its entire subtree from the
+        # root and leaves a self-referential cycle behind in the library.
+        if not self.can_move_action(source_idx, parent_idx):
+            logging.getLogger("system").warning(
+                f"Rejecting move of action {source_idx} into {parent_idx} as the "
+                "target is inside the source's own subtree"
+            )
+            return
+
+        # Both checks have to clear before anything is removed: insert_action raises on
+        # an unknown selector, and validates the boundary against the post-removal
+        # length, by which point a rejected move has already dropped the source action.
+        parent_data = parent_model.action_data
+        container_size = len(parent_data.get_actions(container)[0])
+        if not 0 <= position <= container_size:
+            raise GremlinError(
+                f"Boundary index '{position}' is outside container "
+                + f"'{container}' of action {parent_idx}"
+            )
+
+        source_index = source_model.sequence_index
+        insert_at = position
+        if (
+            source_index.parent_index == parent_idx
+            and source_index.container_name == container
+        ):
+            source_position = self.get_action_container_index(source_index)
+            # The two boundaries either side of the action are where it already is.
+            if source_position in (position, position - 1):
+                # Notify without rebuilding: the tree is unchanged and the models QML
+                # holds must survive, but the view still has to resettle after the drop.
+                self.rootActionChanged.emit()
+                return
+            # Removing the source first shifts every later boundary down by one.
+            if source_position < position:
+                insert_at -= 1
+
+        # Safe in either order now: the boundary carries its own position rather
+        # than being re-derived from the stale pre-removal container snapshot.
+        self.remove_action(source_index, False)
+        parent_data.insert_action(
+            source_model.action_data,
+            container,
+            DataInsertionMode.Prepend,
+            insert_at,
+        )
 
         self._create_action_models()
         self.rootActionChanged.emit()
@@ -560,8 +643,8 @@ class InputItemBindingModel(QtCore.QObject):
         ]
 
     def _check_user_feedback(self, index: int) -> None:
-        # Only perform updates for matchin items.
-        if self.parent().enumeration_index != index:
+        # Only perform updates for matching items; an owner-less model matches nothing.
+        if getattr(self.parent(), "enumeration_index", None) != index:
             return
 
         # Rate limit updates on user feedback.
@@ -677,16 +760,26 @@ class InputItemModel(QtCore.QAbstractListModel):
 
         self._input_item = input_item
         self._enumeration_index = enumeration_index
+        self._binding_cache: dict[
+            gremlin.profile.InputItemBinding, InputItemBindingModel
+        ] = {}
 
     @property
     def enumeration_index(self) -> int:
         return self._enumeration_index
+
+    def dispose(self) -> None:
+        """Disposes all cached binding models before this model is discarded."""
+        for model in self._binding_cache.values():
+            model.dispose()
+        self._binding_cache.clear()
 
     @QtCore.Slot()
     def newActionSequence(self) -> None:
         self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
         self._input_item.add_item_binding()
         self.endInsertRows()
+        self.bindingsChanged.emit()
         signal.inputItemChanged.emit(self._enumeration_index)
 
     @QtCore.Slot(InputItemBindingModel)
@@ -696,37 +789,81 @@ class InputItemModel(QtCore.QAbstractListModel):
             self.beginRemoveRows(QtCore.QModelIndex(), index, index)
             self._input_item.remove_item_binding(binding.input_item_binding)
             self.endRemoveRows()
+            cached = self._binding_cache.pop(binding.input_item_binding, None)
+            if cached is not None:
+                cached.dispose()
+            self.bindingsChanged.emit()
             signal.inputItemChanged.emit(self._enumeration_index)
         except ValueError:
             pass
 
-    @QtCore.Slot(str, str, str)
-    def dropAction(self, source: str, target: str, method: str) -> None:
-        """Handles dropping an action tree element
+    @QtCore.Property(list, notify=bindingsChanged)
+    def bindings(self) -> list[InputItemBindingModel]:
+        return [self.data(self.index(row, 0)) for row in range(self.rowCount())]
+
+    @QtCore.Slot(str, str, bool)
+    def dropAction(self, source: str, target: str, prepend: bool) -> None:
+        """Handles dropping a sequence block to reorder it relative to its siblings.
 
         Args:
-            source: identifier of the tree being dropped
-            target: identifier of the location on which the source is dropped
-            method: type of drop action to perform
+            source: identifier (root action id) of the sequence being dropped
+            target: identifier of the sequence to insert after; unused when prepend
+                is True
+            prepend: True to move source to the very start of the list instead of
+                after target
         """
-        # Force a UI refresh without performing any model changes if both
-        # source and target item are identical, i.e. an invalid drag&drop
-        if source == target:
-            self.bindingsChanged.emit()
+        # Force a UI refresh without performing any model changes if source and target
+        # are identical, i.e. an invalid drag&drop.
+        if not prepend and source == target:
+            signal.reloadCurrentInputItem.emit()
             return
 
-        source_id = uuid.UUID(source)
-        target_id = uuid.UUID(target)
-        source_entry = None
-        for idx, entry in enumerate(self._input_item.action_sequences):
-            if entry.root_action.id == source_id:
-                source_entry = self._input_item.action_sequences.pop(idx)
-        if source_entry is not None:
-            for idx, entry in enumerate(self._input_item.action_sequences):
-                if entry.root_action.id == target_id:
-                    self._input_item.action_sequences.insert(idx + 1, source_entry)
+        sequences = self._input_item.action_sequences
+        try:
+            source_id = uuid.UUID(source)
+            target_id = None if prepend else uuid.UUID(target)
+        except ValueError:
+            logging.getLogger("system").error(
+                f"Received malformed drag&drop identifiers: '{source}', '{target}'"
+            )
+            signal.reloadCurrentInputItem.emit()
+            return
 
-        self.bindingsChanged.emit()
+        source_index = next(
+            (
+                index
+                for index, entry in enumerate(sequences)
+                if entry.root_action.id == source_id
+            ),
+            None,
+        )
+        if source_index is None:
+            signal.reloadCurrentInputItem.emit()
+            return
+
+        if target_id is None:
+            insertion_index = 0
+        else:
+            target_index = next(
+                (
+                    index
+                    for index, entry in enumerate(sequences)
+                    if entry.root_action.id == target_id
+                ),
+                None,
+            )
+            if target_index is None:
+                signal.reloadCurrentInputItem.emit()
+                return
+            # Removing the source shifts a target that sits behind it down by one.
+            insertion_index = (
+                target_index + 1 if target_index < source_index else target_index
+            )
+
+        sequences.insert(insertion_index, sequences.pop(source_index))
+
+        signal.reloadCurrentInputItem.emit()
+        signal.inputItemChanged.emit(self._enumeration_index)
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._input_item.action_sequences)
@@ -734,9 +871,10 @@ class InputItemModel(QtCore.QAbstractListModel):
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> InputItemBindingModel:
-        return InputItemBindingModel(
-            self._input_item.action_sequences[index.row()], parent=self
-        )
+        binding = self._input_item.action_sequences[index.row()]
+        if binding not in self._binding_cache:
+            self._binding_cache[binding] = InputItemBindingModel(binding, parent=self)
+        return self._binding_cache[binding]
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return InputItemModel.roles

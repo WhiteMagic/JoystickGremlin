@@ -1,45 +1,36 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    property DescriptionModel action
 
-    implicitHeight: _content.height
+ColumnLayout {
+    id: root
+
+    required property DescriptionModel action
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         Label {
-            id: _label
-
-            Layout.preferredWidth: 150
-
             text: "Description"
         }
 
-        JGTextField {
-            id: _description
-
+        TextField {
             Layout.fillWidth: true
 
-            placeholderText: null !== action ? null : "Enter description"
-            text: action.description
+            placeholderText: "Enter description"
+            text: root.action.description
             selectByMouse: true
 
-            onTextChanged: () => { action.description = text }
+            onTextChanged: { root.action.description = text }
         }
     }
 }

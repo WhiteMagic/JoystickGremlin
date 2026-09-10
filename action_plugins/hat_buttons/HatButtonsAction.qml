@@ -1,97 +1,71 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Composites
+import Kobold.Foundation
 
-Item {
-    property HatButtonsModel action
 
-    implicitHeight: _content.height
+ColumnLayout {
+    id: root
 
-    ColumnLayout {
-        id: _content
+    required property HatButtonsModel action
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    spacing: Metrics.gapM
 
-        RowLayout {
-            Label {
-                text: "Button mode"
-            }
-            RadioButton {
-                text: "4 way"
-                checked: _root.action.buttonCount == 4
+    RowLayout {
+        spacing: Metrics.gapM
 
-                onClicked: {
-                    _root.action.buttonCount = 4
-                }
-            }
-            RadioButton {
-                text: "8 way"
-                checked: _root.action.buttonCount == 8
-
-                onClicked: {
-                    _root.action.buttonCount = 8
-                }
-            }
+        Label {
+            text: "Button mode"
         }
 
-        Repeater {
-            model: _root.action.buttonCount
+        RadioButton {
+            text: "4 way"
+            checked: root.action.buttonCount === 4
 
-            delegate: ButtonContainer {}
+            onToggled: { root.action.buttonCount = 4 }
+        }
+        RadioButton {
+            text: "8 way"
+            checked: root.action.buttonCount === 8
+
+            onToggled: { root.action.buttonCount = 8 }
         }
     }
 
-    component ButtonContainer : ColumnLayout {
-        Layout.fillWidth: true
+    Repeater {
+        model: root.action.buttonCount
 
-        RowLayout {
+        delegate: ColumnLayout {
+            id: _direction
+
+            readonly property string directionName: root.action.buttonName(index)
+
             Layout.fillWidth: true
+            spacing: Metrics.gapS
 
-            Label {
-                text: _root.action.buttonName(index)
-            }
+            SlotHeader {
+                Layout.fillWidth: true
 
-            LayoutHorizontalSpacer {}
+                label: _direction.directionName
+                actionNames: root.action.compatibleActions
 
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) {
-                    _root.action.appendAction(x, _root.action.buttonName(index));
+                onActionRequested: (name) => {
+                    root.action.appendAction(name, _direction.directionName)
                 }
             }
-        }
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
-        }
+            ActionList {
+                Layout.fillWidth: true
 
-        ListView {
-            id: _buttonSequence
-
-            model: _root.action.getActions(_root.action.buttonName(index))
-
-            Layout.fillWidth: true
-            implicitHeight: contentHeight
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: _root.action.buttonName(index)
-
-                width: _buttonSequence.width
+                containerOwner: root.action
+                containerName: _direction.directionName
             }
         }
     }

@@ -1,0 +1,8 @@
+module Kobold.Composites
+import Kobold.Controls
+singleton DragSession  DragSession.qml
+ActionList          ActionList.qml
+ActionNode          ActionNode.qml
+ActionRow           ActionRow.qml
+SlotHeader          SlotHeader.qml
+ActivationBehavior  ActivationBehavior.qml

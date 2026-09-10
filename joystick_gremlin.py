@@ -24,6 +24,7 @@ from PySide6 import (
     QtQuick,
     QtWidgets,
 )
+from PySide6.QtQuickControls2 import QQuickStyle
 
 import dill
 import resources  # noqa: F401 - registers Qt resources (fonts, icons) as a side effect
@@ -37,7 +38,6 @@ install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
 os.chdir(install_path)
 
 # Setting some global QT configurations.
-os.environ["QT_QUICK_CONTROLS_STYLE"] = "Universal"
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
 
@@ -59,12 +59,12 @@ import gremlin.plugin_manager
 import gremlin.signal
 import gremlin.tts
 import gremlin.types
-import gremlin.ui.action_image_generator
 import gremlin.ui.backend
+import gremlin.ui.icon_provider
 import gremlin.ui.option
 import gremlin.ui.system_tray
+import gremlin.ui.theme_manager
 import gremlin.ui.tools
-import gremlin.ui.util
 
 # ruff: enable[E402]
 
@@ -233,12 +233,32 @@ def register_config_options() -> None:
     cfg.register(
         "global",
         "general",
+        "theme",
+        PropertyType.String,
+        "light",
+        "Currently used color theme for the UI.",
+        {},
+        False,
+    )
+    cfg.register(
+        "global",
+        "general",
         "close-to-tray",
         PropertyType.Bool,
         False,
         "Closing the Gremlin window hides it in the system tray rather than "
         "terminating Gremlin. Quit via the tray icon's menu.",
         {},
+        True,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "ui-scale",
+        PropertyType.Selection,
+        "100",
+        "UI scaling percentage.",
+        {"valid_options": ["100", "150", "200"]},
         True,
     )
     cfg.register(
@@ -272,6 +292,26 @@ def register_config_options() -> None:
         "Selects only inputs if the active tab matches the device.",
         {},
         True,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "main-window-geometry",
+        PropertyType.List,
+        [],
+        "Persisted position and size of the main window.",
+        {},
+        False,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "input-viewer-geometry",
+        PropertyType.List,
+        [],
+        "Persisted position and size of the Input Viewer window.",
+        {},
+        False,
     )
     cfg.register(
         "profile",
@@ -415,14 +455,10 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         # If an error was detected during device initialization, the error
         # will be displayed before Gremlin quits.
         if device_initialization_error is not None:
-            self.engine.load(
-                QtCore.QUrl.fromLocalFile(
-                    gremlin.util.resource_path("qml/MainFailure.qml")
-                )
-            )
             self.engine.rootContext().setContextProperty(
                 "errorString", device_initialization_error
             )
+            self.engine.loadFromModule("Kobold.Views", "MainFailure")
 
             self.aboutToQuit.connect(shutdown_cleanup)
             return
@@ -437,37 +473,14 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         update_action_priorities()
 
         # Initialize main UI.
-        self.engine.load(
-            QtCore.QUrl.fromLocalFile(gremlin.util.resource_path("qml/Main.qml"))
-        )
+        self.engine.loadFromModule("Kobold.Views", "Main")
         if not self.engine.rootObjects():
             sys.exit(-1)
 
         self.process_cmd_args(cmd_args)
         self.backend.check_for_updates()
 
-        # Retrieve color information from QML for Python usage.
         self.main_window = self.engine.rootObjects()[0]
-        self.color_information_object = self.main_window.findChild(
-            QtCore.QObject, "colorInformation"
-        )
-        if self.color_information_object is None:
-            raise gremlin.error.GremlinError(
-                "Failed to find color information object in QML."
-            )
-        gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
-        # Coalesce the colour change signals into a single update call that
-        # triggers only once the current event queue is empty.
-        self._theme_refresh_timer = QtCore.QTimer()
-        self._theme_refresh_timer.setSingleShot(True)
-        self._theme_refresh_timer.setInterval(0)
-        self._theme_refresh_timer.timeout.connect(self._on_theme_colors_changed)
-        for changed in (
-            self.color_information_object.foregroundChanged,
-            self.color_information_object.backgroundChanged,
-            self.color_information_object.accentChanged,
-        ):
-            changed.connect(self._theme_refresh_timer.start)
 
         self.tray_icon = gremlin.ui.system_tray.SystemTrayIcon(self.main_window)
 
@@ -475,11 +488,6 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.syslog.info("Gremlin UI launching")
         self.aboutToQuit.connect(self.tray_icon.release_resources)
         self.aboutToQuit.connect(shutdown_cleanup)
-
-    def _on_theme_colors_changed(self) -> None:
-        """Refreshes the cached theme colours and asks QML to redraw."""
-        gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
-        self.backend.ui_state.bumpThemeRevision()
 
     def process_cmd_args(self, args: argparse.Namespace) -> None:
         # Load the profile specified by the user on the command line, otherwise
@@ -519,31 +527,22 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.setOrganizationDomain("https://whitemagic.github.io/JoystickGremlin/")
         self.setApplicationName("Joystick Gremlin")
 
-        # Change application wide font.
-        self.setFont(QtGui.QFont("Segoe UI", 11))
-
         # Load font used for icons.
         if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:
             self.syslog.error("Failed to load BootstrapIcons")
 
+        # Load fonts used by the style, set default application font and set style.
+        gremlin.ui.theme_manager.load_fonts()
+        self.setFont(QtGui.QFont("IBM Plex Sans"))
+        QQuickStyle.setStyle("Kobold")
+        QQuickStyle.setFallbackStyle("Basic")
+
         # Create application and UI engine.
         self.engine = QtQml.QQmlApplicationEngine(parent=self)
-        self.engine.addImportPath(gremlin.util.resource_path("theme"))
-
-        QtQml.qmlRegisterSingletonType(
-            QtCore.QUrl.fromLocalFile(gremlin.util.resource_path("qml/Style.qml")),
-            "Gremlin.Style",
-            1,
-            0,
-            "Style",
-        )
+        self.engine.addImportPath(gremlin.util.resource_path("style/qml"))
 
         QtCore.QDir.addSearchPath(
             "core_plugins", gremlin.util.resource_path("action_plugins/")
-        )
-        QtCore.QDir.addSearchPath(
-            "qml",
-            gremlin.util.resource_path("qml/"),
         )
 
         self.cfg = Configuration()
@@ -553,19 +552,21 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         if user_plugins_path.is_dir():
             QtCore.QDir.addSearchPath("user_plugins", str(user_plugins_path))
 
-        # Create and register backend and signal objects
+        # Register image providers.
+        self.engine.addImageProvider("icon", gremlin.ui.icon_provider.IconProvider())
+        self.engine.addImageProvider(
+            "action-icon", gremlin.ui.icon_provider.ActionIconProvider()
+        )
+
+        # Create and register singleton instances.
         self.backend = gremlin.ui.backend.Backend(self.engine)
         self.backend.newProfile()
-
-        # Register image provider for action summaries
-        action_image_provider = (
-            gremlin.ui.action_image_generator.ActionSummaryImageProvider()
-        )
-        self.engine.addImageProvider("action_summary", action_image_provider)
+        self.theme_manager = gremlin.ui.theme_manager.ThemeManager()
 
         self.engine.rootContext().setContextProperty("backend", self.backend)
         self.engine.rootContext().setContextProperty("uiState", self.backend.ui_state)
         self.engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
+        self.engine.rootContext().setContextProperty("themeManager", self.theme_manager)
 
 
 def main() -> int:

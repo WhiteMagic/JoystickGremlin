@@ -198,7 +198,7 @@ class MapToLogicalDeviceModel(ActionModel):
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
         return InputIdentifier(
-            LogicalDevice().device_guid,
+            LogicalDevice.device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
             parent=self,
@@ -206,7 +206,7 @@ class MapToLogicalDeviceModel(ActionModel):
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
         new_identifier = InputIdentifier(
-            LogicalDevice().device_guid,
+            LogicalDevice.device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
             parent=self,
@@ -215,6 +215,7 @@ class MapToLogicalDeviceModel(ActionModel):
             self._data.logical_input_id = identifier.input_id
             self._data.logical_input_type = identifier.input_type
             self.logicalInputIdentifierChanged.emit()
+            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     def _get_logical_input_type(self) -> str:
         return InputType.to_string(self._data.logical_input_type)
@@ -311,6 +312,14 @@ class MapToLogicalDeviceData(AbstractActionData):
         self.axis_mode = AxisMode.Absolute
         self.axis_scaling = 1.0
         self.button_inverted = False
+
+    @property
+    @override
+    def chip_label(self) -> str:
+        return (
+            f"Logical {InputType.to_letter(self.logical_input_type)}"
+            f"{self.logical_input_id}"
+        )
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:

@@ -1,40 +1,28 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Profile
-import "../../qml"
+import Kobold.Foundation
+import Kobold.Composites
 
-Item {
-    id: _root
 
-    property RootModel action
+// The invisible container holding every top-level action of a binding's sequence.
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property RootModel action
 
-    // Show all child nodes
-    ColumnLayout {
-        id: _content
+    spacing: 0
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    ActionList {
+        Layout.fillWidth: true
 
-        ListView {
-            model: _root.action.getActions("children")
-
-            delegate: ActionNode {
-                Layout.fillWidth: true
-
-                action: modelData
-                parentAction: _root.action
-                containerName: "children"
-            }
-        }
+        containerOwner: root.action
+        containerName: "children"
     }
 }

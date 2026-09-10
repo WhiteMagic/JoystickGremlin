@@ -4,17 +4,17 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
-import Gremlin.Compact as Compact
-import Gremlin.Style
-import Gremlin.Util
+import Kobold.Controls
+import Kobold.Foundation
 
 
+// Provides the UI element for a single condition row.
 Item {
-    property var comparator : null
+    id: root
+
+    property var comparator: null
 
     implicitWidth: _content.implicitWidth
     implicitHeight: _content.implicitHeight
@@ -22,70 +22,75 @@ Item {
     RowLayout {
         id: _content
 
+        spacing: Metrics.gapM
+
         Loader {
-            active: comparator && comparator.typeName === "pressed"
+            active: root.comparator && root.comparator.typeName === "pressed"
 
-            Layout.preferredWidth: active ? implicitWidth : 0
+            sourceComponent: ButtonStateSelector {
+                isPressed: root.comparator.isPressed
 
-            sourceComponent: RowLayout {
-                Compact.ButtonStateSelector {
-                    isPressed: comparator.isPressed
-                    onStateModified: (isPressed) => {
-                        comparator.isPressed = isPressed
-                    }
-                }
+                onStateModified: (isPressed) => { root.comparator.isPressed = isPressed }
             }
         }
 
         Loader {
-            active: comparator && comparator.typeName === "range"
-
-            Layout.preferredWidth: active ? implicitWidth : 0
+            active: root.comparator && root.comparator.typeName === "range"
 
             sourceComponent: RowLayout {
+                spacing: Metrics.gapM
+
                 Label { text: "between" }
 
-                Compact.FloatSpinBox {
+                DoubleSpinBox {
                     id: _lower
 
-                    minValue: -1.0
-                    maxValue: _upper.value
+                    from: -1.0
+                    to: _upper.value
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: active ? comparator.lowerLimit : 0.0
+                    decimals: Metrics.preciseDecimalPlaces
+                    value: root.comparator.lowerLimit
 
-                    onValueModified: (newValue) => {
-                        comparator.lowerLimit = newValue
-                    }
+                    onValueModified: { root.comparator.lowerLimit = value }
                 }
 
                 Label { text: "and" }
 
-                Compact.FloatSpinBox {
+                DoubleSpinBox {
                     id: _upper
 
-                    minValue: _lower.value
-                    maxValue: 1.0
+                    from: _lower.value
+                    to: 1.0
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: active ? comparator.upperLimit : 0.0
+                    decimals: Metrics.preciseDecimalPlaces
+                    value: root.comparator.upperLimit
 
-                    onValueModified: (newValue) => {
-                        comparator.upperLimit = newValue
-                    }
+                    onValueModified: { root.comparator.upperLimit = value }
                 }
             }
         }
 
         Loader {
-            active: comparator && comparator.typeName === "direction"
+            active: root.comparator && root.comparator.typeName === "direction"
 
-            Layout.preferredWidth: active ? implicitWidth : 0
+            sourceComponent: HatDirectionToggle {
+                north: root.comparator.model.hatNorth
+                northEast: root.comparator.model.hatNorthEast
+                east: root.comparator.model.hatEast
+                southEast: root.comparator.model.hatSouthEast
+                south: root.comparator.model.hatSouth
+                southWest: root.comparator.model.hatSouthWest
+                west: root.comparator.model.hatWest
+                northWest: root.comparator.model.hatNorthWest
 
-            sourceComponent: RowLayout {
-                Compact.HatDirectionSelectorV2 {
-                    directions: active ? comparator.model : null
-                }
+                onNorthEdited: (value) => { root.comparator.model.hatNorth = value }
+                onNorthEastEdited: (value) => { root.comparator.model.hatNorthEast = value }
+                onEastEdited: (value) => { root.comparator.model.hatEast = value }
+                onSouthEastEdited: (value) => { root.comparator.model.hatSouthEast = value }
+                onSouthEdited: (value) => { root.comparator.model.hatSouth = value }
+                onSouthWestEdited: (value) => { root.comparator.model.hatSouthWest = value }
+                onWestEdited: (value) => { root.comparator.model.hatWest = value }
+                onNorthWestEdited: (value) => { root.comparator.model.hatNorthWest = value }
             }
         }
     }

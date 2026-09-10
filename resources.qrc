@@ -5,4 +5,47 @@
     <qresource prefix="/">
         <file alias="BootstrapIcons">gfx/bootstrap-icons.otf</file>
     </qresource>
+    <qresource prefix="themes">
+        <file alias="light.json">style/themes/light.json</file>
+        <file alias="dark.json">style/themes/dark.json</file>
+        <file alias="kobold-colors.schema.json">style/themes/kobold-colors.schema.json</file>
+        <file alias="zenburn.json">style/themes/zenburn.json</file>
+    </qresource>
+    <qresource prefix="fonts">
+        <file alias="IBMPlexSans-Regular.otf">style/assets/fonts/IBMPlexSans-Regular.otf</file>
+        <file alias="IBMPlexSans-SemiBold.otf">style/assets/fonts/IBMPlexSans-SemiBold.otf</file>
+        <file alias="IBMPlexMono-Regular.otf">style/assets/fonts/IBMPlexMono-Regular.otf</file>
+        <file alias="IBMPlexMono-SemiBold.otf">style/assets/fonts/IBMPlexMono-SemiBold.otf</file>
+    </qresource>
+    <qresource prefix="style-icons">
+        <file alias="check.svg">style/assets/icons/check.svg</file>
+        <file alias="chevron-down.svg">style/assets/icons/chevron-down.svg</file>
+        <file alias="edit.svg">style/assets/icons/edit.svg</file>
+        <file alias="delete.svg">style/assets/icons/delete.svg</file>
+        <file alias="new_profile.svg">style/assets/icons/new_profile.svg</file>
+        <file alias="save_profile.svg">style/assets/icons/save_profile.svg</file>
+        <file alias="load_profile.svg">style/assets/icons/load_profile.svg</file>
+        <file alias="activate.svg">style/assets/icons/activate.svg</file>
+        <file alias="options.svg">style/assets/icons/options.svg</file>
+        <file alias="input_viewer.svg">style/assets/icons/input_viewer.svg</file>
+        <file alias="grip.svg">style/assets/icons/grip.svg</file>
+        <file alias="warning.svg">style/assets/icons/warning.svg</file>
+        <file alias="error.svg">style/assets/icons/error.svg</file>
+        <file alias="arrow-n.svg">style/assets/icons/arrow-n.svg</file>
+        <file alias="arrow-ne.svg">style/assets/icons/arrow-ne.svg</file>
+        <file alias="arrow-e.svg">style/assets/icons/arrow-e.svg</file>
+        <file alias="arrow-se.svg">style/assets/icons/arrow-se.svg</file>
+        <file alias="arrow-s.svg">style/assets/icons/arrow-s.svg</file>
+        <file alias="arrow-sw.svg">style/assets/icons/arrow-sw.svg</file>
+        <file alias="arrow-w.svg">style/assets/icons/arrow-w.svg</file>
+        <file alias="arrow-nw.svg">style/assets/icons/arrow-nw.svg</file>
+        <file alias="arrow-c.svg">style/assets/icons/arrow-c.svg</file>
+        <file alias="assign.svg">style/assets/icons/assign.svg</file>
+        <file alias="tab_left.svg">style/assets/icons/tab_left.svg</file>
+        <file alias="tab_right.svg">style/assets/icons/tab_right.svg</file>
+        <file alias="reset.svg">style/assets/icons/reset.svg</file>
+        <file alias="plus.svg">style/assets/icons/plus.svg</file>
+        <file alias="duplicate.svg">style/assets/icons/duplicate.svg</file>
+        <file alias="user-script.svg">style/assets/icons/user-script.svg</file>
+    </qresource>
 </RCC>

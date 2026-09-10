@@ -1,101 +1,80 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+ColumnLayout {
+    id: root
 
-    property MapToLogicalDeviceModel action
-
-    implicitHeight: _content.height
+    required property MapToLogicalDeviceModel action
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         LogicalDeviceSelector {
             // The ordering is important, swapping it will result in the
             // wrong item being displayed.
-            validTypes: [action.actionBehavior]
-            logicalInputType: inputBinding.behavior
-            logicalInputIdentifier: _root.action.logicalInputIdentifier
+            validTypes: [root.action.actionBehavior]
+            logicalInputType: root.action.actionBehavior
+            logicalInputIdentifier: root.action.logicalInputIdentifier
 
             onLogicalInputIdentifierChanged: {
-                _root.action.logicalInputIdentifier = logicalInputIdentifier
+                root.action.logicalInputIdentifier = logicalInputIdentifier
             }
         }
 
-        // UI for a physical axis behaving as an axis
-        Loader {
-            active: _root.action.logicalInputType === "axis"
-            Layout.fillWidth: true
+        // UI for a physical axis behaving as an axis.
+        RowLayout {
+            visible: root.action.logicalInputType === "axis"
+            spacing: Metrics.gapM
 
-            sourceComponent: Row {
-                RadioButton {
-                    text: "Absolute"
-                    checked: _root.action.axisMode === "absolute"
+            RadioButton {
+                text: "Absolute"
+                checked: root.action.axisMode === "absolute"
 
-                    onCheckedChanged: {
-                        _root.action.axisMode = "absolute"
-                    }
-                }
-                RadioButton {
-                    id: _relativeMode
-                    text: "Relative"
-                    checked: _root.action.axisMode === "relative"
+                onToggled: { root.action.axisMode = "absolute" }
+            }
+            RadioButton {
+                id: _relativeMode
 
-                    onCheckedChanged: {
-                        _root.action.axisMode = "relative"
-                    }
-                }
+                text: "Relative"
+                checked: root.action.axisMode === "relative"
 
-                Label {
-                    text: "Scaling"
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: _relativeMode.checked
-                }
+                onToggled: { root.action.axisMode = "relative" }
+            }
 
-                FloatSpinBox {
-                    visible: _relativeMode.checked
-                    minValue: 0
-                    maxValue: 100
-                    value: _root.action.axisScaling
-                    stepSize: 0.05
+            Label {
+                text: "Scaling"
+                visible: _relativeMode.checked
+            }
 
-                    onValueModified: (newValue) => {
-                        _root.action.axisScaling = newValue
-                    }
-                }
+            DoubleSpinBox {
+                visible: _relativeMode.checked
+                from: 0
+                to: 100
+                stepSize: 0.05
+                decimals: Metrics.defaultDecimalPlaces
+                value: root.action.axisScaling
+
+                onValueModified: { root.action.axisScaling = value }
             }
         }
-        // UI for a button input
-        Loader {
-            active: _root.action.logicalInputType === "button"
-            Layout.fillWidth: true
 
-            sourceComponent: Row {
-                Switch {
-                    text: "Invert activation"
-                    checked: _root.action.buttonInverted
+        // UI for a button input.
+        CheckBox {
+            visible: root.action.logicalInputType === "button"
+            text: "Invert activation"
+            checked: root.action.buttonInverted
 
-                    onToggled: function()
-                    {
-                        _root.action.buttonInverted = checked
-                    }
-                }
-            }
+            onToggled: { root.action.buttonInverted = checked }
         }
     }
 }

@@ -210,7 +210,7 @@ class DoubleTapModel(ActionModel):
     def _qml_path_impl(self) -> str:
         return (
             "file:///"
-            + QtCore.QFile("core_plugins:double_Tap/DoubleTapAction.qml").fileName()
+            + QtCore.QFile("core_plugins:double_tap/DoubleTapAction.qml").fileName()
         )
 
     def _action_behavior(self) -> str:

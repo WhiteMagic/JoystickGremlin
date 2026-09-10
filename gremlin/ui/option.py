@@ -14,6 +14,7 @@ from typing import (
 from PySide6 import QtCore
 
 import gremlin.config
+import gremlin.ui.theme_manager
 import gremlin.ui.type_aliases as ta
 from gremlin.common import SingletonMetaclass
 from gremlin.error import (
@@ -193,7 +194,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                     case "value":
                         value = self._option.qml_widget(
                             self._section_name, self._group_name, name
-                        )().qml_path
+                        )().qml_type
                     case "data_type":
                         value = "meta_option"
         return value
@@ -246,13 +247,13 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
 class BaseMetaConfigOptionWidget:
     @property
-    def qml_path(self) -> str:
-        return self._qml_path()
+    def qml_type(self) -> str:
+        return self._qml_type()
 
-    def _qml_path(self) -> str:
+    def _qml_type(self) -> str:
         raise MissingImplementationError(
             "BaseMetaConfigOptionWidget: Subclasses must implement the "
-            + "qml_path method."
+            + "qml_type method."
         )
 
 
@@ -313,17 +314,28 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
     @QtCore.Slot(int, int)
     def move(self, source_index: int, target_index: int) -> None:
-        self.layoutAboutToBeChanged.emit()
         data = self._config.value(*self._cfg_key)
-        item = data.pop(source_index)
-        data.insert(target_index, item)
-        self._config.set(*self._cfg_key, data)
-        self.layoutChanged.emit()
+        item_count = len(data)
+        if not (0 <= source_index < item_count) or source_index == target_index:
+            return
 
-    def _qml_path(self) -> str:
-        return (
-            "file:///" + QtCore.QFile("qml:OptionActionSequenceOrdering.qml").fileName()
-        )
+        target = data[target_index] if target_index < item_count else None
+
+        self.beginRemoveRows(QtCore.QModelIndex(), source_index, source_index)
+        item = data.pop(source_index)
+        self.endRemoveRows()
+
+        insertion_index = len(data)
+        if target is not None:
+            insertion_index = data.index(target)
+        self.beginInsertRows(QtCore.QModelIndex(), insertion_index, insertion_index)
+        data.insert(insertion_index, item)
+        self.endInsertRows()
+
+        self._config.set(*self._cfg_key, data)
+
+    def _qml_type(self) -> str:
+        return "OptionActionSequenceOrdering"
 
 
 @ta.QmlElement
@@ -401,8 +413,8 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _qml_path(self) -> str:
-        return "file:///" + QtCore.QFile("qml:OptionProfileAutoLoading.qml").fileName()
+    def _qml_type(self) -> str:
+        return "OptionProfileAutoLoading"
 
 
 @ta.QmlElement
@@ -435,8 +447,8 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _qml_path(self) -> str:
-        return "file:///" + QtCore.QFile("qml:OptionTTSVoiceSelection.qml").fileName()
+    def _qml_type(self) -> str:
+        return "OptionTTSVoiceSelection"
 
     def _get_current_index(self) -> int:
         try:
@@ -449,6 +461,58 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
             return
         self._config.set(*self._cfg_key, self._voices[index])
         TTSManager().update_voice(self._voices[index])
+        self.currentIndexChanged.emit()
+
+    currentIndex = QtCore.Property(
+        int,
+        fget=_get_current_index,
+        fset=_set_current_index,
+        notify=currentIndexChanged,
+    )
+
+
+@ta.QmlElement
+class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+    }
+
+    currentIndexChanged = QtCore.Signal()
+
+    def __init__(self, parent: ta.OQO = None) -> None:
+        QtCore.QAbstractListModel.__init__(self, parent)
+        BaseMetaConfigOptionWidget.__init__(self)
+
+        self._themes = gremlin.ui.theme_manager.discover_theme_names()
+        self._config = gremlin.config.Configuration()
+        self._cfg_key = ["global", "general", "theme"]
+
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(self._themes)
+
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str | None:
+        if role == QtCore.Qt.ItemDataRole.UserRole + 1:
+            return self._themes[index.row()]
+        return None
+
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
+        return self.roles
+
+    def _qml_type(self) -> str:
+        return "OptionThemeSelection"
+
+    def _get_current_index(self) -> int:
+        try:
+            return self._themes.index(self._config.value(*self._cfg_key))
+        except ValueError:
+            return 0
+
+    def _set_current_index(self, index: int) -> None:
+        if not (0 <= index < len(self._themes)):
+            return
+        gremlin.ui.theme_manager.set_active_theme(self._themes[index], self._themes)
         self.currentIndexChanged.emit()
 
     currentIndex = QtCore.Property(
@@ -624,4 +688,12 @@ MetaConfigOption().register(
     "voice-selection",
     "Voices available for use with Text to Speech actions.",
     TTSVoiceSelectionModel,
+)
+
+MetaConfigOption().register(
+    "global",
+    "general",
+    "theme-selection",
+    "Color theme used for the UI.",
+    ThemeSelectionModel,
 )

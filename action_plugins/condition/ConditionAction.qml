@@ -1,173 +1,168 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
+import Qt.labs.qmlmodels
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-import Gremlin.Style
-import Gremlin.Util
-import "../../qml"
-import "../../qml/helpers.js" as Helpers
+import Kobold.Composites
+import Kobold.Foundation
 
-Item {
-    id: _root
 
-    property ConditionModel action
-    readonly property int conditionLabelWidth: 150
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property ConditionModel action
 
-    // Turns the list of entries into an unordered HTML element.
-    function toUnorderedList(entries) {
-        return entries.join("<br>")
+    spacing: Metrics.gapM
+
+    // +--------------------------------------------------------------------------------
+    // | Logical condition setup
+    // +--------------------------------------------------------------------------------
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Metrics.gapM
+
+        Label {
+            text: "When"
+        }
+
+        ComboBox {
+            id: _logicalOperatorSelector
+
+            model: root.action.logicalOperators
+            textRole: "text"
+            valueRole: "value"
+
+            Component.onCompleted: {
+                currentIndex = indexOfValue(root.action.logicalOperator)
+            }
+
+            onActivated: { root.action.logicalOperator = currentValue }
+        }
+
+        Label {
+            text: "of the following conditions are met"
+        }
+
+        Spacer {}
+
+        ComboBox {
+            id: _conditionType
+
+            implicitContentWidthPolicy: ComboBox.WidestText
+            textRole: "text"
+            valueRole: "value"
+            model: root.action.conditionOperators
+        }
+
+        Button {
+            text: "Add condition"
+
+            onClicked: { root.action.addCondition(_conditionType.currentValue) }
+        }
     }
 
-    ColumnLayout {
-        id: _content
+    Repeater {
+        model: root.action.conditions
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+        delegate: _conditionDelegate
+    }
 
-        // +-------------------------------------------------------------------
-        // | Logical condition setup
-        // +-------------------------------------------------------------------
-        RowLayout {
-            id: _logicalOperator
+    // +--------------------------------------------------------------------------------
+    // | True actions
+    // +--------------------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
 
+        label: "When true"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "true") }
+    }
+
+    ActionList {
+        Layout.fillWidth: true
+
+        containerOwner: root.action
+        containerName: "true"
+    }
+
+    // +--------------------------------------------------------------------------------
+    // | False actions
+    // +--------------------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "When false"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "false") }
+    }
+
+    ActionList {
+        Layout.fillWidth: true
+
+        containerOwner: root.action
+        containerName: "false"
+    }
+
+    component DeleteConditionButton: ToolButton {
+        icon.name: "delete"
+
+        onClicked: () => { root.action.removeCondition(index) }
+    }
+
+    // Shared row shell for every condition type: an optional rule above (to separate
+    // condition rows from one another -- this is a plain list, not an action container,
+    // so SlotHeader's own rule does not apply here), the type-specific content in the
+    // middle, and the error/delete controls at the end.
+    component ConditionComponent: ColumnLayout {
+        property alias conditionItem: _conditionLoader.sourceComponent
+        property string conditionName: ""
+
+        Layout.fillWidth: true
+
+        Divider {
             Layout.fillWidth: true
-
-            Label {
-                text: "When "
-            }
-            ComboBox {
-                id: _logicalOperatorSelector
-                model: _root.action.logicalOperators
-
-                textRole: "text"
-                valueRole: "value"
-
-                Component.onCompleted: () => {
-                    currentIndex = indexOfValue(_root.action.logicalOperator)
-                }
-
-                onActivated: () => {
-                    _root.action.logicalOperator = currentValue
-                }
-            }
-            Label {
-                text: "of the following conditions are met"
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Button {
-                text: "Add Condition"
-
-                onClicked: () => {
-                    _root.action.addCondition(_condition.currentValue)
-                }
-            }
-
-            ComboBox {
-                id: _condition
-
-                implicitContentWidthPolicy: ComboBox.WidestText
-                textRole: "text"
-                valueRole: "value"
-
-                model: _root.action.conditionOperators
-            }
+            visible: index > 0
         }
 
-        Repeater {
-            model: _root.action.conditions
-
-            delegate: _conditionDelegate
-        }
-
-        // +-------------------------------------------------------------------
-        // | True actions
-        // +-------------------------------------------------------------------
         RowLayout {
-            id: _trueHeader
+            Layout.fillWidth: true
+            spacing: Metrics.gapM
 
             Label {
-                text: "When the condition is <b>TRUE</b> then"
+                text: conditionName
+                color: Theme.fgMuted
+                font.pixelSize: Metrics.textDetail
             }
 
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "true"); }
-            }
-        }
-
-        HorizontalDivider {
-            id: _trueDivider
-
-            Layout.fillWidth: true
-
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
-        }
-
-        Repeater {
-            model: _root.action.getActions("true")
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "true"
+            Loader {
+                id: _conditionLoader
 
                 Layout.fillWidth: true
             }
-        }
 
-        // +-------------------------------------------------------------------
-        // | False actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            id: _falseHeader
+            Spacer {}
 
-            Label {
-                text: "When the condition is <b>FALSE</b> then"
+            AppIcon {
+                visible: modelData.isValid !== true
+                name: "error"
+                role: "error"
+
+                HoverHandler {
+                    id: _conditionErrorHover
+                }
+
+                ToolTip.visible: _conditionErrorHover.hovered
+                ToolTip.text: "This condition has not been fully configured yet."
             }
 
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "false"); }
-            }
-        }
-
-        HorizontalDivider {
-            id: _falseDivider
-
-            Layout.fillWidth: true
-
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
-        }
-
-        Repeater {
-            model: _root.action.getActions("false")
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "false"
-
-                Layout.fillWidth: true
-            }
+            DeleteConditionButton {}
         }
     }
 
@@ -180,15 +175,14 @@ Item {
             roleValue: "current_input"
 
             ConditionComponent {
-                typeIcon: bsi.icons.icon_current_input
-                conditionName: "Current Input"
+                conditionName: "Current input"
 
                 conditionItem: RowLayout {
+                    spacing: Metrics.gapM
+
                     Comparator {
                         comparator: modelData.comparator
                     }
-
-                    LayoutHorizontalSpacer {}
                 }
             }
         }
@@ -197,26 +191,23 @@ Item {
             roleValue: "joystick"
 
             ConditionComponent {
-                typeIconSource: "qrc:/icons/physical_joystick"
                 conditionName: "Joystick"
 
                 conditionItem: RowLayout {
-                    InputListener {
-                        text: Helpers.safeText(toUnorderedList(modelData.states))
+                    spacing: Metrics.gapM
 
-                        callback: (inputs) => {
-                            modelData.updateFromUserInput(inputs)
-                        }
-                        multipleInputs: true
+                    InputCaptureButton {
                         eventTypes: ["axis", "button", "hat"]
+                        multipleInputs: true
+                        text: modelData.states.length > 0 ?
+                            modelData.states.join(", ") : "Record inputs"
+
+                        callback: (inputs) => { modelData.updateFromUserInput(inputs) }
                     }
 
                     Comparator {
                         comparator: modelData.comparator
                     }
-
-                    LayoutHorizontalSpacer {}
-
                 }
             }
         }
@@ -225,27 +216,23 @@ Item {
             roleValue: "keyboard"
 
             ConditionComponent {
-                typeIcon: bsi.icons.icon_keyboard
                 conditionName: "Keyboard"
 
                 conditionItem: RowLayout {
-                    InputListener {
-                        text: Helpers.safeText(
-                            modelData.key, toUnorderedList(modelData.states)
-                        )
+                    spacing: Metrics.gapM
 
-                        callback: (inputs) => {
-                            modelData.updateFromUserInput(inputs)
-                        }
-                        multipleInputs: true
+                    InputCaptureButton {
                         eventTypes: ["key"]
+                        multipleInputs: true
+                        text: modelData.states.length > 0 ?
+                            modelData.states.join(", ") : "Record keys"
+
+                        callback: (inputs) => { modelData.updateFromUserInput(inputs) }
                     }
 
                     Comparator {
                         comparator: modelData.comparator
                     }
-
-                    LayoutHorizontalSpacer {}
                 }
             }
         }
@@ -254,29 +241,25 @@ Item {
             roleValue: "logical_device"
 
             ConditionComponent {
-                typeIcon: bsi.icons.icon_logical_device
-                conditionName: "Logical Device"
+                conditionName: "Logical device"
 
                 conditionItem: RowLayout {
+                    spacing: Metrics.gapM
+
                     LogicalDeviceSelector {
-                        // The ordering is important, swapping it will result in the
-                        // wrong item being displayed.
                         validTypes: ["axis", "button", "hat"]
                         logicalInputIdentifier: modelData.logicalInputIdentifier
-                        useCompact: true
 
-                        onLogicalInputIdentifierChanged: () => {
+                        onLogicalInputIdentifierChanged: {
                             modelData.logicalInputIdentifier = logicalInputIdentifier
                         }
                     }
 
-                    Label { text: "<b>True</b> when" }
+                    Label { text: "True when" }
 
                     Comparator {
                         comparator: modelData.comparator
                     }
-
-                    LayoutHorizontalSpacer {}
                 }
             }
         }
@@ -285,13 +268,13 @@ Item {
             roleValue: "vjoy"
 
             ConditionComponent {
-                typeIcon: bsi.icons.icon_joystick
                 conditionName: "vJoy"
 
                 conditionItem: RowLayout {
+                    spacing: Metrics.gapM
+
                     VJoySelector {
                         validTypes: ["axis", "button", "hat"]
-                        useCompact: true
 
                         onSelectionChanged: (vjoyId, inputType, inputId) => {
                             modelData.vjoyDeviceId = vjoyId
@@ -299,7 +282,7 @@ Item {
                             modelData.vjoyInputId = inputId
                         }
 
-                        Component.onCompleted: () => {
+                        Component.onCompleted: {
                             initialize(
                                 modelData.vjoyDeviceId,
                                 modelData.vjoyInputType,
@@ -308,101 +291,13 @@ Item {
                         }
                     }
 
-                    Label { text: "<b>True</b> when" }
+                    Label { text: "True when" }
 
                     Comparator {
                         comparator: modelData.comparator
                     }
-
-                    LayoutHorizontalSpacer {}
                 }
             }
         }
-    }
-
-    // Drop action for insertion into empty/first slot of the true actions
-    ActionDragDropArea {
-        target: _trueDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "true");
-        }
-    }
-
-    // Drop action for insertion into empty/first slot of the false actions
-    ActionDragDropArea {
-        target: _falseDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "false");
-        }
-    }
-
-    component DeleteConditionButton : IconButton {
-        text: bsi.icons.remove
-        font.pixelSize: 16
-
-        onClicked: () => _root.action.removeCondition(index)
-    }
-
-    component ConditionComponent : RowLayout {
-        property alias conditionItem: _actionLoader.sourceComponent
-        property string typeIcon: ""
-        property string typeIconSource: ""
-        property string conditionName: ""
-
-        Item {
-            implicitWidth: _iconRow.implicitWidth
-            implicitHeight: _iconRow.implicitHeight
-
-            Row {
-                id: _iconRow
-
-                Label {
-                    visible: typeIcon !== ""
-                    text: typeIcon
-                    font.family: "bootstrap-icons"
-                    font.pixelSize: 16
-                }
-                Image {
-                    width: 16
-                    height: 16
-
-                    visible: typeIconSource !== ""
-                    source: typeIconSource
-                    fillMode: Image.PreserveAspectFit
-                }
-            }
-
-            HoverHandler {
-                id: _iconHover
-            }
-
-            ToolTip {
-                visible: _iconHover.hovered && conditionName !== ""
-                text: conditionName
-                delay: 500
-            }
-        }
-
-        // Contains the specific condition component.
-        Loader {
-            id: _actionLoader
-
-            Layout.fillWidth: true
-            Layout.leftMargin: 10
-        }
-
-        LayoutHorizontalSpacer {}
-
-        Label {
-            visible: modelData.isValid != true
-
-            font.family: "bootstrap-icons"
-            font.pixelSize: 24
-
-            text: bsi.icons.error
-            color: Style.error
-        }
-
-        DeleteConditionButton {}
     }
 }

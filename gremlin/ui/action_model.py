@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     cast,
@@ -25,6 +27,7 @@ from gremlin.types import (
     ActionActivationMode,
     InputType,
 )
+from gremlin.util import resource_path
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -94,17 +97,40 @@ class ActionModel(QtCore.QObject):
         self._behavior_changed_connection = self._binding_model.behaviorChanged.connect(
             lambda: self.actionChanged.emit()
         )
+        self._expansion_changed_connection = (
+            self._binding_model.expansionChanged.connect(self._handle_expansion_changed)
+        )
 
     def dispose(self) -> None:
         """Disconnects from the binding model before being discarded."""
         self._binding_model.behaviorChanged.disconnect(
             self._behavior_changed_connection
         )
+        self._binding_model.expansionChanged.disconnect(
+            self._expansion_changed_connection
+        )
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
             "ActionModel._qml_path_impl not implemented in subclass"
         )
+
+    def _icon_path_impl(self) -> str:
+        """Resolves the plugin-authored type icon for this action, tinted to `fg`.
+
+        Unlike `_qml_path_impl`, this has a concrete default and is not overridden
+        per plugin: resolved relative to the data class's own module file, so it
+        works identically for core and user-authored plugins alike, without
+        assuming any tag/directory naming convention. Falls back to a shared
+        placeholder if the plugin has not shipped its own `icon.svg`. The returned
+        `file:///...` URI is consumed by `image://action-icon/<uri>?c=<hex>&px=<n>`
+        (`gremlin/ui/icon_provider.py`), which substitutes `currentColor` for the
+        requested colour and rasterizes it.
+        """
+        own_icon = Path(inspect.getfile(type(self._data))).parent / "icon.svg"
+        if own_icon.exists():
+            return own_icon.as_uri()
+        return Path(resource_path("action_plugins/action-placeholder.svg")).as_uri()
 
     @property
     def input_type(self) -> InputType:
@@ -129,6 +155,14 @@ class ActionModel(QtCore.QObject):
     @QtCore.Property(type=str, notify=actionChanged)
     def qmlPath(self) -> str:
         return self._qml_path_impl()
+
+    @QtCore.Property(type=str, notify=actionChanged)
+    def iconPath(self) -> str:
+        return self._icon_path_impl()
+
+    @QtCore.Property(type=bool, notify=actionChanged)
+    def hasChildren(self) -> bool:
+        return self._binding_model.has_child_actions(self._sequence_index)
 
     @QtCore.Property(type=str, constant=True)
     def icon(self) -> str:
@@ -222,38 +256,50 @@ class ActionModel(QtCore.QObject):
             action_name, InputType.to_enum(self._action_behavior())
         )
         if action:
+            # Read before sync_data replaces every ActionModel behind this binding.
+            enumeration_index = self._binding_model.parent().enumeration_index
             self._data.insert_action(action, selector)
+            # sync_data's rootActionChanged reloads the subtree; see dropAction for why
+            # reloadCurrentInputItem must not be emitted from here.
             self._binding_model.sync_data()
-            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+            signal.inputItemChanged.emit(enumeration_index)
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
             )
 
-    @QtCore.Slot(int, int, str)
-    def dropAction(self, source: int, target: int, method: str) -> None:
-        """Handles dropping an action on a UI item.
+    @QtCore.Slot(int, str, int)
+    def dropAction(self, source: int, container: str, position: int) -> None:
+        """Moves the dragged action into one of this action's containers.
+
+        Called on the action owning the target container, not on the action being
+        dragged. The position is the boundary the drag settled on: 0 inserts above
+        the container's current first entry, len(container) appends.
 
         Args:
-            source: sequence id of the acion being dropped
-            target: sequence id of the action on which the source is dropped
-            method: type of drop action to perform
+            source: sequence index of the action being dragged
+            container: name of this action's container to move it into
+            position: boundary index within that container
         """
-        # Force a UI refresh without performing any model changes if both
-        # source and target item are identical, i.e. an invalid drag&drop
-        if source == target:
-            self._binding_model.sync_data()
+        # Read before the move: everything below runs after move_action has replaced
+        # every ActionModel behind this binding, self included.
+        enumeration_index = self._binding_model.parent().enumeration_index
+        try:
+            self._binding_model.move_action(
+                source, self._sequence_index.index, container, position
+            )
+        except GremlinError:
+            logging.getLogger("system").exception(
+                f"Failed to move action {source} into container '{container}'"
+            )
+            signal.reloadUi.emit()
             return
 
-        if method == "append":
-            self._append_drop_action(source, target)
-        else:
-            self._append_drop_action(source, target, method)
-
-        if target == 0:
-            signal.reloadCurrentInputItem.emit()
-
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        # No reloadCurrentInputItem here: move_action's rootActionChanged already
+        # reloads this sequence's subtree (InputItemBinding.qml). Emitting it would
+        # swap the whole InputItemModel out and rebuild every sequence from inside
+        # this slot -- a slot on an ActionModel that the swap destroys.
+        signal.inputItemChanged.emit(enumeration_index)
 
     @QtCore.Slot(int)
     def removeAction(self, index: int) -> None:
@@ -262,8 +308,12 @@ class ActionModel(QtCore.QObject):
         Args:
             index: sequence index corresponding to the action to remove
         """
+        # Read before remove_action replaces every ActionModel behind this binding.
+        enumeration_index = self._binding_model.parent().enumeration_index
+        # remove_action's rootActionChanged reloads the subtree; see dropAction for why
+        # reloadCurrentInputItem must not be emitted from here.
         self._binding_model.remove_action(index)
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        signal.inputItemChanged.emit(enumeration_index)
 
     @property
     def action_data(self) -> AbstractActionData:
@@ -303,6 +353,20 @@ class ActionModel(QtCore.QObject):
         state = self._activation_to_tuple()
         if state[0] != value:
             self._tuple_to_activation((value, state[1]))
+
+    def _get_expanded(self) -> bool:
+        return self._data.expanded
+
+    def _set_expanded(self, value: bool) -> None:
+        # Notification goes out over the binding model rather than directly, so this
+        # model and any other placement of the same action update by one identical path.
+        if self._data.expanded != value:
+            self._data.expanded = value
+            self._binding_model.expansionChanged.emit(self._data)
+
+    def _handle_expansion_changed(self, data: AbstractActionData) -> None:
+        if data is self._data:
+            self.actionChanged.emit()
 
     def _get_activate_on_release(self) -> bool:
         return self._activation_to_tuple()[1]
@@ -344,24 +408,6 @@ class ActionModel(QtCore.QObject):
             case (True, True):
                 self._data.activation_mode = ActionActivationMode.Both
 
-    def _append_drop_action(
-        self, source_sidx: int, target_sidx: int, container: str | None = None
-    ) -> None:
-        """Positions the source node after the target node.
-
-        Args:
-            source_sidx: sequence index of the source action
-            target_sidx: sequence index of the target action
-            container: name of the container to insert the action into
-        """
-        try:
-            if container is None:
-                self._binding_model.move_action(source_sidx, target_sidx)
-            else:
-                self._binding_model.move_action(source_sidx, target_sidx, container)
-        except GremlinError:
-            signal.reloadUi.emit()
-
     actionLabel = QtCore.Property(
         str, fget=_get_action_label, fset=_set_action_label, notify=actionChanged
     )
@@ -378,6 +424,10 @@ class ActionModel(QtCore.QObject):
         fget=_get_activate_on_release,
         fset=_set_activate_on_release,
         notify=actionChanged,
+    )
+
+    expanded = QtCore.Property(
+        bool, fget=_get_expanded, fset=_set_expanded, notify=actionChanged
     )
 
 

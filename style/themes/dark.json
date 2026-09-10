@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "name": "Dark",
+    "appearance": "dark"
+  },
+  "colors": {
+    "bg": "#242429",
+    "bgAlt": "#1b1b1e",
+    "bgHover": "#2e2e34",
+    "bgSelected": "#3a3a42",
+    "line": "#4a4a54",
+    "fg": "#e6e6ea",
+    "fgMuted": "#94949e",
+    "fgDisabled": "#5c5c66",
+    "accent": "#58a6ff",
+    "error": "#ff7b6b",
+    "warning": "#e0a63c"
+  }
+}
