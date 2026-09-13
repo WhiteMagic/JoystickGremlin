@@ -193,7 +193,7 @@ Combines the values of two axes into a single value that can then be processed f
 
 - Add the action to both axes.
 - Select the same merge axis instance from the dropdown in both actions (the instance can be named).
-- Click on the small circle arrow next to *First Axis* and *Second Axis* to assign the currently selected axis to that slot.
+- Assign each axis as either *First Axis* or *Second Axis* by clicking the corresponding *Assign Current Axis* button.
 
 The manner in which the axes values are combined is governed by the *Merge operation* selected.
 

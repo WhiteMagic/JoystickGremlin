@@ -143,6 +143,7 @@ Item {
                 text: _root.action.firstAxis.label
             }
             Compact.RecordButton {
+                description: "Assign Current Axis"
                 onClicked: () => { _root.action.firstAxis = uiState.currentInput }
             }
 
@@ -161,6 +162,7 @@ Item {
                 text: _root.action.secondAxis.label
             }
             Compact.RecordButton {
+                description: "Assign Current Axis"
                 onClicked: () => {
                     _root.action.secondAxis = uiState.currentInput
                 }
