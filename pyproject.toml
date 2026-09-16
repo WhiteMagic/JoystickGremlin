@@ -1,7 +1,7 @@
 [tool.poetry]
 package-mode = false
 name = "JoystickGremlin"
-version = "14.0rc1"
+version = "16.0r"
 description = "A tool for configuring and managing joystick devices."
 authors = ["WhiteMagic <white.magic@gmx.de>"]
 license = "GPL-3.0-only"
@@ -10,17 +10,17 @@ homepage = "https://whitemagic.github.io/JoystickGremlin/"
 repository = "https://github.com/WhiteMagic/JoystickGremlin"
 
 [tool.poetry.dependencies]
-jsonschema = ">=4.25"
-miniaudio = ">=1.61"
-python = ">=3.13, <3.14"
-PySide6 = ">=6.11"
-PyInstaller = ">=6.10"
-pywin32 = ">=308"
-pytest = ">=9.0"
+python = ">=3.14, <3.15"
+jsonschema = ">=4.26"
+miniaudio = ">=1.71"
+PySide6 = ">=6.11.2"
+PyInstaller = ">=6.22"
+pywin32 = ">=312"
+pytest = ">=9.1"
 pytest-qt = ">=4.5.0"
-pytest-rerunfailures = ">= 16.0"
-ruff = "^0.15.7"
-pyright = "^1.1.408"
+pytest-rerunfailures = ">=16.6"
+ruff = "^0.16.8"
+pyright = "^1.1.414"
 
 [tool.pytest.ini_options]
 pythonpath = "."
@@ -48,6 +48,6 @@ include = ["action_plugins", "dill", "gremlin", "joystick_gremlin.py", "vjoy"]
 exclude = ["**/__pycache__", "**/.git", "**/.venv", "**/venv"]
 reportMissingImports = true
 reportMissingTypeStubs = false
-pythonVersion = "3.13"
+pythonVersion = "3.14"
 pythonPlatform = "Windows"
 typeCheckingMode = "basic"
