@@ -49,11 +49,8 @@ Window {
                 anchors.rightMargin: Metrics.gapL
                 spacing: Metrics.gapM
 
-                Text {
+                Label {
                     text: "Kobold Playground"
-                    color: Theme.fg
-                    font.family: FontType.sans
-                    font.pixelSize: Metrics.textBody
                     font.weight: FontType.semiBold
                 }
 

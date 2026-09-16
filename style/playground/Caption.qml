@@ -4,10 +4,10 @@
 // Playground-only: the small fgMuted state label under each swatch.
 
 import QtQuick
+import QtQuick.Controls
 import Kobold.Foundation
 
-Text {
+Label {
     color: Theme.fgMuted
-    font.family: FontType.sans
     font.pixelSize: Metrics.textDetail
 }

@@ -1,7 +1,7 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 //
-// The Kobold style gallery: every standalone-testable type -- the 20 style
+// The Kobold style gallery: every standalone-testable type -- the 22 style
 // templates plus the Kobold.Controls / Kobold.Composites leaves that need
 // nothing but QtQuick + Foundation. Types needing device/app init
 // (VJoySelector, LogicalDeviceSelector, InputCaptureButton, HatView,
@@ -438,11 +438,8 @@ ScrollView {
                 Layout.preferredHeight: Metrics.controlHeight * 5
                 clip: true
                 model: 30
-                delegate: Text {
+                delegate: Label {
                     text: "Row " + index
-                    color: Theme.fg
-                    font.family: FontType.sans
-                    font.pixelSize: Metrics.textBody
                     height: Metrics.controlHeight
                 }
                 ScrollBar.vertical: ScrollBar { }
@@ -451,6 +448,24 @@ ScrollView {
                 flickableDirection: Flickable.VerticalFlick
                 boundsBehavior: Flickable.StopAtBounds
             }
+        }
+
+        // -- ScrollView ----------------------------------------------
+        Section {
+            title: "ScrollView"
+
+            ScrollView {
+                Layout.preferredWidth: Metrics.controlHeight * 8
+                Layout.preferredHeight: Metrics.controlHeight * 5
+                clip: true
+
+                TextArea {
+                    text: "Row 0 -- a line long enough to scroll sideways\n".repeat(30)
+                    font.family: FontType.mono
+                    readOnly: true
+                }
+            }
+            Caption { text: "stops at bounds in both directions -- no overshoot, no rubber band" }
         }
 
         // -- ToolTip -----------------------------------------------------
@@ -618,11 +633,8 @@ ScrollView {
                 Layout.preferredHeight: Metrics.controlHeight * 5
                 scrollbarAlwaysVisible: true
                 model: 30
-                delegate: Text {
+                delegate: Label {
                     text: "Row " + index
-                    color: Theme.fg
-                    font.family: FontType.sans
-                    font.pixelSize: Metrics.textBody
                     height: Metrics.controlHeight
                 }
             }
@@ -651,23 +663,58 @@ ScrollView {
             }
         }
 
-        // -- BetterProgressBar (Kobold.Controls) ----------------------------
+        // -- ProgressBar (style template) -----------------------------------
         Section {
-            title: "BetterProgressBar (Kobold.Controls)"
+            title: "ProgressBar (style template)"
 
             ColumnLayout {
                 spacing: Metrics.gapS
                 Layout.preferredWidth: Metrics.controlHeight * 8
 
-                BetterProgressBar { Layout.fillWidth: true; value: 0.3 }
+                ProgressBar { Layout.fillWidth: true; value: 0.3 }
                 Caption { text: "30%" }
             }
             ColumnLayout {
                 spacing: Metrics.gapS
                 Layout.preferredWidth: Metrics.controlHeight * 8
 
-                BetterProgressBar { Layout.fillWidth: true; value: 0.75 }
+                ProgressBar { Layout.fillWidth: true; value: 0.75 }
                 Caption { text: "75%" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                Layout.preferredWidth: Metrics.controlHeight * 8
+
+                // The denser track the live axis readouts use.
+                ProgressBar {
+                    Layout.fillWidth: true
+                    trackColor: Theme.line
+                    value: 0.75
+                }
+                Caption { text: "75%, trackColor: line" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                Layout.preferredWidth: Metrics.controlHeight * 8
+
+                ProgressBar { Layout.fillWidth: true; indeterminate: true }
+                Caption { text: "Indeterminate" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                ProgressBar {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: Metrics.dp(100)
+
+                    orientation: Qt.Vertical
+                    barSize: Metrics.dp(20)
+                    trackColor: Theme.line
+                    from: -1
+                    to: 1
+                    value: 0.4
+                }
+                Caption { text: "Vertical, -1..1" }
             }
         }
 
@@ -703,10 +750,9 @@ ScrollView {
                         Layout.fillWidth: true
                         hasChildren: false
 
-                        Text {
+                        Label {
                             text: "[vJoy Device 1 ▾] [Hat 3 ▾]"
                             color: Theme.fgMuted
-                            font.family: FontType.sans
                             font.pixelSize: Metrics.textDetail
                         }
                     }
@@ -845,10 +891,8 @@ ScrollView {
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                             }
-                            Text {
+                            Label {
                                 text: modelData.name
-                                color: Theme.fg
-                                font.family: FontType.sans
                                 font.pixelSize: Metrics.textDetail
                             }
                         }
