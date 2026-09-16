@@ -4,6 +4,7 @@
 // Playground-only: a titled section wrapping one control's state swatches.
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Kobold.Foundation
 
@@ -16,11 +17,8 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Metrics.gapM
 
-    Text {
+    Label {
         text: root.title
-        color: Theme.fg
-        font.family: FontType.sans
-        font.pixelSize: Metrics.textBody
         font.weight: FontType.semiBold
     }
 
