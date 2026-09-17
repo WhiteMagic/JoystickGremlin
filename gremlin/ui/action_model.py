@@ -116,20 +116,10 @@ class ActionModel(QtCore.QObject):
         )
 
     def _icon_path_impl(self) -> str:
-        """Resolves the plugin-authored type icon for this action, tinted to `fg`.
-
-        Unlike `_qml_path_impl`, this has a concrete default and is not overridden
-        per plugin: resolved relative to the data class's own module file, so it
-        works identically for core and user-authored plugins alike, without
-        assuming any tag/directory naming convention. Falls back to a shared
-        placeholder if the plugin has not shipped its own `icon.svg`. The returned
-        `file:///...` URI is consumed by `image://action-icon/<uri>?c=<hex>&px=<n>`
-        (`gremlin/ui/icon_provider.py`), which substitutes `currentColor` for the
-        requested colour and rasterizes it.
-        """
-        own_icon = Path(inspect.getfile(type(self._data))).parent / "icon.svg"
-        if own_icon.exists():
-            return own_icon.as_uri()
+        """Resolves the plugin's type icon for this action, tinted to `fg`."""
+        icon = Path(inspect.getfile(type(self._data))).parent / "icon.svg"
+        if icon.exists():
+            return icon.as_uri()
         return Path(resource_path("action_plugins/action-placeholder.svg")).as_uri()
 
     @property
@@ -259,8 +249,6 @@ class ActionModel(QtCore.QObject):
             # Read before sync_data replaces every ActionModel behind this binding.
             enumeration_index = self._binding_model.parent().enumeration_index
             self._data.insert_action(action, selector)
-            # sync_data's rootActionChanged reloads the subtree; see dropAction for why
-            # reloadCurrentInputItem must not be emitted from here.
             self._binding_model.sync_data()
             signal.inputItemChanged.emit(enumeration_index)
         else:
@@ -272,16 +260,12 @@ class ActionModel(QtCore.QObject):
     def dropAction(self, source: int, container: str, position: int) -> None:
         """Moves the dragged action into one of this action's containers.
 
-        Called on the action owning the target container, not on the action being
-        dragged. The position is the boundary the drag settled on: 0 inserts above
-        the container's current first entry, len(container) appends.
-
         Args:
             source: sequence index of the action being dragged
             container: name of this action's container to move it into
             position: boundary index within that container
         """
-        # Read before the move: everything below runs after move_action has replaced
+        # Read before the move, everything below runs after move_action has replaced
         # every ActionModel behind this binding, self included.
         enumeration_index = self._binding_model.parent().enumeration_index
         try:
@@ -295,10 +279,6 @@ class ActionModel(QtCore.QObject):
             signal.reloadUi.emit()
             return
 
-        # No reloadCurrentInputItem here: move_action's rootActionChanged already
-        # reloads this sequence's subtree (InputItemBinding.qml). Emitting it would
-        # swap the whole InputItemModel out and rebuild every sequence from inside
-        # this slot -- a slot on an ActionModel that the swap destroys.
         signal.inputItemChanged.emit(enumeration_index)
 
     @QtCore.Slot(int)
@@ -310,8 +290,6 @@ class ActionModel(QtCore.QObject):
         """
         # Read before remove_action replaces every ActionModel behind this binding.
         enumeration_index = self._binding_model.parent().enumeration_index
-        # remove_action's rootActionChanged reloads the subtree; see dropAction for why
-        # reloadCurrentInputItem must not be emitted from here.
         self._binding_model.remove_action(index)
         signal.inputItemChanged.emit(enumeration_index)
 
@@ -339,8 +317,8 @@ class ActionModel(QtCore.QObject):
         if value != self._data.action_label:
             self._data.action_label = value
             self.actionChanged.emit()
-            # If the label of a root action is changed update the input button
-            # as well as those labels are displayed on it
+            # If the label of a root action is changed update the input button as well
+            # as those labels are displayed on it.
             if self._data == self._binding_model.root_action:
                 signal.inputItemChanged.emit(
                     self._binding_model.parent().enumeration_index
@@ -358,8 +336,6 @@ class ActionModel(QtCore.QObject):
         return self._data.expanded
 
     def _set_expanded(self, value: bool) -> None:
-        # Notification goes out over the binding model rather than directly, so this
-        # model and any other placement of the same action update by one identical path.
         if self._data.expanded != value:
             self._data.expanded = value
             self._binding_model.expansionChanged.emit(self._data)

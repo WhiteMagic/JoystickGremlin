@@ -127,9 +127,6 @@ class AbstractActionData(ABC):
         self._id = uuid.uuid4()
         self._behavior_type = behavior_type
         self._action_label = ""
-        # Session-only UI state, deliberately not serialized. Lives here rather than on
-        # ActionModel because the models are rebuilt on every tree mutation while this
-        # object is the one that actually moves between containers.
         self._expanded = True
 
         self._activation_mode = ActionActivationMode.Deactivated

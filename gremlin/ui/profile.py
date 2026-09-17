@@ -286,9 +286,6 @@ class InputItemBindingModel(QtCore.QObject):
     rootActionChanged = QtCore.Signal()
     inputTypeChanged = QtCore.Signal()
     userFeedbackChanged = QtCore.Signal()
-    # Carries the AbstractActionData whose expansion state changed. The same action can
-    # sit at several places in one tree, and every model holding that instance has to
-    # update in the same event, so the change is broadcast rather than emitted locally.
     expansionChanged = QtCore.Signal(object)
 
     def __init__(
@@ -385,9 +382,11 @@ class InputItemBindingModel(QtCore.QObject):
     def has_child_actions(self, index: SequenceIndex | int) -> bool:
         """Returns whether the given action has children in any of its containers.
 
-        Generic across container-naming schemes ("children", "true"/"false", ...) since
-        it inspects `_child_lookup` directly rather than needing to know a specific
-        plugin's container names.
+        Args:
+            index: SequenceIndex corresponding to an action
+
+        Returns:
+            True if the specified action has children in any of its containers,
         """
         if isinstance(index, int):
             index = self._index_lookup[index]
@@ -440,8 +439,7 @@ class InputItemBindingModel(QtCore.QObject):
             ancestor: sequence index of the action whose subtree is searched
 
         Returns:
-            True if candidate is ancestor or one of its descendants, False
-            otherwise
+            True if candidate is ancestor or one of its descendants, False otherwise
         """
         pending = [ancestor.index]
         while pending:
@@ -478,21 +476,19 @@ class InputItemBindingModel(QtCore.QObject):
     ) -> None:
         """Moves the source action to a boundary within the target container.
 
-        The position is a boundary index into the container as it stands before
-        the move: position 0 places the action above the container's current
-        first entry, position len(container) appends it.
+        Position specified the insertion index, with standard list semantics.
 
         Args:
             source_idx: sequence index of the action to move
             parent_idx: sequence index of the action owning the target container
             container: name of the container to move the action into
-            position: boundary index within the target container
+            position: index within the target container to insert at
         """
         source_model = self.get_action_model_by_sidx(source_idx)
         parent_model = self.get_action_model_by_sidx(parent_idx)
 
-        # Relinking an action below itself detaches its entire subtree from the
-        # root and leaves a self-referential cycle behind in the library.
+        # Relinking an action below itself detaches its entire subtree from the root
+        # and leaves a self-referential cycle behind in the library.
         if not self.can_move_action(source_idx, parent_idx):
             logging.getLogger("system").warning(
                 f"Rejecting move of action {source_idx} into {parent_idx} as the "
@@ -500,9 +496,6 @@ class InputItemBindingModel(QtCore.QObject):
             )
             return
 
-        # Both checks have to clear before anything is removed: insert_action raises on
-        # an unknown selector, and validates the boundary against the post-removal
-        # length, by which point a rejected move has already dropped the source action.
         parent_data = parent_model.action_data
         container_size = len(parent_data.get_actions(container)[0])
         if not 0 <= position <= container_size:
@@ -520,16 +513,15 @@ class InputItemBindingModel(QtCore.QObject):
             source_position = self.get_action_container_index(source_index)
             # The two boundaries either side of the action are where it already is.
             if source_position in (position, position - 1):
-                # Notify without rebuilding: the tree is unchanged and the models QML
-                # holds must survive, but the view still has to resettle after the drop.
+                # Notify without rebuilding, QML models are retained by the view is
+                # refreshed.
                 self.rootActionChanged.emit()
                 return
             # Removing the source first shifts every later boundary down by one.
             if source_position < position:
                 insert_at -= 1
 
-        # Safe in either order now: the boundary carries its own position rather
-        # than being re-derived from the stale pre-removal container snapshot.
+        # Indices have been fully derived at this stage.
         self.remove_action(source_index, False)
         parent_data.insert_action(
             source_model.action_data,
@@ -643,7 +635,6 @@ class InputItemBindingModel(QtCore.QObject):
         ]
 
     def _check_user_feedback(self, index: int) -> None:
-        # Only perform updates for matching items; an owner-less model matches nothing.
         if getattr(self.parent(), "enumeration_index", None) != index:
             return
 

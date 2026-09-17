@@ -72,7 +72,6 @@ def test_model_setter_getter() -> None:
     iib = InputItemBinding(ii)
     iib.root_action = RootData()
     iibm = InputItemBindingModel(iib)
-    # A real parent keeps _check_user_feedback resolvable when the global signal fires.
     owner = InputItemModel(ii, 0)
     iibm.setParent(owner)
     a = DescriptionData()
@@ -110,7 +109,6 @@ def test_model_to_xml() -> None:
     iib = InputItemBinding(ii)
     iib.root_action = RootData()
     iibm = InputItemBindingModel(iib)
-    # A real parent keeps _check_user_feedback resolvable when the global signal fires.
     owner = InputItemModel(ii, 0)
     iibm.setParent(owner)
     a = DescriptionData()
