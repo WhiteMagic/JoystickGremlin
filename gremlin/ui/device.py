@@ -27,7 +27,6 @@ from gremlin import (
     shared_state,
     util,
 )
-from gremlin.base_classes import AbstractActionData
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.input_cache import DeviceDatabase
@@ -45,34 +44,6 @@ QML_IMPORT_NAME = "Gremlin.Device"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-def _generate_action_sequence_descriptor(item: InputItem) -> str:
-    icons = []
-    if item is not None:
-        for seq in item.action_sequences:
-            [
-                _collect_action_icons(action, icons)
-                for action in seq.root_action.get_actions()[0]
-            ]
-    return ":".join(icons)
-
-
-def _collect_action_icons(action: AbstractActionData, icons: list[str]) -> None:
-    icons.append(action.icon)
-    if action.tag == "map-to-vjoy":
-        icons[-1] += (
-            f",{action.vjoy_device_id},"
-            f"{InputType.to_letter(action.vjoy_input_type)},"
-            f"{action.vjoy_input_id}"
-        )
-    for selector in action._valid_selectors():
-        icons.append("(")
-        [
-            _collect_action_icons(child, icons)
-            for child in action._get_container(selector)
-        ]
-        icons.append(")")
-
-
 def _description_from_item(item: InputItem) -> str:
     if item and len(item.action_sequences) > 0:
         labels = filter(
@@ -88,8 +59,7 @@ def _action_labels_from_item(item: InputItem) -> list[str]:
     """Returns the labels of every bound action across all of the item's sequences.
 
     A sequence's root is an invisible container (action_label always "Root") whose
-    children are the actually bound actions; an empty/unbound sequence has no
-    children and contributes nothing.
+    children are the actually bound actions.
     """
     if not item:
         return []
@@ -327,13 +297,10 @@ class Device(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(
-            b"actionSequenceDescriptor"
-        ),
-        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(
             b"actionSequenceDisplayMode"
         ),
-        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
-        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"actionLabels"),
     }
 
     deviceChanged = QtCore.Signal()
@@ -422,13 +389,6 @@ class Device(QtCore.QAbstractListModel):
             case "actionSequenceCount":
                 input_item = self._get_input_item(input_info)
                 return len(input_item.action_sequences) if input_item else 0
-            case "actionSequenceDescriptor":
-                input_item = self._get_input_item(input_info)
-                return (
-                    _generate_action_sequence_descriptor(input_item)
-                    if input_item
-                    else ""
-                )
             case "actionSequenceDisplayMode":
                 return Configuration().value(
                     "global", "general", "action-sequence-information"
@@ -501,13 +461,10 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"label"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"actionSequenceCount"),
         QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(
-            b"actionSequenceDescriptor"
-        ),
-        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(
             b"actionSequenceDisplayMode"
         ),
-        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"description"),
-        QtCore.Qt.ItemDataRole.UserRole + 7: QtCore.QByteArray(b"actionLabels"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -617,12 +574,6 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
                 return input_info.label
             case "actionSequenceCount":
                 return len(input_item.action_sequences) if input_item else 0
-            case "actionSequenceDescriptor":
-                return (
-                    _generate_action_sequence_descriptor(input_item)
-                    if input_item
-                    else ""
-                )
             case "actionSequenceDisplayMode":
                 return Configuration().value(
                     "global", "general", "action-sequence-information"
@@ -814,13 +765,10 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(
-            b"actionSequenceDescriptor"
-        ),
-        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(
             b"actionSequenceDisplayMode"
         ),
-        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
-        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -912,12 +860,6 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
                 return keyboard.key_from_code(*input_item.input_id).name
             case "actionSequenceCount":
                 return len(input_item.action_sequences) if input_item else 0
-            case "actionSequenceDescriptor":
-                return (
-                    _generate_action_sequence_descriptor(input_item)
-                    if input_item
-                    else ""
-                )
             case "actionSequenceDisplayMode":
                 return Configuration().value(
                     "global", "general", "action-sequence-information"

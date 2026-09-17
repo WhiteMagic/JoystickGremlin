@@ -2,7 +2,6 @@
 *.sw[op]
 *.pyc
 *.wxs
-poetry.lock
 
 # IDE & Python generated folders
 __pycache__

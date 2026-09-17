@@ -56,13 +56,14 @@ _CHART_SERIES_COLORS = (
 def _read_qfile(path: str) -> str:
     """Reads a text file's full content via QFile.
 
+    Reads contents of both regular files and qrc resources.
+
     Args:
-        path: Path to the file to read.
+        path: Path specification to the file to read.
 
     Returns:
         The file's contents as a string.
     """
-    # QFile handles both qrc resource paths as well as plain filesystem paths.
     handle = QtCore.QFile(path)
     if not handle.open(
         QtCore.QIODevice.OpenModeFlag.ReadOnly | QtCore.QIODevice.OpenModeFlag.Text
@@ -75,14 +76,14 @@ def _read_qfile(path: str) -> str:
 
 
 def _load_theme_file(path: str, schema: dict) -> tuple[str, dict] | None:
-    """Loads and schema-validates a single scheme file.
+    """Loads a file and validates it against the schema.
 
     Args:
         path: Path to the theme file to load and validate.
         schema: JSON schema to validate the theme file against.
 
     Returns:
-        Tuple of theme name and data if valid, None if rejected.
+        Tuple of theme name and data if valid, None if loading or validation fails.
     """
     theme_name = QtCore.QFileInfo(path).completeBaseName()
     try:
@@ -97,7 +98,9 @@ def _load_theme_file(path: str, schema: dict) -> tuple[str, dict] | None:
 
 
 def _discover_themes(root_paths: list[str]) -> dict[str, dict]:
-    """Loads and validates every theme JSON file across the given roots.
+    """Loads and validates every theme JSON file across the given root paths.
+
+    Assumes that the first root path contains the schema file.
 
     Args:
         root_paths: Directories to search for theme files.
@@ -105,14 +108,14 @@ def _discover_themes(root_paths: list[str]) -> dict[str, dict]:
     Returns:
         Mapping of theme name to theme data for every valid theme found.
     """
-    schema = json.loads(_read_qfile(f"{root_paths[0]}/{_SCHEMA_FILE_NAME}"))
+    validation_schema = json.loads(_read_qfile(f"{root_paths[0]}/{_SCHEMA_FILE_NAME}"))
     themes: dict[str, dict] = {}
     for root in root_paths:
         directory = QtCore.QDir(root)
         for file_name in directory.entryList(["*.json"], QtCore.QDir.Filter.Files):
             if file_name == _SCHEMA_FILE_NAME:
                 continue
-            result = _load_theme_file(directory.filePath(file_name), schema)
+            result = _load_theme_file(directory.filePath(file_name), validation_schema)
             if result is not None:
                 theme_name, data = result
                 themes[theme_name] = data
@@ -120,7 +123,7 @@ def _discover_themes(root_paths: list[str]) -> dict[str, dict]:
 
 
 def discover_theme_names(root_paths: list[str] | None = None) -> list[str]:
-    """Returns the names of every valid, discovered color theme.
+    """Returns the names of all valid, discovered color themes.
 
     Args:
         root_paths: Directories to search for theme files.
@@ -134,13 +137,9 @@ def discover_theme_names(root_paths: list[str] | None = None) -> list[str]:
 def set_active_theme(theme_name: str, valid_names: list[str]) -> None:
     """Persists the given theme as active and notifies listeners.
 
-    The single implementation of "activate a theme" — both ThemeManager.set_theme
-    and ThemeSelectionModel go through this rather than each writing Configuration
-    and emitting configChanged themselves.
-
     Args:
         theme_name: Name of the theme to activate.
-        valid_names: Known-good theme names to validate against.
+        valid_names: Valid theme names to select from.
     """
     if theme_name not in valid_names:
         logging.getLogger("system").warning(f"Unknown theme '{theme_name}'")
@@ -165,10 +164,7 @@ def load_fonts() -> None:
 
 
 class ThemeManager(QtCore.QObject):
-    """Owns Kobold color scheme discovery, validation, and the active scheme.
-
-    Exposes the 11 color tokens plus the UI zoom percentage as QML properties.
-    """
+    """Handles Kobold color scheme management."""
 
     changed = QtCore.Signal()
 

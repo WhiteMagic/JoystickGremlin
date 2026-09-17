@@ -15,19 +15,21 @@ from PySide6 import (
 )
 
 
-class _BaseIconProvider(QtQuick.QQuickImageProvider):
-    """Shared `image://<provider>/<id>?c=<hex>&px=<size>` pipeline.
+class BaseIconProvider(QtQuick.QQuickImageProvider):
+    """Base for dedicated icon providers.
 
-    Handles caching, id parsing, `currentColor` substitution and rasterization.
-    Subclasses only decide how `<id>` (the part before `?`) maps to a QFile.
+    The class provides the shared handling logic to request and process icons requested
+    as: `image://<provider>/<id>?c=<hex>&px=<size>`
+
+    The class handles parsing, caching, color substitution and rasterization.
     """
 
     def __init__(self, max_cache_size: int = 200) -> None:
         """Initialize the image provider.
 
         Args:
-            max_cache_size: Maximum number of rendered images to cache.
-                When the limit is reached, the oldest entry is evicted.
+            max_cache_size: Maximum number of rendered images to cache. When the limit
+                is reached, the oldest entry is evicted.
         """
         super().__init__(QtQuick.QQuickImageProvider.ImageType.Image)
         self._cache: collections.OrderedDict[str, QtGui.QImage] = (
@@ -135,7 +137,7 @@ class _BaseIconProvider(QtQuick.QQuickImageProvider):
         return image
 
 
-class IconProvider(_BaseIconProvider):
+class IconProvider(BaseIconProvider):
     """Rasterizes and recolors the bundled Kobold style icon glyphs on demand.
 
     Handles `image://icon/<name>?c=<hex>&px=<size>` requests by loading
@@ -146,12 +148,11 @@ class IconProvider(_BaseIconProvider):
         return QtCore.QFile(f":/style-icons/{name}.svg")
 
 
-class ActionIconProvider(_BaseIconProvider):
+class ActionIconProvider(BaseIconProvider):
     """Rasterizes and recolors plugin-authored action type icons on demand.
 
     Handles `image://action-icon/<uri>?c=<hex>&px=<size>` requests, where
-    `<uri>` is a `file:///...` URI pointing directly at an `icon.svg` on disk —
-    core or user-authored alike, since neither is embedded in the qrc.
+    `<uri>` is a `file:///...` URI pointing directly at an `icon.svg` on diskc.
     """
 
     def _open(self, name: str) -> QtCore.QFile:
