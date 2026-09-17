@@ -5,24 +5,22 @@ on: workflow_dispatch
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: ["3.13"]
-        poetry-version: ["latest"]
     steps:
     - uses: actions/checkout@v6
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version-file: pyproject.toml
     - name: Set up poetry for dependency management
       uses: abatilo/actions-poetry@v2
       with:
-        poetry-version: ${{ matrix.poetry-version }}
+        poetry-version: "2.3.2"
     - name: Setup a local virtual environment
       run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
+    - name: Verify poetry.lock matches pyproject.toml
+      run: poetry check --lock
     - name: Install the project dependencies with poetry
       run: poetry install
     - name: Install dependencies
