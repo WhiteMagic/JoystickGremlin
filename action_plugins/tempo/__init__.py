@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,8 +8,7 @@ import threading
 from typing import (
     TYPE_CHECKING,
     Any,
-    List,
-    Optional,
+    ClassVar,
     override,
 )
 from xml.etree import ElementTree
@@ -64,7 +61,7 @@ class TempoFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
@@ -91,7 +88,7 @@ class TempoFunctor(AbstractFunctor):
             self._reset_fsm(event, value, properties)
 
     def _reset_fsm(
-        self, event: event_handler.Event, value: Value, properties: List[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         logging.getLogger("event").warning(
             "Tempo: Resetting due to invalid FSM transition."
@@ -104,7 +101,7 @@ class TempoFunctor(AbstractFunctor):
         )
 
     def _release_cb(
-        self, event: event_handler.Event, value: Value, properties: List[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         if (self.fsm.current_state, "press") not in self.fsm.transitions:
             self._reset_fsm(event, value, properties)
@@ -113,31 +110,31 @@ class TempoFunctor(AbstractFunctor):
         T = fsm.Transition
 
         def short_pulse(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             return self._short_pulse(p)
 
         def short_press(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(
                 self.functors["short"], self.event_press, self.value_press, p
             )
 
         def short_release(
-            e: event_handler.Event, v: Value, p: List[ActionProperty]
+            e: event_handler.Event, v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(self.functors["short"], e, v, p)
 
         def long_press(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(
                 self.functors["long"], self.event_press, self.value_press, p
             )
 
         def long_release(
-            e: event_handler.Event, v: Value, p: List[ActionProperty]
+            e: event_handler.Event, v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(self.functors["long"], e, v, [])
 
@@ -174,7 +171,7 @@ class TempoFunctor(AbstractFunctor):
         self.timer = threading.Timer(self.data.threshold, self._timeout)
         self.timer.start()
 
-    def _short_pulse(self, properties: List[ActionProperty]) -> None:
+    def _short_pulse(self, properties: list[ActionProperty]) -> None:
         if self.timer:
             self.timer.cancel()
         self._pulse_event(
@@ -254,8 +251,8 @@ class TempoData(AbstractActionData):
     functor = TempoFunctor
     model = TempoModel
 
-    properties = [ActionProperty.ActivateDisabled]
-    input_types = [InputType.JoystickButton, InputType.Keyboard]
+    properties: ClassVar[list] = [ActionProperty.ActivateDisabled]
+    input_types: ClassVar[list] = [InputType.JoystickButton, InputType.Keyboard]
 
     def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
@@ -306,13 +303,11 @@ class TempoData(AbstractActionData):
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return ["long", "short"]
 
     @override
-    def _get_container(
-        self, selector: Optional[str] = None
-    ) -> List[AbstractActionData]:
+    def _get_container(self, selector: str | None = None) -> list[AbstractActionData]:
         if selector == "short":
             return self.short_actions
         elif selector == "long":

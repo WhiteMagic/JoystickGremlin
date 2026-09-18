@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 """
@@ -111,7 +109,7 @@ class TestSimpleProfile:
             -6554,
             -16384,
             -22940,
-            0,
+            0,  # noqa: PT014
             -32768,
         ],
     )
@@ -216,7 +214,7 @@ class TestSimpleProfile:
 
     @pytest.mark.parametrize(
         ("di_input", "vjoy_output", "cached_value"),
-        [(False, 0, False), (True, 1, True), (False, 0, False), (True, 1, True)],
+        [(False, 0, False), (True, 1, True), (False, 0, False), (True, 1, True)],  # noqa: PT014
     )
     def test_button(
         self,
@@ -255,7 +253,7 @@ class TestSimpleProfile:
             (types.HatDirection.SouthWest, 22500, types.HatDirection.SouthWest),
             (types.HatDirection.West, 27000, types.HatDirection.West),
             (types.HatDirection.NorthWest, 31500, types.HatDirection.NorthWest),
-            (types.HatDirection.North, 0, types.HatDirection.North),
+            (types.HatDirection.North, 0, types.HatDirection.North),  # noqa: PT014
         ],
     )
     def test_hat(

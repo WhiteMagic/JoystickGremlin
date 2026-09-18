@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,7 +8,10 @@ import time
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import cast
+from typing import (
+    ClassVar,
+    cast,
+)
 
 from PySide6 import (
     QtCharts,
@@ -164,7 +165,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
     deviceTypeChanged = QtCore.Signal()
     selectedIndexChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"axes"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"buttons"),
@@ -293,7 +294,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
 class Device(QtCore.QAbstractListModel):
     """Model providing access to information about a single device."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(
@@ -456,7 +457,7 @@ class Device(QtCore.QAbstractListModel):
 class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     """Model providing information about the intermedia output device."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"label"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"actionSequenceCount"),
@@ -658,7 +659,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
     inputsChanged = QtCore.Signal()
     selectionChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"label"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"id"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"type"),
@@ -761,7 +762,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
 class KeyboardManagerModel(QtCore.QAbstractListModel):
     """Model providing information about and managing keyboard inputs."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(
@@ -1139,7 +1140,7 @@ class VJoyDevices(QtCore.QObject):
 class AbstractDeviceState(QtCore.QAbstractListModel):
     deviceChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"identifier"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
     }
@@ -1343,7 +1344,7 @@ class DeviceAxisSeries(QtCore.QObject):
             return
 
         time_series = []
-        for p0, p1 in zip(data[:-1], data[1:]):
+        for p0, p1 in zip(data[:-1], data[1:]):  # noqa: RUF007
             time_series.append(QtCore.QPointF(p0[0] - now, p0[1]))
             time_series.append(QtCore.QPointF(p1[0] - now, p0[1]))
 
@@ -1366,7 +1367,7 @@ class DeviceAxisSeries(QtCore.QObject):
 class AxisCalibration(QtCore.QAbstractListModel):
     deviceChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"identifier"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"calibratedValue"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"rawValue"),

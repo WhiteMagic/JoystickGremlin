@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,9 +5,7 @@ from __future__ import annotations
 import enum
 import logging
 from typing import (
-    Generic,
     NamedTuple,
-    TypeVar,
 )
 
 import gremlin.error
@@ -527,7 +523,7 @@ class LogicalOperator(enum.Enum):
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid logical operator type: {str(instance)}"
+                f"Invalid logical operator type: {instance!s}"
             )
         return value
 
@@ -537,7 +533,7 @@ class LogicalOperator(enum.Enum):
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid logical operator type: {str(instance)}"
+                f"Invalid logical operator type: {instance!s}"
             )
         return value
 
@@ -547,7 +543,7 @@ class LogicalOperator(enum.Enum):
         value = lookup.get(string, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid logical operator type: {str(string)}"
+                f"Invalid logical operator type: {string!s}"
             )
         return value
 
@@ -573,7 +569,7 @@ class ConditionType(enum.Enum):
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid condition operator type: {str(instance)}"
+                f"Invalid condition operator type: {instance!s}"
             )
         return value
 
@@ -589,7 +585,7 @@ class ConditionType(enum.Enum):
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid condition operator type: {str(instance)}"
+                f"Invalid condition operator type: {instance!s}"
             )
         return value
 
@@ -605,7 +601,7 @@ class ConditionType(enum.Enum):
         value = lookup.get(string, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid condition operator type: {str(string)}"
+                f"Invalid condition operator type: {string!s}"
             )
         return value
 
@@ -647,7 +643,7 @@ class ActionActivationMode(enum.Enum):
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid action activation mode: {str(instance)}"
+                f"Invalid action activation mode: {instance!s}"
             )
         return value
 
@@ -663,7 +659,7 @@ class ActionActivationMode(enum.Enum):
         value = lookup.get(string, None)
         if value is None:
             raise gremlin.error.GremlinError(
-                f"Invalid action activation mode: {str(string)}"
+                f"Invalid action activation mode: {string!s}"
             )
         return value
 
@@ -739,10 +735,7 @@ class Point2D:
         return Point2D(self.x - other.x, self.y - other.y)
 
 
-NumericType = TypeVar("NumericType", int, float)
-
-
-class ValueRange(Generic[NumericType]):
+class ValueRange[NumericType: (int, float)]:
     """Represents a value range for a numerical type."""
 
     _low: NumericType

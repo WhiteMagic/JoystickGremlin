@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import (
     TYPE_CHECKING,
-    List,
+    ClassVar,
     override,
 )
 from xml.etree import ElementTree
@@ -114,8 +112,11 @@ class LoadProfileData(AbstractActionData):
     functor = LoadProfileFunctor
     model = LoadProfileModel
 
-    properties = [ActionProperty.ActivateOnPress, ActionProperty.AlwaysExecute]
-    input_types = [InputType.JoystickButton, InputType.Keyboard]
+    properties: ClassVar[list] = [
+        ActionProperty.ActivateOnPress,
+        ActionProperty.AlwaysExecute,
+    ]
+    input_types: ClassVar[list] = [InputType.JoystickButton, InputType.Keyboard]
 
     def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
@@ -146,7 +147,7 @@ class LoadProfileData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         messages = []
         if not file_exists_and_is_accessible(self.profile_filename):
             messages.append(
@@ -159,11 +160,11 @@ class LoadProfileData(AbstractActionData):
         return messages
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override

@@ -42,6 +42,10 @@ indent-style = "space"
 
 [tool.ruff.lint]
 extend-select = ["ANN", "I", "E501"]
+ignore = ["B006", "PLW0602", "RUF017", "TRY401", "SIM115"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["PySide6.QtCore.QModelIndex"]
 
 [tool.pyright]
 include = ["action_plugins", "dill", "gremlin", "joystick_gremlin.py", "vjoy"]

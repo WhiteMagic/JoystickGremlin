@@ -1,14 +1,12 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 import sys
 import threading
+from collections.abc import Generator
 from pathlib import Path
 from typing import (
-    Generator,
     cast,
 )
 
@@ -92,7 +90,7 @@ class EventSpec:
             return False
         match self.event_type:
             case InputType.JoystickAxis:
-                return  self.expected_value == pytest.approx(event.value)
+                return self.expected_value == pytest.approx(event.value)
             case InputType.JoystickButton:
                 return self.expected_value == event.is_pressed
             case InputType.JoystickHat:
@@ -400,7 +398,7 @@ class JoystickGremlinBot:
         self.set_hat_direction(hat_id, HatDirection.Center)
 
     def _emit_event(
-        self, input_type: InputType, input_id: int, value: float | int | HatDirection
+        self, input_type: InputType, input_id: int, value: float | HatDirection
     ) -> None:
         """Creates an Event instance based on the given information and then
         emits it.

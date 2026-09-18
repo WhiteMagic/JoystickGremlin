@@ -1,13 +1,11 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from typing import (
-    Callable,
     TypeVar,
 )
 
@@ -83,9 +81,8 @@ class GremlinAppTester:
             else:
                 assert time.monotonic() - start_t >= min_delay
                 return
-        else:
-            if last_exception is not None:
-                raise last_exception
+        if last_exception is not None:
+            raise last_exception
 
     # Assertions on input cache values.
 

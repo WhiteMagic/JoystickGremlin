@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -9,8 +7,7 @@ from collections.abc import Callable
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
+    ClassVar,
     override,
 )
 from xml.etree import ElementTree
@@ -48,7 +45,7 @@ if TYPE_CHECKING:
 
 
 class DirectionalButton:
-    resolve_direction = {
+    resolve_direction: ClassVar[dict] = {
         HatDirection.North: "North",
         HatDirection.NorthEast: "North-East",
         HatDirection.East: "East",
@@ -69,7 +66,7 @@ class DirectionalButton:
         "North-West": HatDirection.NorthWest,
     }
 
-    def __init__(self, functors: Dict[str, List[Callable]], direction: str) -> None:
+    def __init__(self, functors: dict[str, list[Callable]], direction: str) -> None:
         self.functors = functors
         self.functor_direction = direction
         self.type_direction = DirectionalButton.resolve_direction[direction]
@@ -98,7 +95,7 @@ class DirectionalButton:
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         is_pressed = event.value == self.type_direction
         action = "press" if is_pressed else "release"
@@ -121,7 +118,7 @@ class DirectionalButton:
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         for functor in self.functors[self.functor_direction]:
             functor(event, value, properties)
@@ -141,7 +138,7 @@ class HatButtonsFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         for button in self.buttons:
             button(event, value, properties)
@@ -151,7 +148,7 @@ class HatButtonsModel(ActionModel):
     # Signal emitted when the description variable's content changes
     changed = QtCore.Signal()
 
-    name_lookup = {
+    name_lookup: ClassVar[dict] = {
         (4, 0): "North",
         (4, 1): "East",
         (4, 2): "South",
@@ -221,7 +218,7 @@ class HatButtonsData(AbstractActionData):
     properties = (ActionProperty.ActivateDisabled,)
     input_types = (InputType.JoystickHat,)
 
-    name_list = {
+    name_list: ClassVar[dict] = {
         4: ["North", "East", "South", "West", "Center"],
         8: [
             "North",
@@ -281,7 +278,7 @@ class HatButtonsData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,7 +5,6 @@ from __future__ import annotations
 import uuid
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -63,11 +60,13 @@ class ReferenceModel(ActionModel):
         ancestor_action_ids = []
         queue = [self._data.id]
         while len(queue) > 0:
-            aid = queue.pop(0)
+            current_id = queue.pop(0)
             action_ids = [
-                a.id
-                for a in self.library.actions_by_predicate(
-                    lambda x: aid in [v.id for v in x.get_actions()[0]]
+                action.id
+                for action in self.library.actions_by_predicate(
+                    lambda candidate, child_id=current_id: (
+                        child_id in [child.id for child in candidate.get_actions()[0]]
+                    )
                 )
             ]
             ancestor_action_ids.extend(action_ids)
@@ -86,9 +85,7 @@ class ReferenceModel(ActionModel):
                 return False
 
             # Reject all actions that would result in a loop
-            if action.id in ancestor_action_ids:
-                return False
-            return True
+            return not (action.id in ancestor_action_ids)
 
         # Grab library and get all actions that fit with the given input modality
         actions = self.library.actions_by_predicate(selector)
@@ -154,7 +151,7 @@ class ReferenceData(AbstractActionData):
         return ElementTree.Element("")
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return [
             UserFeedback(
                 UserFeedback.FeedbackType.Error,
@@ -163,11 +160,11 @@ class ReferenceData(AbstractActionData):
         ]
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override

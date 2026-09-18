@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -9,7 +7,7 @@ import logging
 import uuid
 from typing import (
     TYPE_CHECKING,
-    List,
+    ClassVar,
     cast,
     override,
 )
@@ -98,7 +96,7 @@ class JoystickActionModel(AbstractActionModel):
             )
 
     @QtCore.Slot(list)
-    def updateJoystick(self, data: List[event_handler.Event]) -> None:
+    def updateJoystick(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single event and thus only store the
@@ -190,7 +188,7 @@ class KeyActionModel(AbstractActionModel):
         return "" if self._action.key is None else self._action.key.name
 
     @QtCore.Slot(list)
-    def updateKey(self, data: List[event_handler.Event]) -> None:
+    def updateKey(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the
@@ -345,7 +343,7 @@ class MouseButtonActionModel(AbstractActionModel):
         )
 
     @QtCore.Slot(list)
-    def updateButton(self, data: List[event_handler.Event]) -> None:
+    def updateButton(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the
@@ -562,8 +560,8 @@ class MacroFunctor(AbstractFunctor):
         super().__init__(action)
 
         self.macro = macro.Macro()
-        for action in self.data.actions:
-            self.macro.add_action(action)
+        for data_action in self.data.actions:
+            self.macro.add_action(data_action)
         self.macro.is_exclusive = self.data.is_exclusive
         self.macro.is_preempting = self.data.is_preemptive
         match self.data.repeat_mode:
@@ -600,7 +598,7 @@ class ActionListModel(QtCore.QAbstractListModel):
 
     actionAdded = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"modelData"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionType"),
     }
@@ -716,7 +714,7 @@ class MacroModel(ActionModel):
     changed = QtCore.Signal()
     recordingChanged = QtCore.Signal()
 
-    action_lookup = {
+    action_lookup: ClassVar[dict] = {
         "joystick": macro.JoystickAction.create,
         "key": macro.KeyAction.create,
         "logical-device": macro.LogicalDeviceAction.create,
@@ -726,7 +724,7 @@ class MacroModel(ActionModel):
         "vjoy": macro.VJoyAction.create,
     }
 
-    model_lookup = {
+    model_lookup: ClassVar[dict] = {
         "joystick": JoystickActionModel,
         "logical-device": LogicalDeviceActionModel,
         "key": KeyActionModel,
@@ -1058,15 +1056,15 @@ class MacroData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override

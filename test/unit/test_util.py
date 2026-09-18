@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -185,8 +183,8 @@ def test_determine_value_type_valid_values(
     value: Any,  # noqa: ANN401
     property_type: gremlin.types.PropertyType | list[gremlin.types.PropertyType],
 ) -> None:
-    property_type, is_valid = gremlin.util.determine_value_type(value, property_type)
-    assert property_type == property_type
+    prop_type, is_valid = gremlin.util.determine_value_type(value, property_type)
+    assert prop_type == property_type
     assert is_valid
 
 

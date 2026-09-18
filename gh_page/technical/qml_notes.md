@@ -95,8 +95,8 @@ import random
 
 from PySide6 import QtCore
 
-class Backend(QtCore):
 
+class Backend(QtCore):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -178,6 +178,7 @@ At times it is useful to return a simple list of strings to be displayed by a QM
 
 ```python
 from PySide6 import QtCore
+
 
 @QtCore.Property(type="QVariantList")
 def listData():
@@ -278,13 +279,13 @@ from PySide6.QtCore import Signal, Property
 
 
 class Base(QtCore.QObject):
-
     updated = Signal()
 
     def __init__(self):
         super().__init__()
 
         self._value = ""
+
     def _get_value(self) -> str:
         return self._get_value_impl()
 
@@ -299,16 +300,10 @@ class Base(QtCore.QObject):
             self._value = new_value
             self.updated.emit()
 
-    value = Property(
-        str,
-        _get_value,
-        _set_value,
-        notify=updated
-    )
+    value = Property(str, _get_value, _set_value, notify=updated)
 
 
 class Derived(Base):
-
     def __init__(self):
         super().__init__()
 
@@ -334,6 +329,7 @@ A way to find out what imports are active in a program you can use the following
 
 ```python
 import sys, pprint
+
 pprint.pprint(sorted(sys.modules.keys()))
 ```
 

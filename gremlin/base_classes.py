@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -288,10 +286,8 @@ class AbstractActionData(ABC):
             True if the instance is in a valid state, False otherwise
         """
         return not any(
-            [
-                uf.feedback_type == UserFeedback.FeedbackType.Error
-                for uf in self.user_feedback()
-            ]
+            uf.feedback_type == UserFeedback.FeedbackType.Error
+            for uf in self.user_feedback()
         )
 
     # Interface that all actions have to support, even if only an empty noop
@@ -305,7 +301,6 @@ class AbstractActionData(ABC):
             node: the XML node to parse for content
             library: Library instance containing all actions
         """
-        pass
 
     @abstractmethod
     def _to_xml(self) -> ElementTree.Element:
@@ -314,7 +309,6 @@ class AbstractActionData(ABC):
         Returns:
             XML node containing the instance's contents
         """
-        pass
 
     @abstractmethod
     def user_feedback(self) -> list[UserFeedback]:
@@ -326,7 +320,6 @@ class AbstractActionData(ABC):
         Returns:
             List of user feedback instances.
         """
-        pass
 
     def get_actions(
         self, selector: str | None = None
@@ -460,7 +453,6 @@ class AbstractActionData(ABC):
         Returns:
             List of valid selectors
         """
-        pass
 
     @abstractmethod
     def _get_container(self, selector: str) -> list[AbstractActionData]:
@@ -472,7 +464,6 @@ class AbstractActionData(ABC):
         Returns:
             List container with actions referenced by the selector
         """
-        pass
 
     @abstractmethod
     def _handle_behavior_change(
@@ -486,7 +477,6 @@ class AbstractActionData(ABC):
             old_behavior: type describing the old behavior
             new_behavior: type describing the new behavior
         """
-        pass
 
     # General utility functions, supporting the implementation of actions.
 
@@ -514,7 +504,7 @@ class AbstractActionData(ABC):
 T = TypeVar("T", bound="AbstractActionData")
 
 
-class AbstractFunctor(Generic[T], ABC):
+class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
     """Abstract base class defining the interface for functor like classes."""
 
     def __init__(self, instance: T) -> None:
@@ -545,7 +535,6 @@ class AbstractFunctor(Generic[T], ABC):
             properties: additional property information to pass to child
                 functors
         """
-        pass
 
     def _process_event(
         self,

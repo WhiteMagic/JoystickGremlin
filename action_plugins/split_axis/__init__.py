@@ -1,12 +1,9 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -113,8 +110,8 @@ class SplitAxisData(AbstractActionData):
     def __init__(self, behavior_type: InputType = InputType.JoystickAxis) -> None:
         super().__init__(behavior_type)
 
-        self.lower_actions: List[AbstractActionData] = []
-        self.upper_actions: List[AbstractActionData] = []
+        self.lower_actions: list[AbstractActionData] = []
+        self.upper_actions: list[AbstractActionData] = []
         self.split_value: float = 0.0
 
     @override
@@ -151,11 +148,11 @@ class SplitAxisData(AbstractActionData):
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return ["lower", "upper"]
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         match selector:
             case "lower":
                 return self.lower_actions

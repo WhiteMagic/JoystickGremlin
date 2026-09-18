@@ -1,13 +1,11 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 import ctypes
 import logging
+from collections.abc import Callable
 from ctypes import wintypes
-from typing import Callable
 
 import win32api
 import win32con

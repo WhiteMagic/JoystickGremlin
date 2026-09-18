@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -15,7 +13,7 @@ import uuid
 
 import pytest
 
-import action_plugins.condition as condition
+from action_plugins import condition
 from action_plugins.condition import ConditionData
 from action_plugins.description import DescriptionData
 from gremlin.error import GremlinError

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -160,7 +158,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         if data_type not in _required_properties:
             raise error.GremlinError(
                 "Attempting to register an entry with unsupported data type: "
-                + f"{str(data_type)} in {key}"
+                + f"{data_type!s} in {key}"
             )
 
         # Ensure all required properties are present
@@ -169,7 +167,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 if req_prop not in properties:
                     raise error.GremlinError(
                         f"Missing property '{req_prop}' of type "
-                        f"{str(req_type)} in entry '{key}'"
+                        f"{req_type!s} in entry '{key}'"
                     )
                 elif not isinstance(properties[req_prop], req_type):
                     raise error.GremlinError(
@@ -291,7 +289,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
             List containing the name of all sections present.
         """
         section_names = []
-        for key in self._data.keys():
+        for key in self._data:
             if len(self.groups(key[0], only_exposed)) > 0:
                 section_names.append(key[0])
         return sorted(set(section_names))
@@ -308,7 +306,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
             The list of groups occurring within the given section.
         """
         group_names = []
-        for key in self._data.keys():
+        for key in self._data:
             if (
                 key[0] == section
                 and len(self.entries(key[0], key[1], only_exposed)) > 0
@@ -330,29 +328,17 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         if only_exposed:
             return sorted(
-                list(
-                    set(
-                        [
-                            key[2]
-                            for key in self._data.keys()
-                            if key[0] == section
-                            and key[1] == group
-                            and self.expose(section, group, key[2])
-                        ]
-                    )
-                )
+                {
+                    key[2]
+                    for key in self._data
+                    if key[0] == section
+                    and key[1] == group
+                    and self.expose(section, group, key[2])
+                }
             )
         else:
             return sorted(
-                list(
-                    set(
-                        [
-                            key[2]
-                            for key in self._data.keys()
-                            if key[0] == section and key[1] == group
-                        ]
-                    )
-                )
+                {key[2] for key in self._data if key[0] == section and key[1] == group}
             )
 
     def value(self, section: str, group: str, name: str) -> Any:  # noqa: ANN401

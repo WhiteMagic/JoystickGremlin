@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -11,7 +9,6 @@ from abc import (
 from typing import (
     TYPE_CHECKING,
     Any,
-    List,
 )
 from xml.etree import ElementTree
 
@@ -167,7 +164,7 @@ class AbstractComparator(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def __call__(self, value: Value, states: List[Any]) -> bool:
+    def __call__(self, value: Value, states: list[Any]) -> bool:
         pass
 
 
@@ -190,7 +187,7 @@ class RangeComparator(AbstractComparator):
         self.lower = lower
         self.upper = upper
 
-    def __call__(self, value: Value, states: List[Any]) -> bool:
+    def __call__(self, value: Value, states: list[Any]) -> bool:
         """Returns whether or not the provided values is within the range.
 
         Args:
@@ -231,7 +228,7 @@ class PressedComparator(AbstractComparator):
 
         self.is_pressed = is_pressed
 
-    def __call__(self, value: Value, states: List[Any]) -> bool:
+    def __call__(self, value: Value, states: list[Any]) -> bool:
         """Returns True if the button states match, False otherwise.
 
         Args:
@@ -241,7 +238,7 @@ class PressedComparator(AbstractComparator):
         Returns:
             True if all buttons have matching state, False otherwise
         """
-        return all([state == self.is_pressed for state in states])
+        return all(state == self.is_pressed for state in states)
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.is_pressed = util.read_property(node, "is-pressed", PropertyType.Bool)
@@ -259,7 +256,7 @@ class DirectionComparator(AbstractComparator):
 
     model = DirectionComparatorModel
 
-    def __init__(self, directions: List[HatDirection] = []) -> None:
+    def __init__(self, directions: list[HatDirection] = []) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -269,7 +266,7 @@ class DirectionComparator(AbstractComparator):
 
         self.directions = directions
 
-    def __call__(self, value: Value, states: List[Any]) -> bool:
+    def __call__(self, value: Value, states: list[Any]) -> bool:
         return states[0] in self.directions
 
     def from_xml(self, node: ElementTree.Element) -> None:

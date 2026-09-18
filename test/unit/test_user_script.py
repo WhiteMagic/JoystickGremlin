@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -229,24 +227,25 @@ class TestScript:
     def test_selection_variable_with_invalid_default_raises(
         self, subtests: pytest.Subtests
     ) -> None:
-        with subtests.test("default too large"):
-            with pytest.raises(error.PluginError):
-                user_script.SelectionVariable(
-                    "Var With Default Index Too Large",
-                    "Selection variable with invalid default index",
-                    True,
-                    ["option1", "option2"],
-                    default_index=5,
-                )
-        with subtests.test("negative default index not allowed"):
-            with pytest.raises(error.PluginError):
-                user_script.SelectionVariable(
-                    "Var With Default Index Negative",
-                    "Selection variable with invalid default index",
-                    True,
-                    ["option1", "option2"],
-                    default_index=-1,
-                )
+        with subtests.test("default too large"), pytest.raises(error.PluginError):
+            user_script.SelectionVariable(
+                "Var With Default Index Too Large",
+                "Selection variable with invalid default index",
+                True,
+                ["option1", "option2"],
+                default_index=5,
+            )
+        with (
+            subtests.test("negative default index not allowed"),
+            pytest.raises(error.PluginError),
+        ):
+            user_script.SelectionVariable(
+                "Var With Default Index Negative",
+                "Selection variable with invalid default index",
+                True,
+                ["option1", "option2"],
+                default_index=-1,
+            )
 
     def test_selection_variable(
         self, script_for_test: user_script.Script, subtests: pytest.Subtests
@@ -259,9 +258,8 @@ class TestScript:
         assert var.is_optional is True
         assert var.description == "Example selection variable"
 
-        with subtests.test("value change invalid"):
-            with pytest.raises(ValueError):
-                var.value = "selection4"
+        with subtests.test("value change invalid"), pytest.raises(ValueError):
+            var.value = "selection4"
 
         with subtests.test("value change valid"):
             var.value = "selection2"

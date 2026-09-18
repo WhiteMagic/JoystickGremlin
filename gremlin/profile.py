@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -14,11 +12,10 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Callable,
 )
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -59,7 +56,6 @@ class AbstractVirtualButton(metaclass=ABCMeta):
 
     def __init__(self) -> None:
         """Creates a new instance."""
-        pass
 
     @abstractmethod
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -68,7 +64,6 @@ class AbstractVirtualButton(metaclass=ABCMeta):
         Args:
             node: the XML node containing data for this instance
         """
-        pass
 
     @abstractmethod
     def to_xml(self) -> ElementTree.Element:
@@ -77,7 +72,6 @@ class AbstractVirtualButton(metaclass=ABCMeta):
         Returns:
             XML node containing the instance's data
         """
-        pass
 
 
 class VirtualAxisButton(AbstractVirtualButton):
@@ -250,9 +244,8 @@ class Settings:
             default value for the specified axis
         """
         value = 0.0
-        if vid in self.vjoy_initial_values:
-            if aid in self.vjoy_initial_values[vid]:
-                value = self.vjoy_initial_values[vid][aid]
+        if vid in self.vjoy_initial_values and aid in self.vjoy_initial_values[vid]:
+            value = self.vjoy_initial_values[vid][aid]
         return value
 
     def set_initial_vjoy_axis_value(self, vid: int, aid: int, value: float) -> None:
@@ -389,12 +382,12 @@ class Library:
         parse_later = []
 
         def can_parse(entry: ElementTree.Element) -> bool:
-            return all([aid in self._actions for aid in read_action_ids(entry)])
+            return all(aid in self._actions for aid in read_action_ids(entry))
 
         # Parse all actions
         for entry in node.findall("./library/action"):
             # Ensure all required attributes are present
-            if not set(["id", "type"]).issubset(entry.keys()):
+            if not {"id", "type"}.issubset(entry.keys()):
                 raise error.ProfileError("Incomplete library action specification")
 
             # Ensure the action type is known
@@ -961,9 +954,7 @@ class InputItemBinding:
         if (
             self.input_item.input_type == InputType.JoystickAxis
             and self.behavior == InputType.JoystickButton
-        ):
-            needs_virtual_button = True
-        elif (
+        ) or (
             self.input_item.input_type == InputType.JoystickHat
             and self.behavior == InputType.JoystickButton
         ):

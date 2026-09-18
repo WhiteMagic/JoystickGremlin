@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -81,7 +79,6 @@ class VirtualButton(metaclass=ABCMeta):
         Returns:
             List of states to process
         """
-        pass
 
 
 class VirtualAxisButton(VirtualButton):
@@ -106,9 +103,12 @@ class VirtualAxisButton(VirtualButton):
         else:
             # Check if we moved over the activation region between two
             # consecutive measurements
-            if self._last_value < self._lower_limit and value > self._upper_limit:
-                forced_activation = True
-            elif self._last_value > self._upper_limit and value < self._lower_limit:
+            if (
+                self._last_value < self._lower_limit
+                and value > self._upper_limit
+                or self._last_value > self._upper_limit
+                and value < self._lower_limit
+            ):
                 forced_activation = True
 
             # Determine direction in which the axis is moving
@@ -344,9 +344,11 @@ class CodeRunner:
         # Check if we want to override the start mode as determined by the
         # heuristic.
         settings = self._profile.settings
-        if settings.startup_mode is not None:
-            if settings.startup_mode in self._profile.modes.mode_names():
-                start_mode = settings.startup_mode
+        if (
+            settings.startup_mode is not None
+            and settings.startup_mode in self._profile.modes.mode_names()
+        ):
+            start_mode = settings.startup_mode
 
         # Set default macro action delay.
         macro.MacroManager().default_delay = settings.macro_default_delay

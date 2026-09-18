@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,7 +6,7 @@ import uuid
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
-    List,
+    ClassVar,
     override,
 )
 from xml.etree import ElementTree
@@ -141,7 +139,7 @@ class MergeAxisFunctor(AbstractFunctor):
         """
         return (value2 - value1) / 2.0
 
-    actions = {
+    actions: ClassVar[dict] = {
         MergeOperation.Average: _average,
         MergeOperation.Minimum: _minimum,
         MergeOperation.Maximum: _maximum,
@@ -382,7 +380,7 @@ class MergeAxisData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         messages = []
         if not (self.axis_in1.isValid and self.axis_in2.isValid):
             messages.append(

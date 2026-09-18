@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -21,10 +19,10 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Callable
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     override,
 )
 from xml.etree import ElementTree
@@ -433,7 +431,7 @@ class Script:
             True if the instance is fully configured, False otherwise
         """
         return all(
-            [var.is_valid() for var in self.variables.values() if not var.is_optional]
+            var.is_valid() for var in self.variables.values() if not var.is_optional
         )
 
     def has_variable(self, name: str) -> bool:
@@ -569,7 +567,7 @@ class Script:
         self.module._script_id = self.id
         self.spec.loader.exec_module(self.module)
 
-        for key, value in self.module.__dict__.items():
+        for value in self.module.__dict__.values():
             if isinstance(value, AbstractVariable):
                 if value.name in self.variables:
                     logging.getLogger("system").error(

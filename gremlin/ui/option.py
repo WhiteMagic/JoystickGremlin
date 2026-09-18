@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,6 +6,7 @@ import logging
 import re
 from pathlib import Path
 from typing import (
+    ClassVar,
     cast,
 )
 
@@ -33,7 +32,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 class ConfigSectionModel(QtCore.QAbstractListModel):
     """Exposes the sections present in the configuration as a list model."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"groupModel"),
     }
@@ -76,8 +75,8 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
                 case _:
                     return 99
 
-        return list(
-            sorted(set(self._config.sections() + self._option.sections()), key=priority)
+        return sorted(
+            set(self._config.sections() + self._option.sections()), key=priority
         )
 
 
@@ -89,7 +88,7 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
 
     changed = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"groupName"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"entryModel"),
     }
@@ -127,12 +126,10 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
         return self.roles
 
     def _combined_groups(self) -> list[str]:
-        return list(
-            sorted(
-                set(
-                    self._config.groups(self._section_name)
-                    + self._option.groups(self._section_name)
-                )
+        return sorted(
+            set(
+                self._config.groups(self._section_name)
+                + self._option.groups(self._section_name)
             )
         )
 
@@ -141,7 +138,7 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
 class ConfigEntryModel(QtCore.QAbstractListModel):
     """Exposes the entries in a section's group as a list model."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"data_type"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"description"),
@@ -180,9 +177,11 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                 key = [self._section_name, self._group_name, entries[index.row()]]
                 value = self._config.get(*key, role_name)
                 # Convert path values to strings.
-                if role_name == "value":
-                    if self._config.data_type(*key) == PropertyType.Path:
-                        value = str(value)
+                if (
+                    role_name == "value"
+                    and self._config.data_type(*key) == PropertyType.Path
+                ):
+                    value = str(value)
                 if isinstance(value, PropertyType):
                     value = PropertyType.to_string(value)
             else:
@@ -235,12 +234,10 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         return self.roles
 
     def _combined_entries(self) -> list[str]:
-        return list(
-            sorted(
-                set(
-                    self._config.entries(self._section_name, self._group_name)
-                    + self._option.entries(self._section_name, self._group_name)
-                )
+        return sorted(
+            set(
+                self._config.entries(self._section_name, self._group_name)
+                + self._option.entries(self._section_name, self._group_name)
             )
         )
 
@@ -259,7 +256,7 @@ class BaseMetaConfigOptionWidget:
 
 @ta.QmlElement
 class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"visible"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"index"),
@@ -340,7 +337,7 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
 @ta.QmlElement
 class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"profile"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"executable"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"isEnabled"),
@@ -419,7 +416,7 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
 
 @ta.QmlElement
 class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
     }
 
@@ -473,7 +470,7 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
 @ta.QmlElement
 class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
     }
 
@@ -572,7 +569,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         Returns:
             List of section names.
         """
-        return list(set(section for section, _, _ in self._options.keys()))
+        return sorted({section for section, _, _ in self._options})
 
     def groups(self, section: str) -> list[str]:
         """Returns the groups associated with the given section.
@@ -583,9 +580,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         Returns:
             List of group names.
         """
-        return list(
-            set(group for sec, group, _ in self._options.keys() if sec == section)
-        )
+        return sorted({group for sec, group, _ in self._options if sec == section})
 
     def entries(self, section: str, group: str) -> list[str]:
         """Returns the entries associated with the given section and group.
@@ -597,11 +592,9 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         Returns:
             List of entry names.
         """
-        return list(
-            name
-            for sec, grp, name in self._options.keys()
-            if sec == section and grp == group
-        )
+        return [
+            name for sec, grp, name in self._options if sec == section and grp == group
+        ]
 
     def qml_widget(
         self, section: str, group: str, name: str

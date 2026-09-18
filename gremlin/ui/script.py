@@ -1,11 +1,12 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
+from typing import (
+    ClassVar,
+    cast,
+)
 
 from PySide6 import QtCore
 
@@ -327,8 +328,14 @@ class VirtualInputVariableModel(AbstractVariableModel):
 
     @QtCore.Property(str, notify=changed)
     def label(self) -> str:
-        return f"vJoy {self._variable.vjoy_id} " + \
-            f"{common.input_to_ui_string(self._variable.input_type, self._variable.input_id)}"
+        return (
+            f"vJoy {self._variable.vjoy_id} "
+            + f"{
+                common.input_to_ui_string(
+                    self._variable.input_type, self._variable.input_id
+                )
+            }"
+        )
 
     @QtCore.Property(list, constant=True)
     def validTypes(self) -> list[str]:
@@ -379,13 +386,13 @@ class ScriptListModel(QtCore.QAbstractListModel):
 
     instancesChanged = QtCore.Signal()
 
-    roles = {
-        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("path".encode()),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("name".encode()),
-        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray("variables".encode()),
+    roles: ClassVar[dict] = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"path"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"name"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"variables"),
     }
 
-    data_class_lookup = {
+    data_class_lookup: ClassVar[dict] = {
         user_script.BoolVariable: BoolVariableModel,
         user_script.FloatVariable: FloatVariableModel,
         user_script.IntegerVariable: IntegerVariableModel,

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -15,7 +13,7 @@ from PySide6 import (
     QtQml,
 )
 
-import gremlin.ui.theme_manager as theme_manager
+from gremlin.ui import theme_manager
 
 _LIGHT_COLORS = {
     "bg": "#ffffff",

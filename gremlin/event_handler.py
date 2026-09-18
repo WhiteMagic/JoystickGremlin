@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -9,10 +7,10 @@ import inspect
 import logging
 import threading
 import uuid
+from collections.abc import Callable
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
 )
 
 from PySide6 import QtCore
@@ -108,8 +106,8 @@ class Event:
         # Retrieve device name
         label = ""
         if device is None:
-            logging.warning(
-                f"Unable to find a device with GUID {str(self.device_guid)}"
+            logging.getLogger("system").warning(
+                f"Unable to find a device with GUID {self.device_guid!s}"
             )
             label = "Unknown"
         else:

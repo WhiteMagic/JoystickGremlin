@@ -1,11 +1,10 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 import ctypes
 import enum
 import os
 import sys
+from typing import ClassVar
 
 from gremlin.error import GremlinError
 
@@ -40,11 +39,11 @@ class VJoyInterface:
         vjoy_dll = ctypes.cdll.LoadLibrary(dll_path)
         vjoy_dll_loaded = True
     except OSError as e:
-        print("Failed loading vJoy dll, {}".format(e))
+        print(f"Failed loading vJoy dll, {e}")
 
     # Declare argument and return types for all the functions
     # exposed by the dll
-    api_functions = {
+    api_functions: ClassVar[dict] = {
         # General vJoy information
         "GetvJoyVersion": {"arguments": [], "returns": ctypes.c_short},
         "vJoyEnabled": {"arguments": [], "returns": ctypes.c_bool},

@@ -1,13 +1,10 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 from typing import (
     Any,
-    Generic,
-    TypeVar,
+    ClassVar,
 )
 
 from gremlin import error
@@ -18,10 +15,8 @@ from gremlin.types import (
     ScanCode,
 )
 
-T = TypeVar("T")
 
-
-class SingletonDecorator(Generic[T]):
+class SingletonDecorator[T]:
     """Decorator turning a class into a singleton."""
 
     def __init__(self, klass: type[T]) -> None:
@@ -37,13 +32,11 @@ class SingletonDecorator(Generic[T]):
 class SingletonMetaclass(type):
     # https://stackoverflow.com/a/6798042
 
-    _instances: dict[type, Any] = {}
+    _instances: ClassVar[dict[type, Any]] = {}
 
     def __call__(cls, *args: Any, **kwargs: dict) -> Any:  # noqa: ANN401
         if cls not in cls._instances:
-            cls._instances[cls] = super(SingletonMetaclass, cls).__call__(
-                *args, **kwargs
-            )
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -79,7 +72,7 @@ def parse_ui_string(ui_str: str) -> tuple[InputType, int]:
     Returns:
         Tuple containing the InputType and index/identifier of it.
     """
-    if ui_str.startswith("Button") or ui_str.startswith("Hat"):
+    if ui_str.startswith(("Button", "Hat")):
         parts = ui_str.split(" ")
         if parts[0] == "Button":
             return InputType.JoystickButton, int(parts[1])
