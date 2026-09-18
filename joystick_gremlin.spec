@@ -13,8 +13,7 @@ for root, _, files in os.walk("action_plugins"):
 
 datas = [
     ("gfx", "gfx"),
-    ("qml", "qml"),
-    ("theme", "theme"),
+    ("style/qml", "style/qml"),
     ("device_db.json", "."),
     ("version.json", ".")
 ]
@@ -28,6 +27,7 @@ binaries = [
 # doesn't pick them all up automatically.
 hidden_imports = [
     "action_plugins",
+    "action_plugins.axis_delta",
     "action_plugins.chain",
     "action_plugins.change_mode",
     "action_plugins.common",
@@ -50,6 +50,7 @@ hidden_imports = [
     "action_plugins.reference",
     "action_plugins.response_curve",
     "action_plugins.root",
+    "action_plugins.run_command",
     "action_plugins.smart_toggle",
     "action_plugins.split_axis",
     "action_plugins.tempo",
@@ -58,13 +59,16 @@ hidden_imports = [
     "gremlin.ui.action_model",
     "gremlin.ui.backend",
     "gremlin.ui.device",
+    "gremlin.ui.icon_provider",
     "gremlin.ui.option",
-    "gremlin.ui.profile_devices_model",
     "gremlin.ui.profile",
     "gremlin.ui.script",
+    "gremlin.ui.system_tray",
+    "gremlin.ui.theme_manager",
     "gremlin.ui.tools",
     "gremlin.ui.type_aliases",
     "gremlin.ui.util",
+    "gremlin.ui.window_geometry",
     "miniaudio",
     "_cffi_backend",
 ]
@@ -91,7 +95,7 @@ a = Analysis(
     optimize=0,
 )
 
-# Implementation of a library exclusion system to remove huge and unneded
+# Implementation of a library exclusion system to remove huge and unneeded
 # Qt libraries.
 to_keep = []
 to_exclude = [
@@ -163,14 +167,39 @@ to_exclude = [
 directory_excludes = [
     "Pythonwin",
     "PySide6\\translations",
+    # QML modules whose backing Qt libraries are excluded above.
+    "PySide6\\qml\\Qt3D",
+    "PySide6\\qml\\QtDataVisualization",
+    "PySide6\\qml\\QtGraphs",
+    "PySide6\\qml\\QtLocation",
+    "PySide6\\qml\\QtPositioning",
+    "PySide6\\qml\\QtQuick3D",
+    "PySide6\\qml\\QtQuick\\Controls\\FluentWinUI3",
+    "PySide6\\qml\\QtQuick\\Controls\\Fusion",
+    "PySide6\\qml\\QtQuick\\Controls\\Imagine",
+    "PySide6\\qml\\QtQuick\\Controls\\Material",
+    "PySide6\\qml\\QtQuick\\Controls\\Windows",
+    "PySide6\\qml\\QtQuick\\LocalStorage",
+    "PySide6\\qml\\QtQuick\\Pdf",
+    "PySide6\\qml\\QtQuick\\Scene2D",
+    "PySide6\\qml\\QtQuick\\Scene3D",
+    "PySide6\\qml\\QtQuick\\Timeline",
+    "PySide6\\qml\\QtQuick\\VectorImage",
+    "PySide6\\qml\\QtRemoteObjects",
+    "PySide6\\qml\\QtScxml",
+    "PySide6\\qml\\QtSensors",
+    "PySide6\\qml\\QtWebChannel",
+    "PySide6\\qml\\QtWebEngine",
+    "PySide6\\qml\\QtWebSockets",
+    "PySide6\\qml\\QtWebView",
 ]
 
-# Only keep binaries we actually want, exlucindg a bunch of Qt libraries.
+# Only keep binaries we actually want, excluding a bunch of Qt libraries.
 for (dest, source, kind) in a.binaries:
     skip_file = False
     # Skip directories we want to exclude entirely.
     for directory in directory_excludes:
-        if dest.startswith(directory):
+        if dest.lower().startswith(directory.lower()):
             skip_file = True
     # Only add files not on the exclude list.
     if not skip_file and os.path.split(dest)[1] not in to_exclude:
@@ -182,7 +211,7 @@ for (dest, source, kind) in a.datas:
     skip_file = False
     # Skip directories we want to exclude entirely.
     for directory in directory_excludes:
-        if dest.startswith(directory):
+        if dest.lower().startswith(directory.lower()):
             skip_file = True
     # Only add files not on the exclude list.
     if not skip_file:
@@ -200,7 +229,7 @@ exe = EXE(
     a.datas,
     [],
     name="joystick_gremlin",
-    debug=True,
+    debug=False,
     bootloader_ignore_signals=False,
     exclude_binaries=single_folder,
     strip=False,
