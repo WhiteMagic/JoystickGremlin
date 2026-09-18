@@ -184,7 +184,10 @@ def test_determine_value_type_valid_values(
     property_type: gremlin.types.PropertyType | list[gremlin.types.PropertyType],
 ) -> None:
     prop_type, is_valid = gremlin.util.determine_value_type(value, property_type)
-    assert prop_type == property_type
+    if isinstance(property_type, list):
+        assert prop_type in property_type
+    else:
+        assert prop_type == property_type
     assert is_valid
 
 
