@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import codecs
 import dataclasses
 import hashlib
 import logging
@@ -628,7 +627,7 @@ class Profile:
         # Serialize XML document.
         ugly_xml = ElementTree.tostring(root, encoding="utf-8")
         dom_xml = minidom.parseString(ugly_xml)
-        with codecs.open(str(fpath), "w", "utf-8-sig") as out:
+        with open(str(fpath), "w", encoding="utf-8-sig") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
     def get_input_count(

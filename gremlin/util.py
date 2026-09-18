@@ -692,7 +692,7 @@ def determine_value_type(
     value: Any,  # noqa: ANN401
     property_type: PropertyType | list[PropertyType],
 ) -> tuple[PropertyType, bool]:
-    """Returns whether a value is of the correct type and the type..
+    """Returns whether a value is of the correct type and the type.
 
     Args:
         value: the value to check for type correctness
