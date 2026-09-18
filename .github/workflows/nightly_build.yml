@@ -9,32 +9,31 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'WhiteMagic/JoystickGremlin'
     runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: ["3.13"]
-        poetry-version: ["latest"]
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v6
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version-file: pyproject.toml
     - name: Set up poetry for dependency management
       uses: abatilo/actions-poetry@v2
       with:
-        poetry-version: ${{ matrix.poetry-version }}
+        poetry-version: "2.3.2"
+    - name: Verify poetry.lock matches pyproject.toml
+      run: poetry check --lock
     - name: Install the project dependencies with poetry
       run: poetry install
     - name: Build executable
       run: poetry run pyinstaller -y --clean joystick_gremlin.spec
     - name: Store current date
       run: |
-        $CURRENT_DATE=& Get-Date -format yyyy_MM_dd
+        $CURRENT_DATE=Get-Date -Format yyyy_MM_dd
         echo "CURRENT_DATE=$CURRENT_DATE" >> $env:GITHUB_ENV
-    - name: Echo current date
-      run: |
-        echo "${{env.CURRENT_DATE}}"
+      shell: pwsh
     - name: Compress the build
       run: |
         Compress-Archive -Path dist/* -DestinationPath dist/joystick_gremlin_nightly_${{env.CURRENT_DATE}}.zip
@@ -45,3 +44,27 @@ jobs:
         tag_name: Nightly
         files: dist/joystick_gremlin_nightly_${{env.CURRENT_DATE}}.zip
         token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Remove nightly builds older than 7 days
+      run: |
+        $cutoff = (Get-Date).ToUniversalTime().AddDays(-7)
+        $assets = @(gh release view Nightly --json assets --jq '.assets[] | [.name, .createdAt] | @tsv')
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "No Nightly release found, nothing to prune."
+          exit 0
+        }
+        foreach ($asset in $assets) {
+          if (-not $asset) { continue }
+          $name, $created = $asset -split "`t"
+          $created_at = [datetime]::Parse(
+            $created,
+            [cultureinfo]::InvariantCulture,
+            [System.Globalization.DateTimeStyles]::AdjustToUniversal
+          )
+          if ($created_at -lt $cutoff) {
+            Write-Host "Deleting $name (created $created)"
+            gh release delete-asset Nightly $name --yes
+          }
+        }
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
