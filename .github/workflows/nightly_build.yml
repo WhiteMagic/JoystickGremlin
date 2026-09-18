@@ -1,11 +1,9 @@
 name: NightlyBuild
 
 on:
-  # push:
-  #   branches:
-  #     - "nightly-build-action"
   schedule:
     - cron: '45 23 * * *' # runs daily at 23:45
+  workflow_dispatch:
 
 jobs:
   build:
