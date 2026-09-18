@@ -123,16 +123,9 @@ Example:
 from __future__ import annotations
 
 import logging
-from typing import (
-    cast,
-    Any,
-    TYPE_CHECKING
-)
+from typing import cast, Any, TYPE_CHECKING
 
-from PySide6 import (
-    QtCore,
-    QtQml
-)
+from PySide6 import QtCore, QtQml
 
 import gremlin.profile
 from gremlin.types import InputType
@@ -175,10 +168,11 @@ from PySide6 import QtCore
 if TYPE_CHECKING:
     import gremlin.ui.type_aliases as ta
 
+
 class DataProvider(QtCore.QObject):
     dataReady = QtCore.Signal(str)
 
-    def __init__(self, parent: ta.OQO=None):
+    def __init__(self, parent: ta.OQO = None):
         self._value = ""
 
     def _get_value(self) -> str:
@@ -188,12 +182,7 @@ class DataProvider(QtCore.QObject):
         self._value = val
         self.dataReady.emit(val)
 
-    value = QtCore.Property(
-        str,
-        fget=_get_value,
-        fset=_set_value,
-        notify=dataReady
-    )
+    value = QtCore.Property(str, fget=_get_value, fset=_set_value, notify=dataReady)
 ```
 
 ### Error Handling
@@ -249,8 +238,8 @@ Example:
 from gremlin.base_classes import AbstractActionData, AbstractFunctor
 from typing import override
 
-class SpecialActionData(AbstractActionData):
 
+class SpecialActionData(AbstractActionData):
     tag = "special-action"
     name = "Special Action"
     icon = "f123"
@@ -274,6 +263,7 @@ class SpecialActionData(AbstractActionData):
 Example:
 ```python
 from test.unit.conftest import get_fake_device_guid
+
 
 def test_something(xml_dir: pathlib.Path):
     p = Profile()

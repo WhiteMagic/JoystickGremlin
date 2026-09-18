@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,7 +6,6 @@ import logging
 import uuid
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -164,7 +161,7 @@ class ConditionModel(ActionModel):
         )
 
         def predicate(node: TreeNode) -> bool:
-            return True if node.value and node.value.id == self.id else False
+            return bool(node.value and node.value.id == self.id)
 
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
@@ -188,14 +185,14 @@ class ConditionModel(ActionModel):
         self.conditionsChanged.emit()
 
     @QtCore.Property(list, constant=True)
-    def logicalOperators(self) -> List[dict[str, str]]:
+    def logicalOperators(self) -> list[dict[str, str]]:
         return [
             {"value": str(e.value), "text": LogicalOperator.to_display(e)}
             for e in LogicalOperator
         ]
 
     @QtCore.Property(list, constant=True)
-    def conditionOperators(self) -> List[dict[str, str]]:
+    def conditionOperators(self) -> list[dict[str, str]]:
         return [
             {"value": str(e.value), "text": ConditionType.to_display(e)}
             for e in ConditionType
@@ -319,15 +316,15 @@ class ConditionData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return ["true", "false"]
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         match selector:
             case "true":
                 return self.true_actions

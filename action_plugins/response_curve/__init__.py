@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,8 +5,6 @@ from __future__ import annotations
 import enum
 from typing import (
     TYPE_CHECKING,
-    List,
-    Optional,
     override,
 )
 from xml.etree import ElementTree
@@ -103,7 +99,7 @@ class ResponseCurveFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         dz_value = deadzone(
             value.current,
@@ -180,10 +176,10 @@ class ControlPoint(QtCore.QObject):
 
     def __init__(
         self,
-        center: Optional[QtCore.QPointF] = None,
-        handle_left: Optional[QtCore.QPointF] = None,
-        handle_right: Optional[QtCore.QPointF] = None,
-        parent: Optional[QtCore.QPointF] = None,
+        center: QtCore.QPointF | None = None,
+        handle_left: QtCore.QPointF | None = None,
+        handle_right: QtCore.QPointF | None = None,
+        parent: QtCore.QPointF | None = None,
     ) -> None:
         super().__init__(parent)
         self._center = center
@@ -264,7 +260,7 @@ class ResponseCurveModel(ActionModel):
             return QtCore.QPointF(point.center.x, point.center.y)
         else:
             raise GremlinError(
-                f"Invalid curve type encountered {str(type(self._data.curve))}"
+                f"Invalid curve type encountered {type(self._data.curve)!s}"
             )
 
     @QtCore.Slot(float, float)
@@ -384,7 +380,7 @@ class ResponseCurveModel(ActionModel):
         handle.x += dx
         handle.y += dy
 
-    def _get_line_points(self) -> List[QtCore.QPointF]:
+    def _get_line_points(self) -> list[QtCore.QPointF]:
         points = []
         scaling_factor = self.widget_size / 2.0
         for i in range(-100, 101):
@@ -397,7 +393,7 @@ class ResponseCurveModel(ActionModel):
             )
         return points
 
-    def _get_control_points(self) -> List[ControlPoint]:
+    def _get_control_points(self) -> list[ControlPoint]:
         if type(self._data.curve) in [spline.PiecewiseLinear, spline.CubicSpline]:
             return [
                 ControlPoint(center=QtCore.QPointF(p.x, p.y), parent=self)
@@ -417,7 +413,7 @@ class ResponseCurveModel(ActionModel):
             return points
         else:
             raise GremlinError(
-                f"Invalid curve type encountered {str(type(self._data.curve))}"
+                f"Invalid curve type encountered {type(self._data.curve)!s}"
             )
 
     def _get_is_symmetric(self) -> bool:
@@ -600,7 +596,7 @@ class ResponseCurveData(AbstractActionData):
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override

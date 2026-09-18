@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,8 +8,9 @@ import ctypes.wintypes as ctwt
 import os
 import sys
 import uuid
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable
+from typing import ClassVar
 
 
 class DILLError(Exception):
@@ -224,8 +223,9 @@ class GUID:
         Returns:
             GUID string representation in hexadecimal
         """
-        return "{:08X}-{:04X}-{:04X}-{:04X}-{:012X}".format(
-            self.guid[0], self.guid[1], self.guid[2], self.guid[3], self.guid[4]
+        return (
+            f"{self.guid[0]:08X}-{self.guid[1]:04X}-{self.guid[2]:04X}"
+            f"-{self.guid[3]:04X}-{self.guid[4]:012X}"
         )
 
     def __eq__(self, other: GUID) -> bool:
@@ -472,7 +472,7 @@ class DILL:
 
     # Declare argument and return types for all the functions
     # exposed by the dll
-    api_functions = {
+    api_functions: ClassVar[dict] = {
         "init": {"arguments": [], "returns": None},
         "set_input_event_callback": {"arguments": [C_EVENT_CALLBACK], "returns": None},
         "set_device_change_callback": {

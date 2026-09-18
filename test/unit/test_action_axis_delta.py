@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -13,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-import action_plugins.axis_delta as axis_delta
-import gremlin.types as types
+from action_plugins import axis_delta
 from action_plugins.description import DescriptionData
+from gremlin import types
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.profile import Profile

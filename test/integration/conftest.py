@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -11,8 +9,7 @@ sys.path.append(".")
 import logging
 import pathlib
 import tempfile
-from collections.abc import Iterator
-from typing import Generator
+from collections.abc import Generator, Iterator
 
 import pytest
 
@@ -29,7 +26,7 @@ from action_plugins import map_to_vjoy
 from vjoy import vjoy
 
 pytest.register_assert_rewrite("test.integration.app_tester")
-from test.integration import app_tester  # noqa: E402
+from test.integration import app_tester
 
 # +-------------------------------------------------------------------------
 # | Common fixtures, override in modules as needed.
@@ -154,7 +151,9 @@ def vjoy_ids_or_skip() -> list[int]:
             try:
                 vjoy_proxy[i]
             except gremlin.error.VJoyError:
-                logging.warning("vJoy device %d cannot be acquired", i)
+                logging.getLogger("system").warning(
+                    "vJoy device %d cannot be acquired", i
+                )
             else:
                 vjoy_ids.append(i)
     vjoy_proxy.reset()

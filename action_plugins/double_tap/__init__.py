@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,8 +8,6 @@ import threading
 from typing import (
     TYPE_CHECKING,
     Any,
-    List,
-    Optional,
     override,
 )
 from xml.etree import ElementTree
@@ -98,33 +94,33 @@ class DoubleTapFunctor(AbstractFunctor):
             pass
 
         def single_pulse(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             self._pulse_event(
                 self.functors["single"], self.event_press, self.value_press, p
             )
 
         def single_press(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(
                 self.functors["single"], self.event_press, self.value_press, p
             )
 
         def single_release(
-            e: event_handler.Event, v: Value, p: List[ActionProperty]
+            e: event_handler.Event, v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(self.functors["single"], e, v, p)
 
         def double_press(
-            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(
                 self.functors["double"], self.event_press, self.value_press, p
             )
 
         def double_release(
-            e: event_handler.Event, v: Value, p: List[ActionProperty]
+            e: event_handler.Event, v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(self.functors["double"], e, v, p)
 
@@ -308,17 +304,15 @@ class DoubleTapData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return ["single", "double"]
 
     @override
-    def _get_container(
-        self, selector: Optional[str] = None
-    ) -> List[AbstractActionData]:
+    def _get_container(self, selector: str | None = None) -> list[AbstractActionData]:
         if selector == "single":
             return self.single_actions
         elif selector == "double":

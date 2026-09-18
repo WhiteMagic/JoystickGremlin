@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -144,10 +142,7 @@ class MacroManager(metaclass=SingletonMetaclass):
                 for entry in self._queued_macros:
                     # Terminate macro if needed.
                     if entry.state is False:
-                        if (
-                            entry.macro.id in self._executing_macro
-                            and self._executing_macro[entry.macro.id]
-                        ):
+                        if self._executing_macro.get(entry.macro.id):
                             # Terminate currently running macro.
                             with self._executing_macro_lock:
                                 self._executing_macro[entry.macro.id] = False
@@ -392,7 +387,6 @@ class AbstractAction(ABC):
     @abstractmethod
     def create(cls) -> AbstractAction:
         """Creates an empty, likely invalid instance, of the action."""
-        pass
 
     @abstractmethod
     def to_xml(self) -> ElementTree.Element:
@@ -770,7 +764,7 @@ class MouseMotionAction(AbstractAction):
 
     tag = "mouse-motion"
 
-    def __init__(self, dx: float | int, dy: float | int) -> None:
+    def __init__(self, dx: float, dy: float) -> None:
         """Creates a new MouseMotionAction object for use in a macro.
 
         Args:
@@ -887,7 +881,7 @@ class VJoyAction(AbstractAction):
                 vjoy.button(self.input_id).is_pressed = self.value
             elif self.input_type == InputType.JoystickHat:
                 vjoy.hat(self.input_id).direction = self.value
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logging.getLogger("event").error(
                 f"Failed to execute vJoy macro entry due to: {e}"
             )
@@ -1037,7 +1031,6 @@ class ToggleRepeat(AbstractRepeat):
         Args:
             node: XML node containing data with which to populate the instance
         """
-        pass
 
 
 class HoldRepeat(AbstractRepeat):
@@ -1066,7 +1059,6 @@ class HoldRepeat(AbstractRepeat):
         Args:
             node XML node containing data with which to populate the instance
         """
-        pass
 
 
 Configuration().register(

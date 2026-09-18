@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,7 +6,6 @@ import enum
 import math
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -243,7 +240,7 @@ class MapToMouseModel(ActionModel):
         return MouseButton.to_string(self._data.button)
 
     @QtCore.Slot(list)
-    def updateInputs(self, data: List[event_handler.Event]) -> None:
+    def updateInputs(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the
@@ -356,15 +353,15 @@ class MapToMouseData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override

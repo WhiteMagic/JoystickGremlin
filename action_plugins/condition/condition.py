@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,8 +8,6 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    List,
-    Optional,
     override,
 )
 from xml.etree import ElementTree
@@ -72,7 +68,6 @@ class AbstractState(metaclass=ABCMeta):
         Returns:
             Current value of the state.
         """
-        pass
 
     @abstractmethod
     def display_name(self) -> str:
@@ -81,7 +76,6 @@ class AbstractState(metaclass=ABCMeta):
         Returns:
             Human readable representation of the state.
         """
-        pass
 
 
 class AbstractCondition(QtCore.QObject):
@@ -100,10 +94,10 @@ class AbstractCondition(QtCore.QObject):
         self._condition_type: ConditionType = ConditionType.CurrentInput
         # Comparator object implementing the condition and the accompanying
         # UI model.
-        self._comparator: Optional[AbstractComparator] = None
-        self._comparator_ui: Optional[AbstractComparatorModel] = None
+        self._comparator: AbstractComparator | None = None
+        self._comparator_ui: AbstractComparatorModel | None = None
         # States whose values will be compared within the comparator.
-        self._states: List[AbstractState] = []
+        self._states: list[AbstractState] = []
 
     def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
@@ -178,7 +172,7 @@ class AbstractCondition(QtCore.QObject):
         return ConditionType.to_string(self._condition_type)
 
     @QtCore.Property(list, notify=statesChanged)
-    def states(self) -> List[str]:
+    def states(self) -> list[str]:
         """Returns a human readable textual representation for each state.
 
         Returns:
@@ -277,7 +271,7 @@ class AbstractCondition(QtCore.QObject):
             self._comparator_ui = self._comparator.model(self._comparator)
             self.comparatorChanged.emit()
 
-    def _update_states(self, state_list: List[AbstractState]) -> None:
+    def _update_states(self, state_list: list[AbstractState]) -> None:
         """Updates the list of states used by the condition.
 
         Args:
@@ -495,7 +489,7 @@ class KeyboardCondition(AbstractCondition):
         return node
 
     @QtCore.Slot(list)
-    def updateFromUserInput(self, data: List[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: list[event_handler.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.
@@ -620,7 +614,7 @@ class JoystickCondition(AbstractCondition):
         return node
 
     @QtCore.Slot(list)
-    def updateFromUserInput(self, data: List[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: list[event_handler.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.

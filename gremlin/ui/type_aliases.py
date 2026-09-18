@@ -1,12 +1,9 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 import sys
 from typing import (
-    TypeVar,
     cast,
 )
 
@@ -15,10 +12,8 @@ from PySide6 import (
     QtQml,
 )
 
-T = TypeVar("T")
 
-
-def QmlElement(cls: type[T]) -> type[T]:
+def QmlElement[T](cls: type[T]) -> type[T]:
     """Type-preserving QML element registration decorator.
 
     Replacement for the @QtQml.QmlElement decorator which breaks type

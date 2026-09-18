@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 """
@@ -65,7 +63,7 @@ class TestUserScript:
             (-2, -1),
             (0, 0),
             (2, 1),
-            (8192, 4096),
+            (8192, 4096),  # noqa: PT014
             (-16384, -8192),
             (-32768, -16384),
         ],
@@ -107,8 +105,8 @@ class TestUserScript:
             # Example script XORs input value with True.
             (True, True, False, 0),
             (False, False, True, 1),
-            (True, True, False, 0),
-            (False, False, True, 1),
+            (True, True, False, 0),  # noqa: PT014
+            (False, False, True, 1),  # noqa: PT014
         ],
     )
     def test_button(
@@ -153,7 +151,6 @@ class TestUserScript:
             (types.HatDirection.SouthWest, 22500, types.HatDirection.SouthWest),
             (types.HatDirection.West, 27000, types.HatDirection.West),
             (types.HatDirection.NorthWest, 31500, types.HatDirection.NorthWest),
-            (types.HatDirection.North, 0, types.HatDirection.North),
         ],
     )
     def test_hat(

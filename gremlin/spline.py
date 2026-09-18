@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -41,7 +39,6 @@ class AbstractCurve(abc.ABC):
         Returns:
             List of all control points.
         """
-        pass
 
     @abc.abstractmethod
     def add_control_point(self, x: float, y: float) -> None:
@@ -54,7 +51,6 @@ class AbstractCurve(abc.ABC):
             x: x-coordinate of the control point (will be clamped).
             y: y-coordinate of the control point (will be clamped).
         """
-        pass
 
     def remove_control_point(self, index: int) -> None:
         """Removes an existing control point from the curve.
@@ -107,19 +103,16 @@ class AbstractCurve(abc.ABC):
     @abc.abstractmethod
     def invert(self) -> None:
         """Inverts the curve along the y axis."""
-        pass
 
     @abc.abstractmethod
     def fit(self) -> None:
         """Computes internal representation required for proper curve
         computation."""
-        pass
 
     @abc.abstractmethod
     def _enforce_symmetry(self) -> None:
         """Updates the curve definition such that it is symmetric around
         the center."""
-        pass
 
     @abc.abstractmethod
     def _default_points(self) -> CoordinateList:
@@ -128,12 +121,10 @@ class AbstractCurve(abc.ABC):
         Returns:
             List of default control point coordinates
         """
-        pass
 
     @abc.abstractmethod
     def _process_points(self, points: CoordinateList) -> None:
         """Generates the required data structure for the curve."""
-        pass
 
     @abc.abstractmethod
     def __call__(self, x: float) -> float:
@@ -145,7 +136,6 @@ class AbstractCurve(abc.ABC):
         Returns:
             Function value of the curve at the given location
         """
-        pass
 
 
 class PiecewiseLinear(AbstractCurve):
@@ -464,7 +454,7 @@ class CubicBezierSpline(AbstractCurve):
             # Compute the t -> coordinate mappings
             step_size = 0.01
             self._lookup.append([])
-            for i in range(0, 101):
+            for i in range(101):
                 t = i * step_size
                 self._lookup[-1].append((t, self._value_at_t(points, t)))
 

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -49,9 +47,8 @@ def register_profile_device() -> dill.DeviceSummary:
     for mocked_dev in device_initialization._joystick_devices.values():
         if mocked_dev.device_guid == dev.device_guid:
             yield dev
-    else:
-        device_initialization._joystick_devices[dev.device_guid.uuid] = dev
-        yield dev
+    device_initialization._joystick_devices[dev.device_guid.uuid] = dev
+    yield dev
     for mocked_dev in list(device_initialization._joystick_devices.values()):
         if mocked_dev.device_guid == dev.device_guid:
             device_initialization._joystick_devices.pop(mocked_dev.device_guid.uuid)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,7 +8,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 from gremlin.common import SingletonMetaclass
 from gremlin.error import (
@@ -40,7 +38,7 @@ def _error_string(vid: int, iid: int, value: Any) -> str:  # noqa: ANN401
     Returns:
         string representing the error
     """
-    return "vjoy: {} input: {} value: {}".format(vid, iid, value)
+    return f"vjoy: {vid} input: {iid} value: {value}"
 
 
 class AxisCode(enum.Enum):
@@ -156,7 +154,7 @@ def hat_configuration_valid(vjoy_id: int) -> bool:
 class VJoyStateCache(metaclass=SingletonMetaclass):
     """Permanent storage cache of vJoy state across vJoy device acquisitions."""
 
-    axis_lookup = {
+    axis_lookup: ClassVar[dict] = {
         1: AxisCode.X.value,
         2: AxisCode.Y.value,
         3: AxisCode.Z.value,
@@ -235,9 +233,8 @@ class Axis:
         # If this is not the case our value setter needs to change
         if self._min_value != 0:
             raise VJoyError(
-                "vJoy axis minimum value is not 0  - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._min_value)
-                )
+                "vJoy axis minimum value is not 0  - "
+                f"{_error_string(self.vjoy_id, self.axis_id, self._min_value)}"
             )
 
     @property
@@ -264,7 +261,7 @@ class Axis:
         if 1.0 - abs(value) < -0.001:
             logging.getLogger("system").warning(
                 "Wrong data type provided, has to be float in [-1, 1],"
-                " provided value was {:.2f}".format(value)
+                f" provided value was {value:.2f}"
             )
 
         # Clamp the value to [-1, 1].
@@ -278,9 +275,8 @@ class Axis:
             self.axis_id,
         ):
             raise VJoyError(
-                "Failed setting axis value - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._value)
-                )
+                "Failed setting axis value - "
+                f"{_error_string(self.vjoy_id, self.axis_id, self._value)}"
             )
         self.vjoy_dev.used()
 
@@ -324,9 +320,8 @@ class Button:
         self._cache.set_button(self.vjoy_id, self.button_id, is_pressed)
         if not VJoyInterface.SetBtn(self._is_pressed, self.vjoy_id, self.button_id):
             raise VJoyError(
-                "Failed setting button value - {}".format(
-                    _error_string(self.vjoy_id, self.button_id, self._is_pressed)
-                )
+                "Failed setting button value - "
+                f"{_error_string(self.vjoy_id, self.button_id, self._is_pressed)}"
             )
         self.vjoy_dev.used()
 
@@ -336,7 +331,7 @@ class Hat:
     of the hat."""
 
     # Discrete directions, mapping HatDirection coordinates to vJoy values
-    to_discrete_direction = {
+    to_discrete_direction: ClassVar[dict] = {
         HatDirection.North: 0,
         HatDirection.NorthEast: 1,
         HatDirection.South: 2,
@@ -345,7 +340,7 @@ class Hat:
     }
 
     # Continuous directions, mapping 8-way *(x, y) coordinates to vJoy values
-    to_continuous_direction = {
+    to_continuous_direction: ClassVar[dict] = {
         HatDirection.Center: -1,
         HatDirection.North: 0,
         HatDirection.NorthEast: 4500,
@@ -397,9 +392,8 @@ class Hat:
             self._set_continuous_direction(direction)
         else:
             raise VJoyError(
-                "Invalid hat type specified - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self.direction)
-                )
+                "Invalid hat type specified - "
+                f"{_error_string(self.vjoy_id, self.axis_id, self.direction)}"
             )
         self.vjoy_dev.used()
 
@@ -411,9 +405,8 @@ class Hat:
         """
         if direction not in Hat.to_discrete_direction:
             raise VJoyError(
-                "Invalid direction specified - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._direction)
-                )
+                "Invalid direction specified - "
+                f"{_error_string(self.vjoy_id, self.axis_id, self._direction)}"
             )
 
         self._direction = direction
@@ -422,9 +415,8 @@ class Hat:
             Hat.to_discrete_direction[direction], self.vjoy_id, self.hat_id
         ):
             raise VJoyError(
-                "Failed to set hat direction - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._direction)
-                )
+                "Failed to set hat direction - "
+                f"{_error_string(self.vjoy_id, self.axis_id, self._direction)}"
             )
 
     def _set_continuous_direction(self, direction: HatDirection) -> None:
@@ -435,9 +427,8 @@ class Hat:
         """
         if direction not in Hat.to_continuous_direction:
             raise VJoyError(
-                "Invalid direction specified - {}".format(
-                    _error_string(self.vjoy_id, self.hat_id, direction)
-                )
+                "Invalid direction specified - "
+                f"{_error_string(self.vjoy_id, self.hat_id, direction)}"
             )
 
         self._direction = direction
@@ -446,9 +437,8 @@ class Hat:
             Hat.to_continuous_direction[direction], self.vjoy_id, self.hat_id
         ):
             raise VJoyError(
-                "Failed to set hat direction - {}".format(
-                    _error_string(self.vjoy_id, self.hat_id, self._direction)
-                )
+                "Failed to set hat direction - "
+                f"{_error_string(self.vjoy_id, self.hat_id, self._direction)}"
             )
 
 
@@ -459,7 +449,7 @@ class VJoy:
     keep_alive_timeout = 60
 
     # Axis name mapping
-    axis_equivalence = {
+    axis_equivalence: ClassVar[dict] = {
         AxisCode.X: 1,
         AxisCode.Y: 2,
         AxisCode.Z: 3,
@@ -500,11 +490,11 @@ class VJoy:
                 raise VJoyConcurrencyError(
                     f"vJoy device {vjoy_id} is already acquired by this process"
                 )
-            msg = "Requested vJoy device is not available - vid: {}".format(vjoy_id)
+            msg = f"Requested vJoy device is not available - vid: {vjoy_id}"
             logging.getLogger("system").error(msg)
             raise VJoyError(msg)
         elif not VJoyInterface.AcquireVJD(vjoy_id):
-            msg = "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
+            msg = f"Failed to acquire the vJoy device - vid: {vjoy_id}"
             logging.getLogger("system").error(msg)
             raise VJoyError(msg)
 
@@ -541,18 +531,15 @@ class VJoy:
         if self.vjoy_id is None:
             return
 
-        if self.pid != VJoyInterface.GetOwnerPid(self.vjoy_id):
-            if not VJoyInterface.AcquireVJD(self.vjoy_id):
-                logging.getLogger("system").error(
-                    "Failed to re-acquire the vJoy device - vid: {}".format(
-                        self.vjoy_id
-                    )
-                )
-                raise VJoyError(
-                    "Failed to re-acquire the vJoy device - vid: {}".format(
-                        self.vjoy_id
-                    )
-                )
+        if self.pid != VJoyInterface.GetOwnerPid(
+            self.vjoy_id
+        ) and not VJoyInterface.AcquireVJD(self.vjoy_id):
+            logging.getLogger("system").error(
+                f"Failed to re-acquire the vJoy device - vid: {self.vjoy_id}"
+            )
+            raise VJoyError(
+                f"Failed to re-acquire the vJoy device - vid: {self.vjoy_id}"
+            )
 
     def is_owned(self) -> bool:
         """Returns True if the vJoy device is owned by the current process.
@@ -871,15 +858,16 @@ class VJoy:
         Returns:
             string representation of the vJoy device information
         """
-        return "vJoyId={0:d} axis={1:d} buttons={2:d} hats={3:d}".format(
-            self.vjoy_id, len(self._axis), len(self._button), len(self._hat)
+        return (
+            f"vJoyId={self.vjoy_id:d} axis={len(self._axis):d} "
+            f"buttons={len(self._button):d} hats={len(self._hat):d}"
         )
 
 
 class VJoyProxy:
     """Manages the usage of vJoy and allows shared access all callbacks."""
 
-    vjoy_devices = {}
+    vjoy_devices: ClassVar[dict] = {}
 
     def __getitem__(self, index: int) -> VJoy:
         """Returns the requested vJoy instance accessor.
@@ -913,7 +901,7 @@ class VJoyProxy:
                 logging.getLogger("system").error(
                     f"Failed accessing vJoy id={index}, error is: {e}"
                 )
-                raise e
+                raise
             else:
                 VJoyProxy.vjoy_devices[index] = device
                 return device

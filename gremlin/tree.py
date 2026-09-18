@@ -1,12 +1,10 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
 )
 
 from gremlin import error

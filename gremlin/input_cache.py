@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,7 +5,10 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from typing import Any
+from typing import (
+    Any,
+    ClassVar,
+)
 
 import jsonschema
 
@@ -458,7 +459,7 @@ class Joystick(metaclass=common.SingletonMetaclass):
     """Allows read access to joystick state information."""
 
     # Dictionary of initialized joystick devices
-    devices = {}
+    devices: ClassVar[dict] = {}
 
     def __getitem__(
         self, device_guid: uuid.UUID

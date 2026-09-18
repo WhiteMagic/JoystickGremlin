@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -9,6 +7,7 @@ import logging
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    ClassVar,
     cast,
 )
 
@@ -408,10 +407,7 @@ class ActionModel(QtCore.QObject):
 
 
 class ActionPriorityListModel(QtCore.QAbstractListModel):
-    # TODO: Needs to be treated as a normal action property type and then
-    #       rendered in the UI
-
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"visible"),
     }

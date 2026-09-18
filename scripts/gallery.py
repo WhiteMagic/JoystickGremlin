@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 """Launches the Kobold style playground (guide §6 Phase 3).
@@ -32,7 +30,7 @@ import gremlin.signal
 import gremlin.ui.icon_provider
 import gremlin.ui.theme_manager
 import gremlin.util
-import joystick_gremlin  # noqa: F401 -- side effect: sets up userprofile path
+import joystick_gremlin
 
 
 def main() -> int:

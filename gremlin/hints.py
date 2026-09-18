@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 """Reads hints from a CSV file and makes them available to Gremlin for use."""

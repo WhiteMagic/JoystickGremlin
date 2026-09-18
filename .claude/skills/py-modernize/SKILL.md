@@ -43,6 +43,7 @@ Modernize Python code by applying a set of specific transformations.
    ```python
    from PySide6.QtCore import Property, Signal, Slot
 
+
    @Slot(int)
    def doSomething(self, value: int) -> None:
        pass

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -583,7 +581,7 @@ class Backend(QtCore.QObject):
         except (KeyError, TypeError) as e:
             # An error occurred while parsing an existing profile, creating
             # an empty profile instead.
-            logging.getLogger("system").exception(f"Invalid profile content:\n{e}")
+            logging.getLogger("system").exception(f"Invalid profile content: {e}")
             self.newProfile()
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an

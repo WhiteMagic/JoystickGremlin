@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -28,7 +26,7 @@ class AudioSample:
         fine for the play audio action, but may be limiting for other uses.
     """
 
-    Generator_T = Generator[bytes | array.array[int], int, None]
+    Generator_T = Generator[bytes | array.array[int], int]
 
     def __init__(self, sound_file: str, play_volume: int) -> None:
         """Creates an AudioSample instance.

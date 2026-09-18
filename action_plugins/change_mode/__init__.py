@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,7 +6,6 @@ import enum
 import logging
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -83,7 +80,7 @@ class ChangeModeFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         if (
             not self._should_execute(value)
@@ -162,10 +159,10 @@ class ChangeModeModel(ActionModel):
             self._data.change_type = ChangeType.lookup(value)
             self.modelChanged.emit()
 
-    def _get_target_modes(self) -> List[str]:
+    def _get_target_modes(self) -> list[str]:
         return self._data.target_modes
 
-    def _set_target_modes(self, values: List[str]) -> None:
+    def _set_target_modes(self, values: list[str]) -> None:
         if values != self._data.target_modes:
             self._data.target_modes = values
             self.modelChanged.emit()
@@ -251,11 +248,11 @@ class ChangeModeData(AbstractActionData):
                 self._target_modes = []
 
     @property
-    def target_modes(self) -> List[str]:
+    def target_modes(self) -> list[str]:
         return self._target_modes
 
     @target_modes.setter
-    def target_modes(self, value: List[str]) -> None:
+    def target_modes(self, value: list[str]) -> None:
         if len(value) > 0 and self._change_type in [
             ChangeType.Previous,
             ChangeType.Unwind,
@@ -298,15 +295,15 @@ class ChangeModeData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise error.GremlinError(f"{self.name}: has no containers")
 
     @override

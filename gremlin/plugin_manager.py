@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -206,4 +204,4 @@ class PluginManager(metaclass=SingletonMetaclass):
                 logging.getLogger("system").error(
                     f"Loading action_plugins '{fpath.parent}' failed due to: {e}."
                 )
-                raise (e)
+                raise

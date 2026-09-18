@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -7,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -51,7 +48,7 @@ class RunCommandFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: Value,
-        properties: List[ActionProperty] = [],
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
@@ -60,11 +57,9 @@ class RunCommandFunctor(AbstractFunctor):
             return
 
         arguments = QtCore.QProcess.splitCommand(self.data.arguments)
-        try:
-            QtCore.QProcess.startDetached(self.data.executable, arguments)
-        except Exception as exception:
+        if not QtCore.QProcess.startDetached(self.data.executable, arguments)[0]:
             logging.getLogger("system").error(
-                f"Failed to run command '{self.data.executable}': {exception}"
+                f"Failed to run command '{self.data.executable}'"
             )
 
 
@@ -167,7 +162,7 @@ class RunCommandData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         messages = []
         if not self.executable.strip():
             messages.append(

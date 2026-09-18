@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -11,9 +9,9 @@ sys.path.append(".")
 import pathlib
 import uuid
 
-import action_plugins.merge_axis as merge_axis
-import gremlin.types as types
+from action_plugins import merge_axis
 from action_plugins.description import DescriptionData
+from gremlin import types
 from gremlin.profile import Profile
 from gremlin.ui.device import InputIdentifier
 

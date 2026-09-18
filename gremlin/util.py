@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 import ctypes
@@ -148,7 +146,7 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
         else:
             raise error.ProfileError(f"Invalid bool value used: {value}")
     elif value.lower() in ["true", "false"]:
-        return True if value.lower() == "true" else False
+        return value.lower() == "true"
     else:
         raise error.ProfileError(f"Invalid bool type/value used: {type(value)}/{value}")
 
@@ -176,7 +174,7 @@ def safe_read(
     # Attempt to read the value and if present use the provided default value
     # in case reading fails
     value = default_value
-    if key not in node.keys():
+    if key not in node.keys():  # noqa: SIM118
         if default_value is None:
             msg = f"Attempted to read attribute '{key}' which does not exist."
             logging.getLogger("system").error(msg)
@@ -188,7 +186,7 @@ def safe_read(
         try:
             value = type_cast(value)
         except ValueError:
-            msg = f"Failed casting '{value}' to type '{str(type_cast)}'"
+            msg = f"Failed casting '{value}' to type '{type_cast!s}'"
             logging.getLogger("system").error(msg)
             raise error.ProfileError(msg)
     return value
@@ -197,7 +195,7 @@ def safe_read(
 def safe_format(
     value: Any,  # noqa: ANN401
     data_type: Any,  # noqa: ANN401
-    formatter: Callable[[Any], str] = str,  # noqa: ANN401
+    formatter: Callable[[Any], str] = str,
 ) -> str:
     """Returns a formatted value ensuring type correctness.
 
@@ -387,7 +385,7 @@ def create_subelement_node(name: str, value: Any) -> ElementTree.Element:  # noq
 def create_subelement_node_custom(
     name: str,
     value: Any,  # noqa: ANN401
-    to_string: Callable[[Any], str],  # noqa: ANN401
+    to_string: Callable[[Any], str],
 ) -> ElementTree.Element:
     node = ElementTree.Element(name)
     node.text = to_string(value)
@@ -415,7 +413,7 @@ def create_node_from_data(
 def create_property_node(
     name: str,
     value: Any,  # noqa: ANN401
-    property_type: PropertyType | list[PropertyType],  # noqa: ANN401
+    property_type: PropertyType | list[PropertyType],
 ) -> ElementTree.Element:
     """Creates a <property> profile element.
 
@@ -447,7 +445,7 @@ def create_property_node(
 
 def append_property_nodes(
     root_node: ElementTree.Element,
-    properties: list[TypeVar("PropertyData", str, Any, PropertyType)],  # noqa: ANN401
+    properties: list[TypeVar("PropertyData", str, Any, PropertyType)],
 ) -> None:
     """Creates and adds property nodes to the given root node.
 
@@ -495,7 +493,7 @@ def read_action_id(node: ElementTree.Element) -> uuid.UUID:
 
     try:
         return uuid.UUID(id_value)
-    except Exception:
+    except (ValueError, AttributeError):
         raise error.ProfileError(f"Failed parsing id from value: '{id_value}'.")
 
 
@@ -521,7 +519,7 @@ def read_uuid(node: ElementTree.Element, tag: str, key: str) -> uuid.UUID:
 
     try:
         return uuid.UUID(id_value)
-    except Exception:
+    except (ValueError, AttributeError):
         raise error.ProfileError(f"Failed parsing id from value: '{id_value}'.")
 
 
@@ -640,7 +638,7 @@ def _process_property(
     v_node = property_node.find("./value")
     if v_node is None:
         raise error.ProfileError(f"Value element of property '{name}' is missing")
-    if "type" not in property_node.keys():
+    if "type" not in property_node.keys():  # noqa: SIM118
         raise error.ProfileError("Property element is missing the 'type' attribute.")
 
     p_type = PropertyType.to_enum(property_node.get("type"))
@@ -692,7 +690,7 @@ def create_action_ids(name: str, action_ids: list[uuid.UUID]) -> ElementTree.Ele
 
 def determine_value_type(
     value: Any,  # noqa: ANN401
-    property_type: PropertyType | list[PropertyType],  # noqa: ANN401
+    property_type: PropertyType | list[PropertyType],
 ) -> tuple[PropertyType, bool]:
     """Returns whether a value is of the correct type and the type..
 
@@ -922,7 +920,7 @@ def clamp(value: float, min_val: float, max_val: float) -> float:
     """
     if min_val > max_val:
         min_val, max_val = max_val, min_val
-    return min_val if value < min_val else max_val if value > max_val else value
+    return min_val if value < min_val else min(value, max_val)
 
 
 def clamp_analog_axis(value: float) -> float:
@@ -943,8 +941,8 @@ def setup_userprofile() -> None:
     if not os.path.exists(folder):
         try:
             os.mkdir(folder)
-        except Exception as e:
-            raise error.GremlinError(f"Unable to create data folder: {str(e)}")
+        except (FileExistsError, FileNotFoundError) as e:
+            raise error.GremlinError(f"Unable to create data folder: {e!s}")
     elif not os.path.isdir(folder):
         raise error.GremlinError("Data folder exists but is not a folder")
 
@@ -1038,7 +1036,7 @@ def latest_gremlin_version() -> str | None:
             data = response.read()
             json_data = json.loads(data)
             return json_data.get("version", None)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 

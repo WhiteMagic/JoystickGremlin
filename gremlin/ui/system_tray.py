@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -271,7 +269,9 @@ class SystemTrayIcon(QtCore.QObject):
         ):
             self._window.hide()
 
-    def _system_tray_event_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+    def _system_tray_event_cb(
+        self, hwnd: int, msg: int, wparam: int, lparam: int
+    ) -> int:
         """Handles mouse interactions with the system tray icon.
 
         Restores the window on a left click of the icon, a right click shows the
@@ -293,7 +293,9 @@ class SystemTrayIcon(QtCore.QObject):
                 self._show_menu(*_extract_screen_coordinates(wparam))
         return 0
 
-    def _handle_context_menu_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+    def _handle_context_menu_cb(
+        self, hwnd: int, msg: int, wparam: int, lparam: int
+    ) -> int:
         """Dispatches a tray menu selection.
 
         Args:
@@ -335,7 +337,9 @@ class SystemTrayIcon(QtCore.QObject):
         self._add_icon()
         return 0
 
-    def _destroy_system_tray_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+    def _destroy_system_tray_cb(
+        self, hwnd: int, msg: int, wparam: int, lparam: int
+    ) -> int:
         """Removes the icon as the helper window is destroyed.
 
         Args:

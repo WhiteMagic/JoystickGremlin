@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -14,9 +12,9 @@ from xml.etree import ElementTree
 
 import pytest
 
-import gremlin.types as types
 from action_plugins.description import DescriptionData
 from action_plugins.map_to_vjoy import MapToVjoyData
+from gremlin import types
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 

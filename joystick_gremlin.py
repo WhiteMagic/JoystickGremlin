@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -43,7 +41,6 @@ os.chdir(install_path)
 
 # Path mangling to ensure Gremlin can run indepent of the CWD and
 # ensure configuration folder is created in time.
-# ruff: disable[E402]
 import gremlin.util
 
 sys.path.insert(0, gremlin.util.userprofile_path())
@@ -65,8 +62,6 @@ import gremlin.ui.option
 import gremlin.ui.system_tray
 import gremlin.ui.theme_manager
 import gremlin.ui.tools
-
-# ruff: enable[E402]
 
 
 def configure_logger(config: dict[str, Any]) -> None:

@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -8,7 +6,6 @@ import threading
 from typing import (
     TYPE_CHECKING,
     Any,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -55,7 +52,7 @@ class SmartToggleFunctor(AbstractFunctor):
             pass
 
         def process_event(
-            e: event_handler.Event, v: Value, p: List[ActionProperty]
+            e: event_handler.Event, v: Value, p: list[ActionProperty]
         ) -> None:
             self._process_event(self.functors["children"], e, v, p)
 
@@ -196,11 +193,11 @@ class SmartToggleData(AbstractActionData):
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return ["children"]
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         if selector == "children":
             return self.children
 

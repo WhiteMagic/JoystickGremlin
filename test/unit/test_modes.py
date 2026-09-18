@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -52,7 +50,7 @@ class TestModeHierarchy:
         with pytest.raises(GremlinError):
             mh.add_mode("Second")
 
-        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Third")
         assert mh.find_mode("Second").value == "Second"
         with pytest.raises(GremlinError):
             mh.find_mode("not there")
@@ -66,13 +64,13 @@ class TestModeHierarchy:
 
         mh.add_mode("Second")
         mh.add_mode("Third")
-        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Third")
 
         mh.delete_mode("Second")
-        assert set(mh.mode_names()) == set(["Default", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Third")
 
         mh.add_mode("Second")
-        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Third")
 
     def test_rename(self) -> None:
         p = Profile()
@@ -80,10 +78,10 @@ class TestModeHierarchy:
 
         mh.add_mode("Second")
         mh.add_mode("Third")
-        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Third")
 
         mh.rename_mode("Default", "Zeta")
-        assert set(mh.mode_names()) == set(["Zeta", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Zeta", "Second", "Third")
         assert mh.first_mode == "Zeta"
 
     def test_parent(self) -> None:
@@ -92,7 +90,7 @@ class TestModeHierarchy:
 
         mh.add_mode("Second")
         mh.add_mode("Third")
-        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Third")
 
         mh.set_parent("Default", "Second")
         assert mh.first_mode == "Second"
@@ -104,7 +102,7 @@ class TestModeHierarchy:
         p.from_xml(str(xml_dir / _PROFILE_REALISTIC))
         mh = p.modes
 
-        assert set(mh.mode_names()) == set(["Default", "Second", "Child"])
+        assert set(mh.mode_names()) == ("Default", "Second", "Child")
         assert mh.find_mode("Child").parent == mh.find_mode("Default")
 
         child_input = p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")][0]

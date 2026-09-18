@@ -1,14 +1,12 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 import ctypes
 import threading
+from collections.abc import Callable
 from ctypes import wintypes
 from dataclasses import dataclass
-from typing import Callable
 
 from gremlin.common import SingletonMetaclass
 from gremlin.types import MouseButton
@@ -294,7 +292,7 @@ class KeyboardHook(metaclass=SingletonMetaclass):
 
         try:
             user32.UnhookWindowsHookEx(hook_id)
-        except Exception:
+        except Exception:  # noqa: S110, BLE001
             pass
 
 

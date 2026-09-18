@@ -1,5 +1,3 @@
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
@@ -10,6 +8,7 @@ import uuid
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     cast,
     override,
 )
@@ -358,15 +357,14 @@ class InputItemBindingModel(QtCore.QObject):
                 self._child_lookup[key] = []
             self._child_lookup[key].append(model)
 
-            # Add all children to the list of items to process
+            # Add all children to the list of items to process.
             c_actions, c_containers = action.get_actions()
             c_index = 0
             for i in range(len(c_actions)):
                 actions.append((c_actions[i], c_containers[i]))
                 parent_indices.append(index)
-                if i > 0:
-                    if c_containers[i] != c_containers[i - 1]:
-                        c_index = 0
+                if i > 0 and c_containers[i] != c_containers[i - 1]:
+                    c_index = 0
                 container_indices.append(c_index)
                 c_index += 1
 
@@ -682,17 +680,17 @@ class InputItemBindingModel(QtCore.QObject):
             elif (
                 input_type == InputType.JoystickHat
                 and behavior == InputType.JoystickButton
-            ):
-                if not isinstance(
+                and not isinstance(
                     self._input_item_binding.virtual_button,
                     gremlin.profile.VirtualHatButton,
-                ):
-                    self._input_item_binding.virtual_button = (
-                        gremlin.profile.VirtualHatButton()
-                    )
-                    self._virtual_button_model = VirtualButtonModel(
-                        self._input_item_binding.virtual_button
-                    )
+                )
+            ):
+                self._input_item_binding.virtual_button = (
+                    gremlin.profile.VirtualHatButton()
+                )
+                self._virtual_button_model = VirtualButtonModel(
+                    self._input_item_binding.virtual_button
+                )
 
             # Remove all actions when the behavior changes.
             root_action = self.root_action
@@ -727,7 +725,7 @@ class InputItemModel(QtCore.QAbstractListModel):
 
     # This fake single role and the roleName function are needed to have the
     # modelData property available in the QML delegate
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"fake"),
     }
 
@@ -875,7 +873,7 @@ class InputItemModel(QtCore.QAbstractListModel):
 class ModeListModel(QtCore.QAbstractListModel):
     """List containing model instances for each mode."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"parentName"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"depth"),
@@ -986,7 +984,7 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
 
     selectionChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"label"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"bootstrap"),
@@ -1047,7 +1045,7 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
                 self._current_index = index
                 self.selectionChanged.emit()
         except ValueError:
-            logging.error(
+            logging.getLogger("system").error(
                 f"LabelValueSelectionModel: Attempting to set invalid value {value_str}"
             )
 
@@ -1069,9 +1067,9 @@ class StartupModeModel(QtCore.QAbstractListModel):
 
     selectionChanged = QtCore.Signal()
 
-    roles = {
-        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("label".encode()),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
+    roles: ClassVar[dict] = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"label"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -1137,7 +1135,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
     """Model representign if a vJoy device is treated as input or output
     device."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"vid"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"isInput"),
     }
@@ -1201,7 +1199,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
 class OutputVJoyListModel(QtCore.QAbstractListModel):
     """Model representing the initial vJoy values of the current profile."""
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"vjoyId"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"initialValuesModel"),
     }
@@ -1254,9 +1252,9 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
 class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
     """Model representing the initial vJoy values for a specific vJoy device."""
 
-    roles = {
-        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("label".encode()),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
+    roles: ClassVar[dict] = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"label"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
     }
 
     def __init__(self, device: dill.DeviceSummary, parent: ta.OQO = None) -> None:
@@ -1354,7 +1352,7 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
 
     selectedIndexChanged = QtCore.Signal()
 
-    roles = {
+    roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"nameAndActions"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"uuid"),
