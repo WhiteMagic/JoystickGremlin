@@ -209,6 +209,6 @@ def tester(
 ) -> Generator[app_tester.GremlinAppTester]:
     gremlin_app = app_tester.GremlinAppTester(qapp)
     cfg = gremlin.config.Configuration()
-    cfg.set("global", "general", "refresh-axis-on-mode-change", False)
-    cfg.set("global", "general", "refresh-axis-on-activation", False)
+    cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
+    cfg.set("global", "behavior", "refresh-axis-on-activation", False)
     yield gremlin_app

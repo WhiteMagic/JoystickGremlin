@@ -456,7 +456,7 @@ class CodeRunner:
                 ).value
 
         # Refresh physical input states.
-        if Configuration().value("global", "general", "refresh-axis-on-activation"):
+        if Configuration().value("global", "behavior", "refresh-axis-on-activation"):
             RefreshPhysicalInputs.refresh_axes()
 
         # Set vJoy axis default values unless the axis changed its value due

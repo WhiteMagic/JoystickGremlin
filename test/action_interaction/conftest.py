@@ -452,8 +452,8 @@ class JoystickGremlinBot:
 def jgbot(qtbot: pytestqt.qtbot.QtBot) -> Generator[JoystickGremlinBot]:
     bot = JoystickGremlinBot(qtbot)
     cfg = config.Configuration()
-    cfg.set("global", "general", "refresh-axis-on-mode-change", False)
-    cfg.set("global", "general", "refresh-axis-on-activation", False)
+    cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
+    cfg.set("global", "behavior", "refresh-axis-on-activation", False)
     gremlin.ui.backend.Backend().minimize()
     yield bot
     bot.stop()

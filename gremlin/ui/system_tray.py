@@ -107,7 +107,7 @@ class SystemTrayIcon(QtCore.QObject):
         if (
             event.type() == QtCore.QEvent.Type.Close
             and self._icon_present
-            and Configuration().value("global", "general", "close-to-tray")
+            and Configuration().value("global", "behavior", "close-to-tray")
         ):
             event.ignore()
             self._window.hide()
@@ -265,7 +265,7 @@ class SystemTrayIcon(QtCore.QObject):
         if (
             mode == QtGui.QWindow.Visibility.Minimized
             and self._icon_present
-            and Configuration().value("global", "general", "minimize-to-tray")
+            and Configuration().value("global", "behavior", "minimize-to-tray")
         ):
             self._window.hide()
 

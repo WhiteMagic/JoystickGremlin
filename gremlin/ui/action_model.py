@@ -201,7 +201,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of currently valid actions.
         """
-        key = ["action", "general", "action-priorities"]
+        key = ["action", "action-priorities", "action-priorities"]
         priority_list = Configuration().value(*key)
 
         action_list = PluginManager().type_action_map[
@@ -415,7 +415,7 @@ class ActionPriorityListModel(QtCore.QAbstractListModel):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
         self._config = Configuration()
-        self._cfg_key = ["action", "general", "action-priorities"]
+        self._cfg_key = ["action", "action-priorities", "action-priorities"]
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._config.value(*self._cfg_key))

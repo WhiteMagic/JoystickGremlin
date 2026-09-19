@@ -12,11 +12,12 @@ from unittest import mock
 import pytest
 
 import dill
+import gremlin.config_registry
 import gremlin.device_initialization
 import gremlin.event_handler
 
 # Import creates required user profile directory.
-import joystick_gremlin
+import joystick_gremlin  # noqa: F401
 from vjoy import vjoy
 
 
@@ -61,7 +62,7 @@ def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
 
 @pytest.fixture(scope="package", autouse=True)
 def register_config_options() -> None:
-    joystick_gremlin.register_config_options()
+    gremlin.config_registry.register_config_options()
 
 
 @pytest.fixture(scope="package", autouse=True)

@@ -267,7 +267,7 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
         BaseMetaConfigOptionWidget.__init__(self)
 
         self._config = gremlin.config.Configuration()
-        self._cfg_key = ["action", "general", "action-priorities"]
+        self._cfg_key = ["action", "action-priorities", "action-priorities"]
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._config.value(*self._cfg_key))
@@ -482,7 +482,7 @@ class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget)
 
         self._themes = gremlin.ui.theme_manager.discover_theme_names()
         self._config = gremlin.config.Configuration()
-        self._cfg_key = ["global", "general", "theme"]
+        self._cfg_key = ["global", "appearance", "theme"]
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._themes)
@@ -491,7 +491,7 @@ class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget)
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> str | None:
         if role == QtCore.Qt.ItemDataRole.UserRole + 1:
-            return self._themes[index.row()]
+            return self._themes[index.row()].capitalize()
         return None
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
@@ -656,7 +656,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
 
 MetaConfigOption().register(
     "action",
-    "general",
+    "action-priorities",
     "action-list",
     "Reorder the order in which actions appear in the drop down menu as desired "
     "by dragging and dropping them in the list. Actions that are not desired "
@@ -685,8 +685,8 @@ MetaConfigOption().register(
 
 MetaConfigOption().register(
     "global",
-    "general",
-    "theme-selection",
+    "appearance",
+    "color-theme-selection",
     "Color theme used for the UI.",
     ThemeSelectionModel,
 )

@@ -25,10 +25,10 @@ class WindowGeometry(QtCore.QObject):
         self._config = config
         self._name = name
 
-        if not self._config.exists("global", "general", name):
+        if not self._config.exists("global", "internal", name):
             self._config.register(
                 "global",
-                "general",
+                "internal",
                 name,
                 PropertyType.List,
                 [],
@@ -37,7 +37,7 @@ class WindowGeometry(QtCore.QObject):
                 False,
             )
 
-        value = self._config.value("global", "general", name)
+        value = self._config.value("global", "internal", name)
         if self._is_valid(value, min_width, min_height):
             self._x, self._y, self._width, self._height = value
         else:
@@ -95,4 +95,4 @@ class WindowGeometry(QtCore.QObject):
 
     @QtCore.Slot(int, int, int, int)
     def save(self, x: int, y: int, w: int, h: int) -> None:
-        self._config.set("global", "general", self._name, [x, y, w, h])
+        self._config.set("global", "internal", self._name, [x, y, w, h])

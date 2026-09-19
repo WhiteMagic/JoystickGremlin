@@ -313,7 +313,7 @@ class Device(QtCore.QAbstractListModel):
         self._device_mapping: dict[str, str] | None = None
         self._mode: str = "Default"
         self._action_sequence_display_mode = Configuration().value(
-            "global", "general", "action-sequence-information"
+            "global", "appearance", "action-sequence-visualization"
         )
 
         signal.profileChanged.connect(self._profile_changed_cb)
@@ -335,7 +335,9 @@ class Device(QtCore.QAbstractListModel):
         self._refresh_all_rows()
 
     def _config_changed_cb(self) -> None:
-        mode = Configuration().value("global", "general", "action-sequence-information")
+        mode = Configuration().value(
+            "global", "appearance", "action-sequence-visualization"
+        )
         if mode == self._action_sequence_display_mode:
             return
         self._action_sequence_display_mode = mode
@@ -392,7 +394,7 @@ class Device(QtCore.QAbstractListModel):
                 return len(input_item.action_sequences) if input_item else 0
             case "actionSequenceDisplayMode":
                 return Configuration().value(
-                    "global", "general", "action-sequence-information"
+                    "global", "appearance", "action-sequence-visualization"
                 )
             case "description":
                 input_item = self._get_input_item(input_info)
@@ -474,7 +476,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         self._logical = LogicalDevice()
         self._mode: str = "Default"
         self._action_sequence_display_mode = Configuration().value(
-            "global", "general", "action-sequence-information"
+            "global", "appearance", "action-sequence-visualization"
         )
 
         signal.profileChanged.connect(self._profile_changed_cb)
@@ -534,7 +536,9 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         self.endResetModel()
 
     def _config_changed_cb(self) -> None:
-        mode = Configuration().value("global", "general", "action-sequence-information")
+        mode = Configuration().value(
+            "global", "appearance", "action-sequence-visualization"
+        )
         if mode == self._action_sequence_display_mode:
             return
         self._action_sequence_display_mode = mode
@@ -577,7 +581,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
                 return len(input_item.action_sequences) if input_item else 0
             case "actionSequenceDisplayMode":
                 return Configuration().value(
-                    "global", "general", "action-sequence-information"
+                    "global", "appearance", "action-sequence-visualization"
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
@@ -777,7 +781,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
         self._profile = shared_state.current_profile
         self._action_sequence_display_mode = Configuration().value(
-            "global", "general", "action-sequence-information"
+            "global", "appearance", "action-sequence-visualization"
         )
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
@@ -789,7 +793,9 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         self.endResetModel()
 
     def _config_changed_cb(self) -> None:
-        mode = Configuration().value("global", "general", "action-sequence-information")
+        mode = Configuration().value(
+            "global", "appearance", "action-sequence-visualization"
+        )
         if mode == self._action_sequence_display_mode:
             return
         self._action_sequence_display_mode = mode
@@ -863,7 +869,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
                 return len(input_item.action_sequences) if input_item else 0
             case "actionSequenceDisplayMode":
                 return Configuration().value(
-                    "global", "general", "action-sequence-information"
+                    "global", "appearance", "action-sequence-visualization"
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
@@ -1677,26 +1683,3 @@ class AxisCalibration(QtCore.QAbstractListModel):
             self.emit_update(index)
 
     guid = QtCore.Property(str, fget=_get_guid, fset=_set_guid, notify=deviceChanged)
-
-
-Configuration().register(
-    "global",
-    "input-names",
-    "display-mode",
-    PropertyType.Selection,
-    "Numerical and Label",
-    "Defines how input name is displayed.",
-    {"valid_options": ["Numerical", "Numerical and Label", "Label"]},
-    True,
-)
-
-Configuration().register(
-    "global",
-    "general",
-    "action-sequence-information",
-    PropertyType.Selection,
-    "Chips",
-    "Defines how action sequences associated with inputs are displayed.",
-    {"valid_options": ["Chips", "Count"]},
-    True,
-)

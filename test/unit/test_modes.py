@@ -124,7 +124,7 @@ class TestModeManager:
         mm = ModeManager()
         cfg = Configuration()
         cfg.set("action", "change-mode", "resolution-mode", "Oldest")
-        cfg.set("global", "general", "refresh-axis-on-mode-change", False)
+        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
@@ -160,7 +160,7 @@ class TestModeManager:
         # Simple case with oldest mode retainment
         cfg = Configuration()
         cfg.set("action", "change-mode", "resolution-mode", "Oldest")
-        cfg.set("global", "general", "refresh-axis-on-mode-change", False)
+        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))

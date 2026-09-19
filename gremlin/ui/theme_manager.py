@@ -142,7 +142,7 @@ def set_active_theme(theme_name: str, valid_names: list[str]) -> None:
     if theme_name not in valid_names:
         logging.getLogger("system").warning(f"Unknown theme '{theme_name}'")
         return
-    Configuration().set("global", "general", "theme", theme_name)
+    Configuration().set("global", "appearance", "theme", theme_name)
     signal.configChanged.emit()
 
 
@@ -193,7 +193,7 @@ class ThemeManager(QtCore.QObject):
         Returns:
             Name of the currently selected theme, with default fallback.
         """
-        theme_name = Configuration().value("global", "general", "theme")
+        theme_name = Configuration().value("global", "appearance", "theme")
         if theme_name in self._themes:
             return theme_name
         return _DEFAULT_THEME
@@ -204,7 +204,7 @@ class ThemeManager(QtCore.QObject):
         Returns:
             Current UI scale, defaulting to 100.
         """
-        scale = Configuration().value("global", "general", "ui-scale")
+        scale = Configuration().value("global", "appearance", "ui-scale")
         if scale not in _VALID_UI_SCALES:
             return 100
         return int(scale)
@@ -271,7 +271,7 @@ class ThemeManager(QtCore.QObject):
         if scale not in _VALID_UI_SCALES:
             logging.getLogger("system").warning(f"Unknown UI scale '{scale}'")
             return
-        Configuration().set("global", "general", "ui-scale", scale)
+        Configuration().set("global", "appearance", "ui-scale", scale)
         signal.configChanged.emit()
 
     @QtCore.Property(list, constant=True)

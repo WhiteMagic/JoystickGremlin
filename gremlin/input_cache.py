@@ -87,7 +87,7 @@ class DeviceMapping:
             Formatted input name based on user settings.
         """
         input_name_display_mode = Configuration().value(
-            "global", "input-names", "display-mode"
+            "global", "appearance", "display-mode"
         )
         ui_input_name = common.input_to_ui_string(*identifier)
 

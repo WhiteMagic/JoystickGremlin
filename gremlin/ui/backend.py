@@ -199,7 +199,7 @@ class Backend(QtCore.QObject):
 
     def _highlight_input(self, event: event_handler.Event) -> None:
         if (
-            not self.config.value("global", "general", "input-highlighting")
+            not self.config.value("global", "behavior", "input-highlighting")
             or shared_state.suspend_input_highlighting()
         ):
             return
@@ -226,7 +226,7 @@ class Backend(QtCore.QObject):
         signal.profileChanged.emit()
 
     def _device_change(self) -> None:
-        behavior = self.config.value("global", "general", "device-change-behavior")
+        behavior = self.config.value("global", "behavior", "device-change-behavior")
         match behavior:
             case "Disable":
                 self.activate_gremlin(False)
@@ -352,7 +352,7 @@ class Backend(QtCore.QObject):
         else:
             # Stop running the code
             self.runner.stop()
-            if self.config.value("global", "general", "input-highlighting"):
+            if self.config.value("global", "behavior", "input-highlighting"):
                 shared_state.set_suspend_input_highlighting(False)
             # self._update_statusbar_active(False)
             # self._profile_auto_activated = False

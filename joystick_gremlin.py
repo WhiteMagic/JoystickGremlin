@@ -28,7 +28,6 @@ import dill
 import resources  # noqa: F401 - registers Qt resources (fonts, icons) as a side effect
 import vjoy.vjoy
 from gremlin.config import Configuration
-from gremlin.types import PropertyType
 
 # Figure out the location of the code / executable and change the working
 # directory accordingly.
@@ -48,6 +47,7 @@ gremlin.util.setup_userprofile()
 
 import gremlin.audio_player
 import gremlin.config
+import gremlin.config_registry
 import gremlin.device_initialization
 import gremlin.error
 import gremlin.event_handler
@@ -126,222 +126,6 @@ def shutdown_cleanup() -> None:
     gremlin.tts.TTSManager().stop()
 
 
-def register_config_options() -> None:
-    cfg = gremlin.config.Configuration()
-
-    cfg.register(
-        "global",
-        "internal",
-        "last-mode",
-        PropertyType.String,
-        "Default",
-        "Name of the last active mode",
-        {},
-    )
-    cfg.register(
-        "global",
-        "internal",
-        "last-profile",
-        PropertyType.String,
-        "",
-        "Most recently used profile",
-        {},
-    )
-    cfg.register(
-        "global",
-        "internal",
-        "recent-profiles",
-        PropertyType.List,
-        [],
-        "List of recently opened profiles",
-        {},
-    )
-    cfg.register(
-        "global",
-        "internal",
-        "last-known-version",
-        PropertyType.String,
-        gremlin.util.get_code_version(),
-        "Last known version of Gremlin.",
-        {},
-    )
-    cfg.register(
-        "global",
-        "general",
-        "check-for-updates",
-        PropertyType.Bool,
-        True,
-        "Check for new Gremlin versions online upon start.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "plugin-directory",
-        PropertyType.Path,
-        "",
-        "Directory containing additional action plugins",
-        {"is_folder": True},
-        True,
-    )
-    cfg.register(
-        "action",
-        "general",
-        "action-priorities",
-        PropertyType.List,
-        [],
-        "Priority order of the actions",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "device-change-behavior",
-        PropertyType.Selection,
-        "Reload",
-        "Action Gremlin takes when a joystick is connected or disconnected.",
-        {"valid_options": ["Disable", "Ignore", "Reload"]},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "dark-mode",
-        PropertyType.Bool,
-        False,
-        "Use the dark mode UI.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "minimize-to-tray",
-        PropertyType.Bool,
-        False,
-        "Minimize the Gremlin window to the system tray instead of the taskbar.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "theme",
-        PropertyType.String,
-        "light",
-        "Currently used color theme for the UI.",
-        {},
-        False,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "close-to-tray",
-        PropertyType.Bool,
-        False,
-        "Closing the Gremlin window hides it in the system tray rather than "
-        "terminating Gremlin. Quit via the tray icon's menu.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "ui-scale",
-        PropertyType.Selection,
-        "100",
-        "UI scaling percentage.",
-        {"valid_options": ["100", "150", "200"]},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "refresh-axis-on-activation",
-        PropertyType.Bool,
-        True,
-        "Use known physical device state to perform actions using these values "
-        "upon profile activation.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "refresh-axis-on-mode-change",
-        PropertyType.Bool,
-        True,
-        "Force an update of all axes by emitting axis events upon a mode change.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "input-highlighting",
-        PropertyType.Bool,
-        True,
-        "Select the input in the UI by using an input on the physical device. "
-        "Selects only inputs if the active tab matches the device.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "main-window-geometry",
-        PropertyType.List,
-        [],
-        "Persisted position and size of the main window.",
-        {},
-        False,
-    )
-    cfg.register(
-        "global",
-        "general",
-        "input-viewer-geometry",
-        PropertyType.List,
-        [],
-        "Persisted position and size of the Input Viewer window.",
-        {},
-        False,
-    )
-    cfg.register(
-        "profile",
-        "automation",
-        "enable-auto-loading",
-        PropertyType.Bool,
-        False,
-        "Enable the automatic loading and activation of profiles based on the "
-        "specified executable and profile combinations.",
-        {},
-        True,
-    )
-    cfg.register(
-        "profile",
-        "automation",
-        "remain-active-on-focus-loss",
-        PropertyType.Bool,
-        False,
-        "Keep the profile active when the monitored executable loses focus and "
-        "the newly focused executable does not have a profile assigned to it.",
-        {},
-        True,
-    )
-    cfg.register(
-        "profile",
-        "automation",
-        "entries-auto-loading",
-        PropertyType.List,
-        [],
-        "List of executable and profile combinations for automatic loading.",
-        {},
-        False,
-    )
-
-
 def configure_loggers() -> None:
     """Configures logging for system and user events."""
     configure_logger(
@@ -375,7 +159,7 @@ def configure_loggers() -> None:
 
 def update_action_priorities() -> None:
     cfg = gremlin.config.Configuration()
-    key = ["action", "general", "action-priorities"]
+    key = ["action", "action-priorities", "action-priorities"]
     priorities = []
     if cfg.exists(*key):
         priorities = cfg.value(*key)
@@ -428,7 +212,7 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         # Initialize various components.
         configure_loggers()
         self.syslog = logging.getLogger("system")
-        register_config_options()
+        gremlin.config_registry.register_config_options()
 
         # Ensure unhandled exceptions are shown to the user when running a
         # compiled version of Joystick Gremlin.
