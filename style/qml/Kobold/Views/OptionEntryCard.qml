@@ -29,22 +29,15 @@ ColumnLayout {
         spacing: Metrics.gapL
 
         Label {
+            Layout.preferredWidth: Metrics.labelColumn
+            Layout.fillHeight: true
+
             text: root.title
-
-            color: Theme.fg
-            font.family: FontType.sans
-            font.weight: FontType.regular
-            font.pixelSize: Metrics.textBody
-
-            Layout.alignment: Qt.AlignVCenter
         }
-
-        Spacer {}
 
         Item {
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
-            Layout.maximumWidth: _headerRow.width / 2
             Layout.preferredHeight: _optionElementContainer.implicitHeight
 
             ColumnLayout {
@@ -62,10 +55,7 @@ ColumnLayout {
         text: root.explanation
 
         color: Theme.fgMuted
-        font.family: FontType.sans
-        font.weight: FontType.regular
         font.pixelSize: Metrics.textDetail
-
         wrapMode: Text.WordWrap
     }
 }

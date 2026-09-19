@@ -229,7 +229,7 @@ Item {
                                     url,
                                     {
                                         "repeater": _repeater,
-                                        "focusTarget": _root
+                                        "focusTarget": root
                                     }
                                 )
                             }
@@ -258,8 +258,8 @@ Item {
                     decimals: Metrics.preciseDecimalPlaces
                     value: root.action.selectedPointCoord.x
 
-                    onValueModified: (newValue) => {
-                        root.action.updateSelectedPoint(newValue, _coordY.value)
+                    onValueModified: () => {
+                        root.action.updateSelectedPoint(value, _coordY.value)
                     }
                 }
 
@@ -276,8 +276,8 @@ Item {
                     decimals: Metrics.preciseDecimalPlaces
                     value: root.action.selectedPointCoord.y
 
-                    onValueModified: (newValue) => {
-                        root.action.updateSelectedPoint(_coordX.value, newValue)
+                    onValueModified: () => {
+                        root.action.updateSelectedPoint(_coordX.value, value)
                     }
                 }
             }

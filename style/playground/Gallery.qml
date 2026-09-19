@@ -234,6 +234,49 @@ ScrollView {
             }
         }
 
+        // -- TextArea --------------------------------------------------
+        Section {
+            title: "TextArea"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+                TextArea {
+                    Layout.preferredWidth: Metrics.controlHeight * 8
+                    Layout.preferredHeight: Metrics.controlHeight * 3
+                    placeholderText: "placeholder"
+                }
+                Caption { text: "rest" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                TextArea {
+                    Layout.preferredWidth: Metrics.controlHeight * 8
+                    Layout.preferredHeight: Metrics.controlHeight * 3
+                    text: "Some text\nover several lines"
+                }
+                Caption { text: "filled" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                TextArea {
+                    Layout.preferredWidth: Metrics.controlHeight * 8
+                    Layout.preferredHeight: Metrics.controlHeight * 3
+                    text: "Disabled"
+                    enabled: false
+                }
+                Caption { text: "disabled" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                TextArea {
+                    Layout.preferredWidth: Metrics.controlHeight * 8
+                    Layout.preferredHeight: Metrics.controlHeight * 3
+                    placeholderText: "Click / Tab me"
+                }
+                Caption { text: "live -- focus" }
+            }
+        }
+
         // -- SpinBox -----------------------------------------------------
         Section {
             title: "SpinBox"

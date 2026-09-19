@@ -9,6 +9,7 @@ import Qt.labs.qmlmodels
 import Gremlin.ActionPlugins
 import Gremlin.Profile
 import Kobold.Composites
+import Kobold.Controls
 import Kobold.Foundation
 
 
@@ -50,19 +51,16 @@ ColumnLayout {
 
         Spacer {}
 
-        ComboBox {
-            id: _conditionType
-
-            implicitContentWidthPolicy: ComboBox.WidestText
-            textRole: "text"
-            valueRole: "value"
-            model: root.action.conditionOperators
-        }
-
-        Button {
+        AddActionMenuButton {
+            variant: "bordered"
             text: "Add condition"
+            model: root.action.conditionOperators.map((entry) => entry.text)
 
-            onClicked: { root.action.addCondition(_conditionType.currentValue) }
+            onActionRequested: (name) => {
+                root.action.addCondition(
+                    root.action.conditionOperators.find((entry) => entry.text === name).value
+                )
+            }
         }
     }
 
@@ -116,20 +114,11 @@ ColumnLayout {
         onClicked: () => { root.action.removeCondition(index) }
     }
 
-    // Shared row shell for every condition type: an optional rule above (to separate
-    // condition rows from one another -- this is a plain list, not an action container,
-    // so SlotHeader's own rule does not apply here), the type-specific content in the
-    // middle, and the error/delete controls at the end.
     component ConditionComponent: ColumnLayout {
         property alias conditionItem: _conditionLoader.sourceComponent
         property string conditionName: ""
 
         Layout.fillWidth: true
-
-        Divider {
-            Layout.fillWidth: true
-            visible: index > 0
-        }
 
         RowLayout {
             Layout.fillWidth: true
@@ -180,6 +169,8 @@ ColumnLayout {
                 conditionItem: RowLayout {
                     spacing: Metrics.gapM
 
+                    Spacer {}
+
                     Comparator {
                         comparator: modelData.comparator
                     }
@@ -204,6 +195,8 @@ ColumnLayout {
 
                         callback: (inputs) => { modelData.updateFromUserInput(inputs) }
                     }
+
+                    Spacer {}
 
                     Comparator {
                         comparator: modelData.comparator
@@ -230,6 +223,8 @@ ColumnLayout {
                         callback: (inputs) => { modelData.updateFromUserInput(inputs) }
                     }
 
+                    Spacer {}
+
                     Comparator {
                         comparator: modelData.comparator
                     }
@@ -255,7 +250,7 @@ ColumnLayout {
                         }
                     }
 
-                    Label { text: "True when" }
+                    Spacer {}
 
                     Comparator {
                         comparator: modelData.comparator
@@ -291,7 +286,7 @@ ColumnLayout {
                         }
                     }
 
-                    Label { text: "True when" }
+                    Spacer {}
 
                     Comparator {
                         comparator: modelData.comparator

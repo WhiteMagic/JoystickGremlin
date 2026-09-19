@@ -24,7 +24,8 @@ ColumnLayout {
         }
 
         InputCaptureButton {
-            Layout.fillWidth: true
+            Layout.leftMargin: Metrics.gapM
+            Layout.rightMargin: Metrics.gapM
 
             eventTypes: ["key"]
             multipleInputs: true

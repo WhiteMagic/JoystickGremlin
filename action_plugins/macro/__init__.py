@@ -250,6 +250,7 @@ class LogicalDeviceActionModel(AbstractActionModel):
     def _get_is_pressed(self) -> bool:
         if self._action.input_type == InputType.JoystickButton:
             return self._action.value
+        return False
 
     def _set_is_pressed(self, value: bool) -> None:
         if self._action.input_type != InputType.JoystickButton:

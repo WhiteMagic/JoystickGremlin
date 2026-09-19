@@ -55,6 +55,7 @@ ToolButton {
         font.family: FontType.sans
         font.pixelSize: control.bordered ? Metrics.textBody : Metrics.textDetail
         verticalAlignment: Text.AlignVCenter
+        leftPadding: Metrics.gapS
     }
 
     indicator: AppIcon {
@@ -65,11 +66,14 @@ ToolButton {
     }
 
     // Handles the visual appearance of the button for the two different styles:
-    // - ghost: no styling, an edge only on hover.
+    // - ghost: no styling at rest, hover fill and edge on hover.
     // - bordered: an ordinary button fill with border.
     background: Rectangle {
         radius: control.bordered ? Metrics.radius : 0
-        color: control.bordered ? control.fillColor : "transparent"
+        color: control.down    ? Theme.bgSelected
+             : control.hovered ? Theme.bgHover
+             : control.bordered ? control.fillColor
+             :                    "transparent"
         border.width: Metrics.hairline
         border.color: control.bordered ? Theme.line
             : (control.ghostActive ? Theme.line : "transparent")

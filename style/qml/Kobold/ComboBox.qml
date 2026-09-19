@@ -36,7 +36,7 @@ T.ComboBox {
         radius: Metrics.radius
         color: Theme.bgAlt
         border.width: Metrics.hairline
-        border.color: control.activeFocus || control.popup.visible ? Theme.accent : Theme.line
+        border.color: Theme.line
     }
 
     // Popup: opaque fill, 1px line border, zero shadow.

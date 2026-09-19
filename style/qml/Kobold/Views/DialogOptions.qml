@@ -48,6 +48,7 @@ Window {
                 anchors.topMargin: Metrics.gapM
 
                 spacing: Metrics.gapS
+                scrollbarAlwaysVisible: false
 
                 model: _sectionModel
                 delegate: ConfigSectionButton {}

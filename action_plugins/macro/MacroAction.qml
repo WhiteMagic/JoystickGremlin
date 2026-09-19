@@ -234,14 +234,14 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
-                        Layout.fillWidth: true
-
                         eventTypes: ["axis", "button", "hat"]
                         multipleInputs: false
                         text: modelData.label ? modelData.label : "Record input"
 
                         callback: (inputs) => { modelData.updateJoystick(inputs) }
                     }
+
+                    Spacer {}
 
                     ButtonStateSelector {
                         visible: modelData.inputType === "button"
@@ -269,14 +269,14 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
-                        Layout.fillWidth: true
-
                         eventTypes: ["key"]
                         multipleInputs: false
                         text: modelData.key ? modelData.key : "Record input"
 
                         callback: (inputs) => { modelData.updateKey(inputs) }
                     }
+
+                    Spacer {}
 
                     ButtonStateSelector {
                         isPressed: modelData.isPressed
@@ -338,14 +338,14 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
-                        Layout.fillWidth: true
-
                         eventTypes: ["mouse"]
                         multipleInputs: false
                         text: modelData.button ? modelData.button : "Record input"
 
                         callback: (inputs) => { modelData.updateButton(inputs) }
                     }
+
+                    Spacer {}
 
                     ButtonStateSelector {
                         isPressed: modelData.isPressed
@@ -366,7 +366,9 @@ ColumnLayout {
 
                     Spacer {}
 
-                    Label { text: "X axis" }
+                    Label {
+                        text: "X axis"
+                    }
                     SpinBox {
                         editable: true
                         from: -10000
@@ -377,7 +379,9 @@ ColumnLayout {
                         onValueModified: { modelData.dx = value }
                     }
 
-                    Label { text: "Y axis" }
+                    Label {
+                        text: "Y axis"
+                    }
                     SpinBox {
                         editable: true
                         from: -10000

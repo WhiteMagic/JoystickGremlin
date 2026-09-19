@@ -12,6 +12,9 @@ T.ScrollBar {
     implicitWidth: Metrics.gapM
     implicitHeight: Metrics.gapM
 
+    // AsNeeded hides the bar while the content fits.
+    visible: policy === T.ScrollBar.AlwaysOn || (policy === T.ScrollBar.AsNeeded && size < 1.0)
+
     contentItem: Rectangle {
         implicitWidth: Metrics.gapS
         implicitHeight: Metrics.gapS

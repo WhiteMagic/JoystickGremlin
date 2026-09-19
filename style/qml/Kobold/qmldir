@@ -5,6 +5,7 @@ ToolButton  ToolButton.qml
 CheckBox    CheckBox.qml
 RadioButton RadioButton.qml
 TextField   TextField.qml
+TextArea    TextArea.qml
 SpinBox     SpinBox.qml
 DoubleSpinBox DoubleSpinBox.qml
 ComboBox    ComboBox.qml

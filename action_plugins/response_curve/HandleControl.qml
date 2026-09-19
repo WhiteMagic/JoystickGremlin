@@ -36,7 +36,7 @@ Rectangle {
 
         // Handle symmetry mode, no need to update model as the code does this
         // behind the scenes with the model update below.
-        if (_root.action.isSymmetric) {
+        if (action.isSymmetric) {
             let mirror = repeater.itemAt(repeater.count - index - 1).item
             let dx = new_u - handle.x
             let dy = new_v - handle.y
@@ -128,8 +128,8 @@ Rectangle {
 
             visible: modelData.hasRight
 
-            x: ((modelData.handleRight.x - modelData.center.x) / 2.0) * _vis.size
-            y: -((modelData.handleRight.y - modelData.center.y) / 2.0) * _vis.size
+            x: modelData.hasRight ? ((modelData.handleRight.x - modelData.center.x) / 2.0) * _vis.size : 0
+            y: modelData.hasRight ? -((modelData.handleRight.y - modelData.center.y) / 2.0) * _vis.size : 0
 
             width: offset * 2
             height: offset * 2
