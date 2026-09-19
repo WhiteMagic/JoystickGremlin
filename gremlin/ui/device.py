@@ -36,7 +36,6 @@ from gremlin.profile import InputItem
 from gremlin.signal import signal
 from gremlin.types import (
     InputType,
-    PropertyType,
     ScanCode,
 )
 from gremlin.ui import backend
@@ -57,17 +56,18 @@ def _description_from_item(item: InputItem) -> str:
 
 
 def _action_labels_from_item(item: InputItem) -> list[str]:
-    """Returns the labels of every bound action across all of the item's sequences.
-
-    A sequence's root is an invisible container (action_label always "Root") whose
-    children are the actually bound actions.
-    """
+    """Returns the labels of every action across all of the item's sequences."""
     if not item:
         return []
     labels = []
     for seq in item.action_sequences:
         assert seq.root_action is not None
-        labels.extend(child.chip_label for child in seq.root_action.get_actions()[0])
+        # Children push order reversed so they pop in their original order.
+        pending = list(reversed(seq.root_action.get_actions()[0]))
+        while pending:
+            action = pending.pop()
+            labels.append(action.chip_label)
+            pending.extend(reversed(action.get_actions()[0]))
     return labels
 
 
