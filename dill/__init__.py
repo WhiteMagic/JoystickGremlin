@@ -438,6 +438,20 @@ class DeviceSummary:
 C_EVENT_CALLBACK = ctypes.CFUNCTYPE(None, _JoystickInputData)
 C_DEVICE_CHANGE_CALLBACK = ctypes.CFUNCTYPE(None, _DeviceSummary, ctypes.c_uint8)
 
+
+def _dispatch_input_event(data: _JoystickInputData) -> None:
+    DILL.input_event_handler(data)
+
+
+def _dispatch_device_change(data: _DeviceSummary, action: int) -> None:
+    DILL.device_change_handler(data, action)
+
+
+# Registered once and never released, DILL's thread may still be inside a callback
+# while it's being replaced.
+_input_event_stub = C_EVENT_CALLBACK(_dispatch_input_event)
+_device_change_stub = C_DEVICE_CHANGE_CALLBACK(_dispatch_device_change)
+
 _dll_path = os.path.join(os.path.dirname(__file__), "dill.dll")
 if "_MEIPASS" in sys.__dict__:
     _dll_path = os.path.join(sys._MEIPASS, "dill.dll")
@@ -466,9 +480,9 @@ class DILL:
     # Should only be initialized once in a process's lifetime.
     _dill_initialized = False
 
-    # Storage for the callback functions
-    device_change_callback_fn = None
-    input_event_callback_fn = None
+    # Python functions that the permanently registered stubs forward to.
+    device_change_handler: Callable[..., None] = lambda *_: None
+    input_event_handler: Callable[..., None] = lambda *_: None
 
     # Declare argument and return types for all the functions
     # exposed by the dll
@@ -515,11 +529,13 @@ class DILL:
         Args:
             callback: function to execute when an event occurs
         """
-        DILL.input_event_callback_fn = C_EVENT_CALLBACK(callback)
-        DILL._dll.set_input_event_callback(DILL.input_event_callback_fn)
+        DILL.input_event_handler = callback
+        DILL._dll.set_input_event_callback(_input_event_stub)
 
     @staticmethod
-    def set_device_change_callback(callback: Callable[[DeviceSummary], None]) -> None:
+    def set_device_change_callback(
+        callback: Callable[[DeviceSummary, DeviceActionType], None],
+    ) -> None:
         """Sets the callback function to use for device change events.
 
         The provided function will be executed whenever the status of a
@@ -528,8 +544,8 @@ class DILL:
         Args:
             callback: function to execute when an event occurs
         """
-        DILL.device_change_callback_fn = C_DEVICE_CHANGE_CALLBACK(callback)
-        DILL._dll.set_device_change_callback(DILL.device_change_callback_fn)
+        DILL.device_change_handler = callback
+        DILL._dll.set_device_change_callback(_device_change_stub)
 
     @staticmethod
     def get_device_count() -> int:

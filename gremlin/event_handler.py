@@ -247,7 +247,7 @@ class EventListener(QtCore.QObject):
         self._running = False
         self._stop_event.set()
         self.keyboard_hook.stop()
-        dill.DILL.set_device_change_callback(lambda x: None)
+        dill.DILL.set_device_change_callback(lambda *_: None)
         dill.DILL.set_input_event_callback(lambda x: None)
 
     def restart(self) -> None:

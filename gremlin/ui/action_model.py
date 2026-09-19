@@ -37,6 +37,16 @@ QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
+def _emit_input_item_changed_later(enumeration_index: int) -> None:
+    """Emits inputItemChanged once control has returned to the event loop.
+
+    Args:
+        enumeration_index: linear index of the input item that changed
+    """
+    # Emitting from inside a slot on a model the rebuild discarded crashed shiboken.
+    QtCore.QTimer.singleShot(0, lambda: signal.inputItemChanged.emit(enumeration_index))
+
+
 class SequenceIndex:
     def __init__(
         self,
@@ -249,7 +259,7 @@ class ActionModel(QtCore.QObject):
             enumeration_index = self._binding_model.parent().enumeration_index
             self._data.insert_action(action, selector)
             self._binding_model.sync_data()
-            signal.inputItemChanged.emit(enumeration_index)
+            _emit_input_item_changed_later(enumeration_index)
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
@@ -278,7 +288,7 @@ class ActionModel(QtCore.QObject):
             signal.reloadUi.emit()
             return
 
-        signal.inputItemChanged.emit(enumeration_index)
+        _emit_input_item_changed_later(enumeration_index)
 
     @QtCore.Slot(int)
     def removeAction(self, index: int) -> None:
@@ -290,7 +300,7 @@ class ActionModel(QtCore.QObject):
         # Read before remove_action replaces every ActionModel behind this binding.
         enumeration_index = self._binding_model.parent().enumeration_index
         self._binding_model.remove_action(index)
-        signal.inputItemChanged.emit(enumeration_index)
+        _emit_input_item_changed_later(enumeration_index)
 
     @property
     def action_data(self) -> AbstractActionData:
