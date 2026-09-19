@@ -63,6 +63,38 @@ def test_library_remove_unused_recursive() -> None:
     assert library.has_action(top.id)
 
 
+def test_bound_actions_by_type() -> None:
+    from action_plugins.chain import ChainData
+    from action_plugins.description import DescriptionData
+    from action_plugins.map_to_vjoy import MapToVjoyData
+    from action_plugins.root import RootData
+
+    p = Profile()
+    input_item = profile.InputItem(p.library)
+    p.inputs[uuid.uuid4()] = [input_item]
+
+    direct = MapToVjoyData()
+    nested = MapToVjoyData()
+    shared = MapToVjoyData()
+    orphan = MapToVjoyData()
+    chain = ChainData()
+    chain.insert_action(nested, "0")
+    chain.insert_action(shared, "0")
+    for action in [direct, nested, shared, orphan, chain]:
+        p.library.add_action(action)
+
+    for children in [[direct, chain, DescriptionData()], [shared]]:
+        binding = profile.InputItemBinding(input_item)
+        binding.root_action = RootData()
+        for child in children:
+            binding.root_action.insert_action(child, "children")
+        input_item.action_sequences.append(binding)
+
+    bound_ids = [action.id for action in p.bound_actions_by_type(MapToVjoyData)]
+
+    assert sorted(bound_ids) == sorted([direct.id, nested.id, shared.id])
+
+
 def test_simple_action(xml_dir: pathlib.Path) -> None:
     gremlin.plugin_manager.PluginManager()
 

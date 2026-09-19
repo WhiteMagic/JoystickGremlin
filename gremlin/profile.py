@@ -717,6 +717,36 @@ class Profile:
         else:
             return None
 
+    def bound_actions_by_type[T: AbstractActionData](
+        self, action_type: type[T]
+    ) -> list[T]:
+        """Returns all actions reachable from an input binding matching the given type.
+
+        Args:
+            action_type: type of the action to return
+
+        Returns:
+            All bound actions of the given type, each listed once
+        """
+        pending = [
+            binding.root_action
+            for input_items in self.inputs.values()
+            for input_item in input_items
+            for binding in input_item.action_sequences
+            if binding.root_action is not None
+        ]
+        visited: set[uuid.UUID] = set()
+        actions: list[T] = []
+        while pending:
+            action = pending.pop()
+            if action.id in visited:
+                continue
+            visited.add(action.id)
+            if isinstance(action, action_type):
+                actions.append(action)
+            pending.extend(action.get_actions()[0])
+        return actions
+
     def remove_action(
         self, action: AbstractActionData, binding: InputItemBinding
     ) -> None:

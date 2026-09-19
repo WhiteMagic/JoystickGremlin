@@ -7,6 +7,7 @@ import threading
 import time
 from typing import (
     TYPE_CHECKING,
+    Self,
     override,
 )
 from xml.etree import ElementTree
@@ -18,6 +19,7 @@ from gremlin import (
     error,
     event_handler,
     event_helpers,
+    shared_state,
     signal,
     util,
 )
@@ -31,6 +33,7 @@ from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     AxisMode,
+    DataCreationMode,
     InputType,
     PropertyType,
 )
@@ -41,6 +44,8 @@ from gremlin.ui.action_model import (
 from vjoy.vjoy import VJoyProxy
 
 if TYPE_CHECKING:
+    import dill
+    from gremlin.profile import Profile
     from gremlin.ui.profile import InputItemBindingModel
 
 
@@ -324,8 +329,55 @@ class MapToVjoyData(AbstractActionData):
 
     @classmethod
     @override
+    def create(
+        cls, mode: DataCreationMode, behavior_type: InputType = InputType.JoystickButton
+    ) -> Self:
+        action = super().create(mode, behavior_type)
+        profile = shared_state.current_profile
+        if mode == DataCreationMode.Create and profile is not None:
+            action._select_unused_vjoy_input(profile)
+        return action
+
+    @classmethod
+    @override
     def can_create(cls) -> bool:
         return len(device_initialization.output_vjoy_devices()) > 0
+
+    def _select_unused_vjoy_input(self, profile: Profile) -> None:
+        """Selects the first vJoy input of this action's type not bound in the profile.
+
+        Args:
+            profile: profile whose bound actions determine used inputs
+        """
+        used_inputs = {
+            (action.vjoy_device_id, action.vjoy_input_type, action.vjoy_input_id)
+            for action in profile.bound_actions_by_type(MapToVjoyData)
+        }
+        for device in device_initialization.output_vjoy_devices():
+            for input_id in self._input_ids(device, self.vjoy_input_type):
+                if (device.vjoy_id, self.vjoy_input_type, input_id) not in used_inputs:
+                    self.vjoy_device_id = device.vjoy_id
+                    self.vjoy_input_id = input_id
+                    return
+
+    @staticmethod
+    def _input_ids(device: dill.DeviceSummary, input_type: InputType) -> list[int]:
+        """Returns the ids of all inputs of the given type on the device.
+
+        Args:
+            device: vJoy device whose inputs to list
+            input_type: type of the inputs to list
+
+        Returns:
+            Input ids in ascending order
+        """
+        match input_type:
+            case InputType.JoystickAxis:
+                return [device.axis_map[i].axis_index for i in range(device.axis_count)]
+            case InputType.JoystickHat:
+                return list(range(1, device.hat_count + 1))
+            case _:
+                return list(range(1, device.button_count + 1))
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:

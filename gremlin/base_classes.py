@@ -142,7 +142,7 @@ class AbstractActionData(ABC):
     @classmethod
     def create(
         cls, mode: DataCreationMode, behavior_type: InputType = InputType.JoystickButton
-    ) -> AbstractActionData:
+    ) -> Self:
         """Creates a new instance with the given creation mode.
 
         Args:
