@@ -12,7 +12,6 @@ DeviceTabBar          DeviceTabBar.qml
 DeviceList            DeviceList.qml
 InputConfiguration    InputConfiguration.qml
 InputItemBinding      InputItemBinding.qml
-InputItemBindingConfigurationHeader InputItemBindingConfigurationHeader.qml
 ProfileSettings       ProfileSettings.qml
 ScriptManager         ScriptManager.qml
 ScriptConfiguration   ScriptConfiguration.qml

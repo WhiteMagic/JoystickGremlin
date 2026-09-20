@@ -29,25 +29,25 @@ Item {
         RadioButton {
             text: "Button"
 
-            checked: _root.inputBinding.behavior == "button"
+            checked: _root.inputBinding.behavior === "button"
             onClicked: () => { _root.inputBinding.behavior = "button" }
         }
 
         RadioButton {
             text: "Axis"
 
-            visible: _root.inputBinding.inputType == "axis"
+            visible: _root.inputBinding.inputType === "axis"
 
-            checked: _root.inputBinding.behavior == "axis"
+            checked: _root.inputBinding.behavior === "axis"
             onClicked: () => { _root.inputBinding.behavior = "axis" }
         }
 
         RadioButton {
             text: "Hat"
 
-            visible: _root.inputBinding.inputType == "hat"
+            visible: _root.inputBinding.inputType === "hat"
 
-            checked: _root.inputBinding.behavior == "hat"
+            checked: _root.inputBinding.behavior === "hat"
             onClicked: () => { _root.inputBinding.behavior = "hat" }
         }
     }

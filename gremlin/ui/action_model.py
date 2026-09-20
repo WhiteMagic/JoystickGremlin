@@ -106,8 +106,11 @@ class ActionModel(QtCore.QObject):
         self._behavior_changed_connection = self._binding_model.behaviorChanged.connect(
             lambda: self.actionChanged.emit()
         )
+        # Bound-method slot corrupts memory when the model is freed by C++ parent.
         self._expansion_changed_connection = (
-            self._binding_model.expansionChanged.connect(self._handle_expansion_changed)
+            self._binding_model.expansionChanged.connect(
+                lambda data: self._handle_expansion_changed(data)
+            )
         )
 
     def dispose(self) -> None:
