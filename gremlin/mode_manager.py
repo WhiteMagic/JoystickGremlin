@@ -87,7 +87,6 @@ class ModeManager(QtCore.QObject):
         QtCore.QObject.__init__(self)
 
         self._mode_stack = [Mode("Invalid", None)]
-        self._config = Configuration()
 
     @property
     def current(self) -> Mode:
@@ -95,15 +94,16 @@ class ModeManager(QtCore.QObject):
 
     def reset(self) -> None:
         self._mode_stack = [Mode(shared_state.current_profile.modes.first_mode, None)]
-        self._config.set("global", "internal", "last-mode", self.current.name)
+        Configuration().set("global", "internal", "last-mode", self.current.name)
 
     def _exists(self, mode: Mode) -> bool:
         return mode in self._mode_stack
 
     def _update_mode(self) -> None:
-        self._config.set("global", "internal", "last-mode", self.current.name)
+        config = Configuration()
+        config.set("global", "internal", "last-mode", self.current.name)
         self.mode_changed.emit(self.current.name)
-        if self._config.value("global", "behavior", "refresh-axis-on-mode-change"):
+        if config.value("global", "behavior", "refresh-axis-on-mode-change"):
             RefreshPhysicalInputs.refresh_axes()
 
     def cycle(self, sequence: ModeSequence) -> None:

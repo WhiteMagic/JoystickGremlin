@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Hashable
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -244,3 +244,79 @@ class ButtonReleaseActions(QtCore.QObject):
             mode: name of the now active mode
         """
         self._current_mode = mode
+
+
+type ModeChangeCallback = Callable[[mode_manager.Mode, mode_manager.Mode], bool]
+
+
+@common.SingletonDecorator
+class ModeChangeActions(QtCore.QObject):
+    """Runs callbacks when the active mode changes.
+
+    Actions holding runtime state tied to the mode they were started in register a
+    callback which is run whenever the mode change. The callback decides what to do.
+    """
+
+    def __init__(self) -> None:
+        """Initializes the instance."""
+        QtCore.QObject.__init__(self)
+
+        self._registry: dict[Hashable, ModeChangeCallback] = {}
+
+        manager = mode_manager.ModeManager()
+        self._previous_mode = manager.current
+        manager.mode_changed.connect(self._mode_changed_cb)
+
+    def register(self, key: Hashable, callback: ModeChangeCallback) -> None:
+        """Registers a callback to run when the active mode changes.
+
+        Registering an existing key replaces the previous callback, which keeps
+        repeated activations of the same input from piling up entries.
+
+        Args:
+            key: identifier of the entry
+            callback: run with the previously and the newly active mode, returning
+                True if it has run and its entry is to be discarded
+        """
+        self._registry[key] = callback
+
+    def unregister(self, key: Hashable) -> None:
+        """Removes the entry of the given key, if one exists.
+
+        Args:
+            key: identifier of the entry to remove
+        """
+        self._registry.pop(key, None)
+
+    def reset(self) -> None:
+        """Wipes the registry database and resyncs the tracked mode."""
+        self._registry = {}
+        self._previous_mode = mode_manager.ModeManager().current
+
+    def _mode_changed_cb(self, _mode: str) -> None:
+        """Runs the registered callbacks for the mode change that occurred.
+
+        Args:
+            _mode: name of the now active mode, the Mode instances are used instead
+        """
+        old_mode = self._previous_mode
+        new_mode = mode_manager.ModeManager().current
+        self._previous_mode = new_mode
+
+        # Callbacks are free to modify the registry, hence the snapshot of the keys and
+        # the repeated lookups which skip entries removed or replaced mid pass.
+        for key in list(self._registry):
+            callback = self._registry.get(key)
+            if callback is None:
+                continue
+
+            try:
+                has_run = callback(old_mode, new_mode)
+            except Exception:
+                logging.getLogger("system").exception(
+                    f"Mode change callback for '{key}' raised an exception."
+                )
+                has_run = True
+
+            if has_run and self._registry.get(key) is callback:
+                del self._registry[key]

@@ -524,6 +524,42 @@ class EventHandler(QtCore.QObject):
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
 
+    def is_same_binding(
+        self, device_guid: uuid.UUID, event: Event, first_mode: str, second_mode: str
+    ) -> bool:
+        """Returns whether both modes route the given event to the same binding.
+
+        Args:
+            device_guid: the GUID of the device the event originates from
+            event: the event whose binding to compare
+            first_mode: name of the mode to compare against second_mode
+            second_mode: name of the mode to compare against first_mode
+
+        Returns:
+            True if both modes dispatch the event to the same callbacks
+        """
+        return self._binding_for(device_guid, first_mode, event) is self._binding_for(
+            device_guid, second_mode, event
+        )
+
+    def _binding_for(
+        self, device_guid: uuid.UUID, mode: str, event: Event
+    ) -> list[Callable[[Event], None]] | None:
+        """Returns the callbacks bound to the event in the given mode.
+
+        Mode inheritance shares the very same list instance with every child mode,
+        making identity of the returned list a test for an unchanged binding.
+
+        Args:
+            device_guid: the GUID of the device the event originates from
+            mode: name of the mode to look the event up in
+            event: the event to look up
+
+        Returns:
+            The callbacks bound to the event, None if there are none
+        """
+        return self.callbacks.get(device_guid, {}).get(mode, {}).get(event)
+
     def resume(self) -> None:
         """Resumes the processing of callbacks."""
         self.process_callbacks = True

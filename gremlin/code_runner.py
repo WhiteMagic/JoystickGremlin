@@ -417,8 +417,9 @@ class CodeRunner:
             evt_lst.gremlin_active = False
         self._running = False
 
-        # Empty callback registry.
+        # Empty various callback registries.
         user_script.callback_registry.clear()
+        event_helpers.ModeChangeActions().reset()
         self.event_handler.clear()
 
         # Stop periodic events and clear registry.
@@ -440,6 +441,7 @@ class CodeRunner:
         self.event_handler._previous_mode = self._profile.modes.first_mode
         user_script.callback_registry.clear()
         event_helpers.ButtonReleaseActions().reset()
+        event_helpers.ModeChangeActions().reset()
 
     def _refresh_axes(self) -> None:
         # Store state of all vJoy axes before we do anything.

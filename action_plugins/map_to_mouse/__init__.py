@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import functools
 import math
 from typing import (
     TYPE_CHECKING,
@@ -15,6 +16,8 @@ from PySide6 import QtCore
 
 from gremlin import (
     event_handler,
+    event_helpers,
+    mode_manager,
     sendinput,
     util,
 )
@@ -65,6 +68,7 @@ class MapToMouseFunctor(AbstractFunctor):
         super().__init__(action)
 
         self._motion = sendinput.MouseMotionManager()
+        self._mode_changes = event_helpers.ModeChangeActions()
 
     @override
     def __call__(
@@ -115,6 +119,54 @@ class MapToMouseFunctor(AbstractFunctor):
         """
         return (self.data.id, event)
 
+    def _register_mode_change_cb(
+        self, key: sendinput.MotionKey, event: event_handler.Event
+    ) -> None:
+        """Adds a mode change callback for the given action.
+
+        Args:
+            key: identifier of the contribution to track
+            event: input event driving the motion
+        """
+        self._mode_changes.register(
+            key, functools.partial(self._mode_change_cb, key, event)
+        )
+
+    def _remove_mode_change_cb(self, key: sendinput.MotionKey) -> None:
+        """Removes the specified callback from the mode change handler.
+
+        Args:
+            key: identifier of the contribution no longer to track
+        """
+        self._mode_changes.unregister(key)
+
+    def _mode_change_cb(
+        self,
+        key: sendinput.MotionKey,
+        event: event_handler.Event,
+        _old_mode: mode_manager.Mode,
+        new_mode: mode_manager.Mode,
+    ) -> bool:
+        """Stops the action's mouse motino contributino if the new mode no longer
+        routes the input here.
+
+        Args:
+            key: identifier of the contribution to stop
+            event: input event that started the motion
+            _old_mode: mode active before the change
+            new_mode: mode active after the change
+
+        Returns:
+            True if the motion was stopped, False if the binding still applies
+        """
+        if event_handler.EventHandler().is_same_binding(
+            event.device_guid, event, event.mode, new_mode.name
+        ):
+            return False
+
+        self._motion.clear(key)
+        return True
+
     def _axis_compass_direction(self) -> float:
         """Returns the heading a positive axis value moves the cursor towards.
 
@@ -126,8 +178,7 @@ class MapToMouseFunctor(AbstractFunctor):
             90.0: 90.0,
         }
         return direction_remap.get(
-            float(self.data.direction),
-            float(self.data.direction)
+            float(self.data.direction), float(self.data.direction)
         )
 
     def _perform_axis_motion(self, event: event_handler.Event, value: Value) -> None:
@@ -143,11 +194,17 @@ class MapToMouseFunctor(AbstractFunctor):
         speed = math.copysign(speed, value.current)
         speed = 0.0 if abs(value.current) < 1e-6 else speed
 
+        key = self._motion_key(event)
         self._motion.set_velocity(
-            self._motion_key(event),
+            key,
             sendinput.Vector2.from_compass_direction(self._axis_compass_direction())
             * speed,
         )
+        # A zero speed makes set_velocity drop the contribution.
+        if speed == 0.0:
+            self._remove_mode_change_cb(key)
+        else:
+            self._register_mode_change_cb(key, event)
 
     def _perform_button_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes button-controlled motion.
@@ -165,10 +222,10 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.max_speed,
                 self.data.time_to_max_speed,
             )
+            self._register_mode_change_cb(key, event)
         else:
-            # A button held across a mode switch never delivers its release
-            # here and leaks its contribution until the profile is stopped.
             self._motion.clear(key)
+            self._remove_mode_change_cb(key)
 
     def _perform_hat_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes hat-controlled motion.
@@ -180,6 +237,7 @@ class MapToMouseFunctor(AbstractFunctor):
         key = self._motion_key(event)
         if value.current == HatDirection.Center:
             self._motion.clear(key)
+            self._remove_mode_change_cb(key)
         else:
             # Hat directions are cartesian with y pointing up, screen
             # coordinates have y growing downwards.
@@ -191,6 +249,7 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.max_speed,
                 self.data.time_to_max_speed,
             )
+            self._register_mode_change_cb(key, event)
 
 
 class MapToMouseModel(ActionModel):
