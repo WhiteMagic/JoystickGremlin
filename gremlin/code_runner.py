@@ -399,7 +399,7 @@ class CodeRunner:
             self.event_handler.resume()
             self._running = True
 
-            sendinput.MouseController().start()
+            sendinput.MouseMotionManager().start()
             self._refresh_axes()
         except ImportError as e:
             signal.display_error(
@@ -427,7 +427,7 @@ class CodeRunner:
 
         # Stop all manager classes.
         macro.MacroManager().stop()
-        sendinput.MouseController().stop()
+        sendinput.MouseMotionManager().stop()
         audio_player.AudioPlayer().stop()
         tts.TTSManager().stop()
 

@@ -1,0 +1,30 @@
+<action id="3f8c1d07-5b2a-4e61-9c84-06ad7e2b41f9" type="map-to-mouse">
+    <property type="string">
+        <name>mode</name>
+        <value>Motion</value>
+    </property>
+    <property type="int">
+        <name>direction</name>
+        <value>90</value>
+    </property>
+    <property type="int">
+        <name>min-speed</name>
+        <value>25</value>
+    </property>
+    <property type="int">
+        <name>max-speed</name>
+        <value>175</value>
+    </property>
+    <property type="float">
+        <name>time-to-max-speed</name>
+        <value>2.5</value>
+    </property>
+    <property type="string">
+        <name>action-label</name>
+        <value></value>
+    </property>
+    <property type="activation-mode">
+        <name>activation-mode</name>
+        <value>press</value>
+    </property>
+</action>

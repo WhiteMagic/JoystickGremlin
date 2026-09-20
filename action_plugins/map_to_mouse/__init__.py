@@ -6,6 +6,7 @@ import enum
 import math
 from typing import (
     TYPE_CHECKING,
+    cast,
     override,
 )
 from xml.etree import ElementTree
@@ -63,7 +64,7 @@ class MapToMouseFunctor(AbstractFunctor):
     def __init__(self, action: MapToMouseData) -> None:
         super().__init__(action)
 
-        self.mouse_controller = sendinput.MouseController()
+        self._motion = sendinput.MouseMotionManager()
 
     @override
     def __call__(
@@ -103,6 +104,32 @@ class MapToMouseFunctor(AbstractFunctor):
             else:
                 sendinput.mouse_release(self.data.button)
 
+    def _motion_key(self, event: event_handler.Event) -> sendinput.MotionKey:
+        """Returns the key identifying this action's contribution.
+
+        Args:
+            event: input event driving the motion
+
+        Returns:
+            Key under which to register the motion contribution
+        """
+        return (self.data.id, event)
+
+    def _axis_compass_direction(self) -> float:
+        """Returns the heading a positive axis value moves the cursor towards.
+
+        Returns:
+            Heading in degree, 0 being north and 90 being east
+        """
+        direction_remap = {
+            0.0: 180.0,
+            90.0: 90.0,
+        }
+        return direction_remap.get(
+            float(self.data.direction),
+            float(self.data.direction)
+        )
+
     def _perform_axis_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes axis-controlled motion.
 
@@ -110,15 +137,17 @@ class MapToMouseFunctor(AbstractFunctor):
             event: input event to process
             value: potentially modified input value
         """
-        delta_motion = self.data.min_speed + abs(value.current) * (
+        speed = self.data.min_speed + abs(value.current) * (
             self.data.max_speed - self.data.min_speed
         )
-        delta_motion = math.copysign(delta_motion, value.current)
-        delta_motion = 0.0 if abs(value.current) < 1e-6 else delta_motion
+        speed = math.copysign(speed, value.current)
+        speed = 0.0 if abs(value.current) < 1e-6 else speed
 
-        dx = delta_motion if self.data.direction == 90 else None
-        dy = delta_motion if self.data.direction == 0 else None
-        self.mouse_controller.set_absolute_motion(dx, dy)
+        self._motion.set_velocity(
+            self._motion_key(event),
+            sendinput.Vector2.from_compass_direction(self._axis_compass_direction())
+            * speed,
+        )
 
     def _perform_button_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes button-controlled motion.
@@ -127,16 +156,19 @@ class MapToMouseFunctor(AbstractFunctor):
             event: input event to process
             value: potentially modified input value
         """
+        key = self._motion_key(event)
         if event.is_pressed:
-            self.mouse_controller.add_accelerated_motion(
-                self.data.direction,
+            self._motion.set_accelerated_motion(
+                key,
+                sendinput.Vector2.from_compass_direction(self.data.direction),
                 self.data.min_speed,
                 self.data.max_speed,
                 self.data.time_to_max_speed,
-                event,
             )
         else:
-            self.mouse_controller.remove_accelerated_motion(event)
+            # A button held across a mode switch never delivers its release
+            # here and leaks its contribution until the profile is stopped.
+            self._motion.clear(key)
 
     def _perform_hat_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes hat-controlled motion.
@@ -145,26 +177,19 @@ class MapToMouseFunctor(AbstractFunctor):
             event: input event to process
             value: potentially modified input value
         """
-        direction_lut = {
-            HatDirection.North: 0.0,
-            HatDirection.NorthEast: 45.0,
-            HatDirection.East: 90.0,
-            HatDirection.SouthEast: 135.0,
-            HatDirection.South: 180.0,
-            HatDirection.SouthWest: 225.0,
-            HatDirection.West: 270.0,
-            HatDirection.NorthWest: 315.0,
-        }
-
+        key = self._motion_key(event)
         if value.current == HatDirection.Center:
-            self.mouse_controller.set_absolute_motion(0, 0)
+            self._motion.clear(key)
         else:
-            self.mouse_controller.add_accelerated_motion(
-                direction_lut[value.current],
+            # Hat directions are cartesian with y pointing up, screen
+            # coordinates have y growing downwards.
+            hat_x, hat_y = cast(HatDirection, value.current).value
+            self._motion.set_accelerated_motion(
+                key,
+                sendinput.Vector2(hat_x, -hat_y).normalize(),
                 self.data.min_speed,
                 self.data.max_speed,
                 self.data.time_to_max_speed,
-                event,
             )
 
 

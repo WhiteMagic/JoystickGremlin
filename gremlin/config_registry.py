@@ -221,6 +221,17 @@ def _register_action() -> None:
         {},
         True,
     )
+    cfg.register(
+        "action",
+        "map-to-mouse",
+        "update-rate",
+        PropertyType.Int,
+        100,
+        "Rate in Hz at which mouse motion updates are sent. Higher values give "
+        "smoother motion at high speeds at the cost of additional CPU usage.",
+        {"min": 50, "max": 500},
+        True,
+    )
 
 
 def _register_profile() -> None:
