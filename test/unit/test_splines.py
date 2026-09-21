@@ -7,7 +7,14 @@ import sys
 sys.path.append(".")
 
 
-from gremlin.spline import CubicBezierSpline
+import math
+
+import pytest
+
+from gremlin.spline import (
+    CubicBezierSpline,
+    CubicSpline,
+)
 
 
 def cbs(
@@ -67,3 +74,23 @@ def test_cubic_bezier_spline_curve() -> None:
     assert s(r[0]) == r[1]
     r = cbs(0.91, *cps)
     assert s(r[0]) == r[1]
+
+
+@pytest.mark.parametrize("position", [-1.0, -0.5, -0.001, 0.0, 0.001, 0.5, 1.0])
+def test_cubic_spline_default_is_identity(position: float) -> None:
+    assert CubicSpline()(position) == pytest.approx(position, abs=1e-12)
+
+
+def test_cubic_spline_passes_exactly_through_control_points() -> None:
+    points = [(-1.0, -1.0), (-0.5, -0.1), (0.0, 0.0), (0.5, 0.4), (1.0, 1.0)]
+    spline = CubicSpline(points)
+
+    for position, expected in points:
+        assert spline(position) == pytest.approx(expected, abs=1e-12)
+
+
+def test_cubic_spline_stacked_control_points() -> None:
+    spline = CubicSpline([(-1.0, -1.0), (0.0, -0.5), (0.0, 0.5), (1.0, 1.0)])
+
+    for position in (-1.0, -0.5, 0.0, 0.5, 1.0):
+        assert math.isfinite(spline(position))

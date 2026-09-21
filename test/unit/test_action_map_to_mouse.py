@@ -174,6 +174,19 @@ def test_axis_at_rest_removes_contribution(manager: MouseMotionManager) -> None:
     assert manager._sources == {}
 
 
+@pytest.mark.parametrize("residual", [5e-6, -5e-6, 5e-4, -5e-4])
+def test_axis_values_below_threshold_remove_contribution(
+    manager: MouseMotionManager, residual: float
+) -> None:
+    functor = _axis_functor(90)
+    event = _event(InputType.JoystickAxis)
+    functor(event, Value(0.5))
+
+    functor(event, Value(residual))
+
+    assert manager._sources == {}
+
+
 def test_hat_north_east_is_unit_length(manager: MouseMotionManager) -> None:
     """Hat coordinates are cartesian, screen coordinates grow downwards."""
     functor = _hat_functor()

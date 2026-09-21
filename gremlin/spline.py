@@ -219,6 +219,9 @@ class CubicSpline(AbstractCurve):
     create a C2 spline which passes through all of them.
     """
 
+    # Prevent a division by zero if control points are too close to each other.
+    _MIN_SEGMENT_WIDTH = 1e-9
+
     def __init__(self, points: CoordinateList | None = None) -> None:
         """Creates a new CubicSpline object.
 
@@ -269,26 +272,42 @@ class CubicSpline(AbstractCurve):
         if n < 2:
             return
 
-        eps = 0.000001
         h = [0.0] * n
         b = [0.0] * n
         u = [0.0] * n
         v = [0.0] * n
 
         for i in range(n):
-            h[i] = self.points[i + 1].x - self.points[i].x
-            b[i] = (self.points[i + 1].y - self.points[i].y) / (h[i] + eps)
+            h[i] = self._segment_width(i)
+            b[i] = (self.points[i + 1].y - self.points[i].y) / h[i]
 
         u[1] = 2 * (h[0] + h[1])
         v[1] = 6 * (b[1] - b[0])
         for i in range(2, n):
-            u[i] = 2 * (h[i] + h[i - 1]) - h[i - 1] ** 2 / (u[i - 1] + eps)
-            v[i] = 6 * (b[i] - b[i - 1]) - (h[i - 1] * v[i - 1]) / (u[i - 1] + eps)
+            u[i] = 2 * (h[i] + h[i - 1]) - h[i - 1] ** 2 / u[i - 1]
+            v[i] = 6 * (b[i] - b[i - 1]) - (h[i - 1] * v[i - 1]) / u[i - 1]
 
         self.z[n] = 0.0
         for i in range(n - 1, 0, -1):
-            self.z[i] = (v[i] - h[i] * self.z[i + 1]) / (u[i] + eps)
+            self.z[i] = (v[i] - h[i] * self.z[i + 1]) / u[i]
         self.z[0] = 0.0
+
+    def _segment_width(self, index: int) -> float:
+        """Returns the x extent of a segment.
+
+        Returns a small positive value when the value gets close to 0 to avoid a
+        division by zero issue.
+
+        Args:
+            index: index of the segment's left control point
+
+        Returns:
+            Width of the segment, guarded against division by zero
+        """
+        return max(
+            self.points[index + 1].x - self.points[index].x,
+            self._MIN_SEGMENT_WIDTH
+        )
 
     def _default_points(self) -> CoordinateList:
         return [(-1.0, -1.0), (1.0, 1.0)]
@@ -318,7 +337,7 @@ class CubicSpline(AbstractCurve):
             if self.points[i].x <= x <= self.points[i + 1].x:
                 break
 
-        h = self.points[i + 1].x - self.points[i].x + 0.00001
+        h = max(self.points[i + 1].x - self.points[i].x, self._MIN_SEGMENT_WIDTH)
         tmp = (self.z[i] / 2.0) + (x - self.points[i].x) * (
             self.z[i + 1] - self.z[i]
         ) / (6 * h)

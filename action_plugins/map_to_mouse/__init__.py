@@ -46,6 +46,11 @@ if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
+# Axis values less than this valure are considered at rest, not triggering mouse motion
+# contributions.
+_AXIS_REST_THRESHOLD = 1e-3
+
+
 class MapToMouseMode(enum.Enum):
     Button = 1
     Motion = 2
@@ -192,7 +197,7 @@ class MapToMouseFunctor(AbstractFunctor):
             self.data.max_speed - self.data.min_speed
         )
         speed = math.copysign(speed, value.current)
-        speed = 0.0 if abs(value.current) < 1e-6 else speed
+        speed = 0.0 if abs(value.current) < _AXIS_REST_THRESHOLD else speed
 
         key = self._motion_key(event)
         self._motion.set_velocity(
