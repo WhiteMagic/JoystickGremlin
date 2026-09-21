@@ -52,11 +52,12 @@ Item {
         RowLayout {
             Label {
                 text: "Merge axis instance"
+                Layout.preferredWidth: Metrics.labelColumnShort
             }
 
             ComboBox {
                 id: _actionSelection
-                Layout.fillWidth: true
+
                 model: root.actionModel
                 textRole: "label"
                 valueRole: "value"
@@ -92,17 +93,18 @@ Item {
         RowLayout {
             Label {
                 text: "Merge operation"
+                Layout.preferredWidth: Metrics.labelColumnShort
             }
 
             ComboBox {
                 id: _operationSelection
-                Layout.fillWidth: true
+
                 model: root.operationModel
                 textRole: "label"
                 valueRole: "value"
 
                 Component.onCompleted: () => {
-                    currentIndex = root.operationModel.currentSelectionIndex
+                    currentIndex = indexOfValue(root.action.operation)
                 }
                 Connections {
                     target: root.operationModel
@@ -127,7 +129,7 @@ Item {
             InputAssignButton {
                 valueLabel: root.action.firstAxis.isValid
                     ? root.action.firstAxis.label
-                    : "Not assigned -- open the second axis and add this merge instance there to assign it."
+                    : "Click to assign current axis."
                 isAssigned: root.action.firstAxis.isValid
                 onClicked: () => { root.action.firstAxis = uiState.currentInput }
             }
@@ -139,7 +141,7 @@ Item {
             InputAssignButton {
                 valueLabel: root.action.secondAxis.isValid
                     ? root.action.secondAxis.label
-                    : "Not assigned -- open the first axis and add this merge instance there to assign it."
+                    : "Click to assign current axis."
                 isAssigned: root.action.secondAxis.isValid
                 onClicked: () => { root.action.secondAxis = uiState.currentInput }
             }

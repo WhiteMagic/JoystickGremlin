@@ -7,36 +7,79 @@ import QtQuick.Layouts
 
 import Kobold.Foundation
 
-// UI element showing the recorded input as well as the control to start recording.
-Item {
-    id: root
+// Button showing the assigned input, clicking it assigns the currently selected input.
+// Shares its look with the bordered InputCaptureButton.
+ToolButton {
+    id: control
 
     required property string valueLabel
     property bool isAssigned: true
 
-    signal clicked()
+    text: valueLabel
 
+    // Setting icon.name would collapse the style's implicitWidth to a square, the icon
+    // is part of the contentItem instead.
     implicitHeight: Metrics.controlHeight
-    implicitWidth: _row.implicitWidth
+    implicitWidth: leftPadding + implicitContentWidth + rightPadding
 
-    RowLayout {
-        id: _row
+    leftPadding: Metrics.gapM
+    rightPadding: Metrics.gapM
+    topPadding: 0
+    bottomPadding: 0
 
-        anchors.fill: parent
+    contentItem: RowLayout {
         spacing: Metrics.gapM
 
-        Label {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            text: root.valueLabel
-            color: root.isAssigned ? Theme.fg : Theme.fgDisabled
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
+        Spacer {}
+
+        AppIcon {
+            Layout.alignment: Qt.AlignVCenter
+            name: "assign"
+            role: control.enabled ? "fg" : "fgDisabled"
         }
 
-        ToolButton {
-            icon.name: "assign"
-            onClicked: root.clicked()
+        Label {
+            id: _label
+
+            Layout.fillHeight: true
+            text: control.text
+            color: control.isAssigned && control.enabled ? Theme.fg : Theme.fgDisabled
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+
+            ToolTip {
+                text: _label.text
+                width: Metrics.tooltipWidth(contentWidth)
+                visible: _hoverHandler.hovered
+                delay: 500
+            }
+
+            HoverHandler {
+                id: _hoverHandler
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            }
+        }
+
+        Spacer {}
+    }
+
+    background: Rectangle {
+        radius: Metrics.radius
+        color: !control.enabled ? Theme.bgAlt
+             : control.down     ? Theme.bgSelected
+             : control.hovered  ? Theme.bgHover
+             :                    Theme.bgAlt
+        border.width: Metrics.hairline
+        border.color: Theme.line
+
+        Rectangle {
+            visible: control.visualFocus
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: parent.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.accent
         }
     }
 }

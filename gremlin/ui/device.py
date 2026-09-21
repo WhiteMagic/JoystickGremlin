@@ -93,6 +93,7 @@ class InputIdentifier(QtCore.QObject):
     @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         if self.isValid:
+            input_name = common.input_to_ui_string(self.input_type, self.input_id)
             if self.device_guid == dill.UUID_LogicalDevice:
                 dev_name = "Logical Device"
             elif self.device_guid == dill.UUID_Keyboard:
@@ -101,11 +102,10 @@ class InputIdentifier(QtCore.QObject):
                 dev_name = dill.DILL.get_device_name(
                     dill.GUID.from_uuid(self.device_guid)
                 )
-            return (
-                f"{dev_name} - "
-                + f"{InputType.to_string(self.input_type).capitalize()} "
-                + f"{self.input_id}"
-            )
+                mapping = DeviceDatabase().get_mapping_by_uuid(self.device_guid)
+                if mapping is not None:
+                    input_name = mapping.input_name((self.input_type, self.input_id))
+            return f"{dev_name} - {input_name}"
         else:
             return "No input"
 
