@@ -232,7 +232,7 @@
             </property>
             <property type="int">
                 <name>axis1-axis</name>
-                <value>2</value>
+                <value>1</value>
             </property>
             <property type="uuid">
                 <name>axis2-guid</name>
@@ -240,7 +240,7 @@
             </property>
             <property type="int">
                 <name>axis2-axis</name>
-                <value>1</value>
+                <value>2</value>
             </property>
             <property type="string">
                 <name>operation</name>

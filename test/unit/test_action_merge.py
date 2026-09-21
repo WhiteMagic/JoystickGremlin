@@ -9,6 +9,8 @@ sys.path.append(".")
 import pathlib
 import uuid
 
+import pytest
+
 from action_plugins import merge_axis
 from action_plugins.description import DescriptionData
 from gremlin import types
@@ -73,6 +75,39 @@ def test_to_xml() -> None:
         node.find("./property/name[.='axis1-guid']/../value").text.upper()
         == str(_DEVICE_GUID_1).upper()
     )
+
+
+@pytest.mark.parametrize(
+    ("operation", "xml_name", "display_name"),
+    [
+        (
+            merge_axis.MergeOperation.MaximumDeflection,
+            "maximum-deflection",
+            "Maximum Deflection",
+        ),
+        (
+            merge_axis.MergeOperation.ClosestToCenter,
+            "closest-to-center",
+            "Closest to Center",
+        ),
+    ],
+)
+def test_operation_names(
+    operation: merge_axis.MergeOperation, xml_name: str, display_name: str
+) -> None:
+    assert merge_axis.MergeOperation.to_string(operation) == xml_name
+    assert merge_axis.MergeOperation.to_enum(xml_name) == operation
+    assert merge_axis.MergeOperation.to_display(operation) == display_name
+    assert merge_axis.MergeOperation.from_display(display_name) == operation
+
+    a = merge_axis.MergeAxisData(types.InputType.JoystickAxis)
+    a.operation = operation
+    a.axis_in1.device_guid = _DEVICE_GUID_1
+    a.axis_in1.input_id = 1
+    a.axis_in2.device_guid = _DEVICE_GUID_2
+    a.axis_in2.input_id = 2
+    node = a._to_xml()
+    assert node.find("./property/name[.='operation']/../value").text == xml_name
 
 
 def test_swap_first_uuid(xml_dir: pathlib.Path) -> None:
