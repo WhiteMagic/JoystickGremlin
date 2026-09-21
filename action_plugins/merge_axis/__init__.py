@@ -53,8 +53,8 @@ class MergeOperation(Enum):
     Maximum = 2
     Sum = 3
     Bidirectional = 4
-    Preferextreme = 5
-    Prefercenter = 6
+    MaximumDeflection = 5
+    ClosestToCenter = 6
 
     @classmethod
     def to_string(cls, value: MergeOperation) -> str:
@@ -64,13 +64,13 @@ class MergeOperation(Enum):
             MergeOperation.Maximum: "maximum",
             MergeOperation.Sum: "sum",
             MergeOperation.Bidirectional: "bidirectional",
-            MergeOperation.Preferextreme: "preferextreme",
-            MergeOperation.Prefercenter: "prefercenter"
+            MergeOperation.MaximumDeflection: "maximum-deflection",
+            MergeOperation.ClosestToCenter: "closest-to-center",
         }
 
         res = lookup.get(value, None)
         if res is None:
-            raise GremlinError("MergeOperation: invalid value in lookup '{value}'")
+            raise GremlinError(f"MergeOperation: invalid value in lookup '{value}'")
         return res
 
     @classmethod
@@ -81,15 +81,39 @@ class MergeOperation(Enum):
             "maximum": MergeOperation.Maximum,
             "sum": MergeOperation.Sum,
             "bidirectional": MergeOperation.Bidirectional,
-            "preferextreme": MergeOperation.Preferextreme,
-            "prefercenter": MergeOperation.Prefercenter
+            "maximum-deflection": MergeOperation.MaximumDeflection,
+            "closest-to-center": MergeOperation.ClosestToCenter,
         }
         res = lookup.get(value.lower(), None)
         if res is None:
             raise GremlinError(
-                "MergeOperation: invalid value in lookup '{value.lower()}'"
+                f"MergeOperation: invalid value in lookup '{value.lower()}'"
             )
         return res
+
+    @classmethod
+    def to_display(cls, value: MergeOperation) -> str:
+        lookup = {
+            MergeOperation.Average: "Average",
+            MergeOperation.Minimum: "Minimum",
+            MergeOperation.Maximum: "Maximum",
+            MergeOperation.Sum: "Sum",
+            MergeOperation.Bidirectional: "Bidirectional",
+            MergeOperation.MaximumDeflection: "Maximum Deflection",
+            MergeOperation.ClosestToCenter: "Closest to Center",
+        }
+
+        res = lookup.get(value, None)
+        if res is None:
+            raise GremlinError(f"MergeOperation: invalid value in lookup '{value}'")
+        return res
+
+    @classmethod
+    def from_display(cls, value: str) -> MergeOperation:
+        for operation in cls:
+            if cls.to_display(operation) == value:
+                return operation
+        raise GremlinError(f"MergeOperation: invalid display name '{value}'")
 
 
 class MergeAxisFunctor(AbstractFunctor):
@@ -145,29 +169,24 @@ class MergeAxisFunctor(AbstractFunctor):
         """
         return (value2 - value1) / 2.0
 
-    actions: ClassVar[dict] = {
     @staticmethod
-    def _preferextreme(value1: float, value2: float) -> float:
-        """Merges two axes into one:
-            - the axis furthest from center (0.0) is used
-        """
+    def _maximum_deflection(value1: float, value2: float) -> float:
+        """Uses the axis furthest from center (0.0); ties go to the 2nd axis."""
         return value1 if abs(value1) > abs(value2) else value2
 
     @staticmethod
-    def _prefercenter(value1: float, value2: float) -> float:
-        """Merges two axes into one:
-            - the axis closest to center (0.0) is used
-        """
-        return value1 if abs(value1) < abs(value2) else value2    
+    def _closest_to_center(value1: float, value2: float) -> float:
+        """Uses the axis closest to center (0.0); ties go to the 2nd axis."""
+        return value1 if abs(value1) < abs(value2) else value2
 
-    actions = {
+    actions: ClassVar[dict] = {
         MergeOperation.Average: _average,
         MergeOperation.Minimum: _minimum,
         MergeOperation.Maximum: _maximum,
         MergeOperation.Sum: _sum,
         MergeOperation.Bidirectional: _bidirectional,
-        MergeOperation.Preferextreme: _preferextreme,
-        MergeOperation.Prefercenter: _prefercenter
+        MergeOperation.MaximumDeflection: _maximum_deflection,
+        MergeOperation.ClosestToCenter: _closest_to_center,
     }
 
 
@@ -202,13 +221,7 @@ class MergeAxisModel(ActionModel):
         Returns:
             List of valid operation names
         """
-        operations = sorted(
-            [
-                e.name.capitalize()
-                for e in MergeOperation
-                if not e.name.startswith("_MergeOperation")
-            ]
-        )
+        operations = sorted(MergeOperation.to_display(e) for e in MergeOperation)
         return LabelValueSelectionModel(operations, operations, parent=self)
 
     @QtCore.Property(LabelValueSelectionModel, notify=modelChanged)
@@ -281,10 +294,10 @@ class MergeAxisModel(ActionModel):
                 self.modelChanged.emit()
 
     def _get_operation(self) -> str:
-        return MergeOperation.to_string(self._data.operation).capitalize()
+        return MergeOperation.to_display(self._data.operation)
 
     def _set_operation(self, value: str) -> None:
-        operation = MergeOperation.to_enum(value)
+        operation = MergeOperation.from_display(value)
         if operation != self._data.operation:
             self._data.operation = operation
             self.modelChanged.emit()
