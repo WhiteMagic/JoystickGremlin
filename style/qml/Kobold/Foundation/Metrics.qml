@@ -31,6 +31,7 @@ QtObject {
     readonly property int radius:        dp(2)
     // Width used for slider tracks.
     readonly property int sliderTrack:   dp(4)
+    readonly property int labelColumnShort:   dp(150)
     readonly property int labelColumn:   dp(250)
 
     // Font pixel sizes, font families and weight live in FontType.
