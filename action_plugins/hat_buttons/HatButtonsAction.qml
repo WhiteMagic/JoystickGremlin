@@ -29,13 +29,17 @@ ColumnLayout {
             text: "4 way"
             checked: root.action.buttonCount === 4
 
-            onToggled: { root.action.buttonCount = 4 }
+            onToggled: () => {
+                if (checked) { root.action.buttonCount = 4 }
+            }
         }
         RadioButton {
             text: "8 way"
             checked: root.action.buttonCount === 8
 
-            onToggled: { root.action.buttonCount = 8 }
+            onToggled: () => {
+                if (checked) { root.action.buttonCount = 8 }
+            }
         }
     }
 

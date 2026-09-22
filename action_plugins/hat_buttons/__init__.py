@@ -197,6 +197,7 @@ class HatButtonsModel(ActionModel):
     def _set_button_count(self, count: int) -> None:
         if self._data.button_count != count:
             self._data.set_button_count(count)
+            self._binding_model.sync_data()
             self.changed.emit()
 
     buttonCount = QtCore.Property(
@@ -244,9 +245,11 @@ class HatButtonsData(AbstractActionData):
         if count not in HatButtonsData.name_list:
             raise GremlinError(f"Invalid button count {count} for HatButtons")
         self.button_count = count
-        self.direction = {}
-        for name in HatButtonsData.name_list[self.button_count]:
-            self.direction[name] = []
+        # Keep shared direction actions upon changing number of buttons emulated.
+        self.direction = {
+            name: self.direction.get(name, [])
+            for name in HatButtonsData.name_list[count]
+        }
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
