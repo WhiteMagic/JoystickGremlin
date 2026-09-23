@@ -82,8 +82,8 @@ Item {
                         to: modelData.maxValue
                         value: modelData.value
 
-                        onValueModified: (newValue) => {
-                            modelData.value = newValue
+                        onValueModified: () => {
+                            modelData.value = value
                         }
                     }
                 }

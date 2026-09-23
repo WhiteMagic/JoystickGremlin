@@ -38,6 +38,7 @@ from gremlin.error import (
 )
 from gremlin.logical_device import LogicalDevice
 from gremlin.profile import Library
+from gremlin.signal import display_error
 from gremlin.types import (
     ActionProperty,
     AxisMode,
@@ -767,11 +768,16 @@ class MacroModel(ActionModel):
 
     @QtCore.Slot(str)
     def addAction(self, name: str) -> None:
-        self._action_list_model.append(self.action_lookup[name]())
+        try:
+            action = self.action_lookup[name]()
+        except GremlinError as e:
+            display_error(f"Unable to add the {name} macro action.", str(e))
+            return
+        self._action_list_model.append(action)
         self.changed.emit()
 
     @QtCore.Slot(int)
-    def removeAction(self, index: int) -> None:
+    def removeMacroAction(self, index: int) -> None:
         self._action_list_model.remove(index)
         self.changed.emit()
 
@@ -1029,9 +1035,14 @@ class MacroData(AbstractActionData):
             action_type = entry.get("type")
             action_obj = None
             if action_type in type_lookup:
-                action_obj = type_lookup[action_type]()
-                action_obj.from_xml(entry)
-                self.actions.append(action_obj)
+                try:
+                    action_obj = type_lookup[action_type]()
+                    action_obj.from_xml(entry)
+                    self.actions.append(action_obj)
+                except GremlinError as e:
+                    logging.getLogger("system").error(
+                        f"Failed to load macro action with id {self._id}: {e}"
+                    )
             else:
                 raise ProfileError(
                     f"Unknown action type {action_type} in Macro action with "

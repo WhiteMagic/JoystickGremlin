@@ -288,7 +288,7 @@ Window {
                     text: "Calibrate extrema"
 
                     checkable: true
-                    onToggled: {
+                    onToggled: () => {
                         _axisView.model.calibrateExtrema(index, checked)
                         _btnCenterCalibration.checked = false
                     }

@@ -87,8 +87,8 @@ Item {
                         decimals: 3
 
                         value: settingsModel.macroDefaultDelay
-                        onValueModified: (newValue) => {
-                            settingsModel.macroDefaultDelay = newValue
+                        onValueModified: () => {
+                            settingsModel.macroDefaultDelay = value
                         }
                     }
 
@@ -232,7 +232,7 @@ Item {
                     // internalWidth: 130
 
                     value: model.value
-                    onValueModified: (newValue) => { model.value = newValue }
+                    onValueModified: () => { model.value = value }
                 }
             }
         }

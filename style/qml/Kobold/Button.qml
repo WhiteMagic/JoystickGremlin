@@ -64,10 +64,11 @@ T.Button {
         radius: Metrics.radius
         color: !control.enabled ? Theme.bgAlt
              : control.down     ? Theme.bgSelected
+             : control.checked  ? Theme.bgSelected
              : control.hovered  ? Theme.bgHover
              :                    Theme.bgAlt
         border.width: Metrics.hairline
-        border.color: Theme.line
+        border.color: control.checked ? Theme.accent : Theme.line
 
         Rectangle {
             visible: control.visualFocus

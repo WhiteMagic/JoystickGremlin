@@ -133,3 +133,26 @@ def test_accessors() -> None:
 
     with pytest.raises(GremlinError):
         assert logical.button(4)
+
+
+def test_labels_sorted_naturally() -> None:
+    logical = LogicalDevice()
+
+    for _ in range(11):
+        logical.create(InputType.JoystickButton)
+    logical.set_label("Button 3", "Throttle 10")
+    logical.set_label("Button 4", "Throttle 2")
+
+    assert logical.labels_of_type([InputType.JoystickButton]) == [
+        "Button 1",
+        "Button 2",
+        "Button 5",
+        "Button 6",
+        "Button 7",
+        "Button 8",
+        "Button 9",
+        "Button 10",
+        "Button 11",
+        "Throttle 2",
+        "Throttle 10",
+    ]

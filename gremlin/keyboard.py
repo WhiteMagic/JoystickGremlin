@@ -305,9 +305,11 @@ def modifier_keys() -> list[Key]:
         List with key instances corresponding to modifier keys.
     """
     return [
+        g_name_to_key["leftwin"],
         g_name_to_key["leftshift"],
         g_name_to_key["leftcontrol"],
         g_name_to_key["leftalt"],
+        g_name_to_key["rightwin"],
         g_name_to_key["rightshift"],
         g_name_to_key["rightshift2"],
         g_name_to_key["rightcontrol"],

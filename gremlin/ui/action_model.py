@@ -87,6 +87,7 @@ class ActionModel(QtCore.QObject):
 
     actionChanged = QtCore.Signal()
     actionLabelChanged = QtCore.Signal()
+    feedbackChanged = QtCore.Signal()
 
     def __init__(
         self,
@@ -112,6 +113,20 @@ class ActionModel(QtCore.QObject):
                 lambda data: self._handle_expansion_changed(data)
             )
         )
+
+        # Connect the actionChanged signal as well as all other signals of derived
+        # classes to the feedbackChanged signal to ensure the user feedback system
+        # is updated on any change.
+        self.actionChanged.connect(self.feedbackChanged)
+        meta = self.metaObject()
+        for index in range(
+            ActionModel.staticMetaObject.methodCount(), meta.methodCount()
+        ):
+            method = meta.method(index)
+            if method.methodType() == QtCore.QMetaMethod.MethodType.Signal:
+                getattr(self, bytes(method.name()).decode()).connect(
+                    self.feedbackChanged
+                )
 
     def dispose(self) -> None:
         """Disconnects from the binding model before being discarded."""
@@ -170,14 +185,14 @@ class ActionModel(QtCore.QObject):
     def icon(self) -> str:
         return self._data.icon
 
-    @QtCore.Property(type=list, notify=actionChanged)
+    @QtCore.Property(type=list, notify=feedbackChanged)
     def userFeedback(self) -> list[dict]:
         return [
             {"type": entry.feedback_type.value, "message": entry.message}
             for entry in self._data.user_feedback()
         ]
 
-    @QtCore.Property(type=bool, notify=actionChanged)
+    @QtCore.Property(type=bool, notify=feedbackChanged)
     def isValid(self) -> bool:
         return self._data.is_valid()
 

@@ -22,6 +22,7 @@ from xml.etree import ElementTree
 
 import dill
 from gremlin import (
+    device_initialization,
     error,
     event_handler,
     mode_manager,
@@ -40,6 +41,7 @@ from gremlin.keyboard import (
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
     AxisMode,
+    HatDirection,
     InputType,
     MouseButton,
     PropertyType,
@@ -448,7 +450,7 @@ class JoystickAction(AbstractAction):
 
     @classmethod
     def create(cls) -> JoystickAction:
-        return JoystickAction(dill.UUID_Invalid, InputType.JoystickButton, 0, False)
+        return JoystickAction(dill.UUID_Invalid, InputType.JoystickButton, 0, True)
 
     def __call__(self) -> None:
         """Emits an Event instance through the EventListener system."""
@@ -555,7 +557,7 @@ class KeyAction(AbstractAction):
 
     @classmethod
     def create(cls) -> KeyAction:
-        return KeyAction(None, False)
+        return KeyAction(None, True)
 
     def __call__(self) -> None:
         if self.key is None:
@@ -725,7 +727,7 @@ class MouseButtonAction(AbstractAction):
 
     @classmethod
     def create(cls) -> MouseButtonAction:
-        return MouseButtonAction(MouseButton.Left, False)
+        return MouseButtonAction(MouseButton.Left, True)
 
     def __call__(self) -> None:
         if self.button == MouseButton.WheelDown:
@@ -864,8 +866,21 @@ class VJoyAction(AbstractAction):
 
     @classmethod
     def create(cls) -> VJoyAction:
-        # FIXME: Implement a function returning a valid vJoy input
-        return VJoyAction(1, InputType.JoystickButton, 1, False)
+        # Attempt to find a valid vJoy input.
+        choice = util.first_available_input(
+            device_initialization.output_vjoy_devices(),
+            [InputType.JoystickButton, InputType.JoystickAxis, InputType.JoystickHat],
+        )
+        if choice is None:
+            raise error.GremlinError("No vJoy device with usable outputs is available")
+
+        device, input_type, input_id = choice
+        default_value = {
+            InputType.JoystickAxis: 0.0,
+            InputType.JoystickButton: True,
+            InputType.JoystickHat: HatDirection.Center,
+        }[input_type]
+        return VJoyAction(device.vjoy_id, input_type, input_id, default_value)
 
     def __call__(self) -> None:
         try:

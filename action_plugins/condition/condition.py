@@ -8,6 +8,7 @@ from abc import (
     abstractmethod,
 )
 from typing import (
+    Self,
     override,
 )
 from xml.etree import ElementTree
@@ -26,6 +27,7 @@ from action_plugins.condition.comparator import (
 )
 from gremlin import (
     common,
+    device_initialization,
     error,
     event_handler,
     util,
@@ -98,6 +100,18 @@ class AbstractCondition(QtCore.QObject):
         self._comparator_ui: AbstractComparatorModel | None = None
         # States whose values will be compared within the comparator.
         self._states: list[AbstractState] = []
+
+    @classmethod
+    def create(cls, parent: ta.OQO = None) -> Self:
+        """Creates a new condition initialized with default values.
+
+        Args:
+            parent: Parent object of the new condition.
+
+        Returns:
+            New condition instance.
+        """
+        return cls(parent)
 
     def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
@@ -298,16 +312,17 @@ class VJoyCondition(AbstractCondition):
             self.vjoy_id = vjoy_id
             self.input_type = input_type
             self.input_id = input_id
-            self.vjoy = VJoyProxy()[self.vjoy_id]
 
         def get(self, value: Value) -> bool | float | HatDirection:
+            # Resolved per call as VJoyProxy.reset() invalidates held devices.
+            vjoy = VJoyProxy()[self.vjoy_id]
             match self.input_type:
                 case InputType.JoystickAxis:
-                    return self.vjoy.axis(self.input_id).value
+                    return vjoy.axis(self.input_id).value
                 case InputType.JoystickButton:
-                    return self.vjoy.button(self.input_id).is_pressed
+                    return vjoy.button(self.input_id).is_pressed
                 case InputType.JoystickHat:
-                    return self.vjoy.hat(self.input_id).direction
+                    return vjoy.hat(self.input_id).direction
                 case _:
                     raise error.GremlinError(
                         f"ConditionAction: Invalid InputType {self.input_type} "
@@ -332,9 +347,23 @@ class VJoyCondition(AbstractCondition):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-        self._states = [self.State(1, InputType.JoystickButton, 1)]
         self._condition_type = ConditionType.VJoy
-        self._create_comparator(self._states[0].input_type)
+
+    @classmethod
+    @override
+    def create(cls, parent: ta.OQO = None) -> Self:
+        choice = util.first_available_input(
+            device_initialization.output_vjoy_devices(),
+            [InputType.JoystickButton, InputType.JoystickAxis, InputType.JoystickHat],
+        )
+        if choice is None:
+            raise error.GremlinError("No vJoy device with usable outputs is available")
+
+        device, input_type, input_id = choice
+        condition = cls(parent)
+        condition._states = [cls.State(device.vjoy_id, input_type, input_id)]
+        condition._create_comparator(input_type)
+        return condition
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._comparator_from_xml(node)

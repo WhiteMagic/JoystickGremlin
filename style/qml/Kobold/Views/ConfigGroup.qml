@@ -84,7 +84,7 @@ ColumnLayout {
                     from: properties.min
                     to: properties.max
 
-                    onValueModified: (newValue) => { model.value = newValue }
+                    onValueModified: () => { model.value = value }
                 }
             }
         }

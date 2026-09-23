@@ -167,7 +167,7 @@ ColumnLayout {
             visible: root.action.isRecording
             text: "Stop recording"
 
-            onClicked: { root.action.stopRecording() }
+            onPressed: { root.action.stopRecording() }
         }
 
         Spacer {}
@@ -616,7 +616,7 @@ ColumnLayout {
             ToolButton {
                 icon.name: "delete"
 
-                onClicked: { root.action.removeAction(index) }
+                onClicked: { root.action.removeMacroAction(index) }
             }
         }
 

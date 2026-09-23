@@ -218,7 +218,7 @@ class PressedComparator(AbstractComparator):
 
     model = PressedComparatorModel
 
-    def __init__(self, is_pressed: bool = False) -> None:
+    def __init__(self, is_pressed: bool = True) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -256,7 +256,7 @@ class DirectionComparator(AbstractComparator):
 
     model = DirectionComparatorModel
 
-    def __init__(self, directions: list[HatDirection] = []) -> None:
+    def __init__(self, directions: list[HatDirection] | None = None) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -264,7 +264,7 @@ class DirectionComparator(AbstractComparator):
         """
         super().__init__()
 
-        self.directions = directions
+        self.directions = list(directions) if directions is not None else []
 
     def __call__(self, value: Value, states: list[Any]) -> bool:
         return states[0] in self.directions

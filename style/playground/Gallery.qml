@@ -115,6 +115,11 @@ ScrollView {
             }
             ColumnLayout {
                 spacing: Metrics.gapS
+                Button { text: "Button"; checkable: true; checked: true }
+                Caption { text: "checked" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
                 Button { text: "Button"; enabled: false }
                 Caption { text: "disabled" }
             }

@@ -171,6 +171,17 @@ def test_ctor() -> None:
     assert a.is_valid()
 
 
+def test_pressed_comparator_default() -> None:
+    assert condition.comparator.PressedComparator().is_pressed is True
+
+
+def test_direction_comparator_default_not_shared() -> None:
+    first = condition.comparator.DirectionComparator()
+    second = condition.comparator.DirectionComparator()
+    first.directions.append(HatDirection.North)
+    assert second.directions == []
+
+
 def test_swap_uuid(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_COMPLEX))

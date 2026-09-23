@@ -25,6 +25,7 @@ from gremlin.base_classes import (
     Value,
 )
 from gremlin.profile import Library
+from gremlin.signal import display_error
 from gremlin.tree import TreeNode
 from gremlin.types import (
     ActionProperty,
@@ -140,7 +141,15 @@ class ConditionModel(ActionModel):
 
         condition_type = ConditionType(condition)
         if condition_type in condition_lookup:
-            cond = condition_lookup[condition_type](self)
+            try:
+                cond = condition_lookup[condition_type].create()
+            except error.GremlinError as e:
+                display_error(
+                    "Unable to add the "
+                    f"{ConditionType.to_display(condition_type)} condition.",
+                    str(e),
+                )
+                return
             # If the condition is a CurrentInput one set the input type
             if condition_type == ConditionType.CurrentInput:
                 cond.set_input_type(self._data.behavior_type)
