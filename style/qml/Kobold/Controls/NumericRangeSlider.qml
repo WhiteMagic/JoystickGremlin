@@ -38,6 +38,10 @@ RowLayout {
         return Number.fromLocaleString(Qt.locale(), text)
     }
 
+    function _wheelDelta(event) {
+        return (event.angleDelta.y > 0 ? 1 : -1) * 0.05
+    }
+
     TextField {
         id: _firstInput
 
@@ -54,6 +58,14 @@ RowLayout {
         onEditingFinished: {
             const value = root._valueFromText(text)
             root.firstValueEdited(Math.min(value, root.secondValue))
+        }
+
+        WheelHandler {
+            onWheel: (event) => {
+                const value = root.firstValue + root._wheelDelta(event)
+                root.firstValueEdited(Math.max(root.from, Math.min(value, root.secondValue)))
+                event.accepted = true
+            }
         }
 
         background: Rectangle {
@@ -115,6 +127,14 @@ RowLayout {
         onEditingFinished: {
             const value = root._valueFromText(text)
             root.secondValueEdited(Math.max(value, root.firstValue))
+        }
+
+        WheelHandler {
+            onWheel: (event) => {
+                const value = root.secondValue + root._wheelDelta(event)
+                root.secondValueEdited(Math.min(root.to, Math.max(value, root.firstValue)))
+                event.accepted = true
+            }
         }
 
         background: Rectangle {
