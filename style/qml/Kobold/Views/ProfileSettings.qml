@@ -59,10 +59,11 @@ Item {
                     UIText {
                         Layout.fillWidth: true
 
-                        text: "Selection defines what mode Gremlin should start " +
-                            "in when the profile is activated. \"Use Heuristic\" " +
-                            "lets Gremlin decide, otherwise the selected mode is " +
-                            "used."
+                        text: "Defines what mode Gremlin starts in when " +
+                            "the profile is activated. \"Use Heuristic\" picks the " +
+                            "alphabetically first top-level mode. \"Last Active\" " +
+                            "resumes in the mode the profile was last in. Otherwise " +
+                            "the selected mode is used."
                     }
                 }
 
@@ -208,7 +209,6 @@ Item {
         horizontalAlignment: Text.AlignJustify
         wrapMode: Text.Wrap
 
-        font.pixelSize: Metrics.textDetail
         color: Theme.fgMuted
     }
 

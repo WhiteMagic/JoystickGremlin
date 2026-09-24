@@ -19,10 +19,10 @@ def _register_internal() -> None:
     cfg.register(
         "global",
         "internal",
-        "last-mode",
-        PropertyType.String,
-        "Default",
-        "Name of the last active mode",
+        "last-mode-per-profile",
+        PropertyType.Dict,
+        {},
+        "Last active mode for each profile path",
         {},
     )
     cfg.register(

@@ -94,14 +94,29 @@ class ModeManager(QtCore.QObject):
 
     def reset(self) -> None:
         self._mode_stack = [Mode(shared_state.current_profile.modes.first_mode, None)]
-        Configuration().set("global", "internal", "last-mode", self.current.name)
 
     def _exists(self, mode: Mode) -> bool:
         return mode in self._mode_stack
 
+    def _store_last_mode(self) -> None:
+        profile = shared_state.current_profile
+        if profile is None or profile.fpath is None:
+            return
+        last_mode = next(
+            (mode for mode in reversed(self._mode_stack) if not mode.is_temporary),
+            None,
+        )
+        if last_mode is None:
+            return
+
+        config = Configuration()
+        last_modes = dict(config.value("global", "internal", "last-mode-per-profile"))
+        last_modes[str(profile.fpath)] = last_mode.name
+        config.set("global", "internal", "last-mode-per-profile", last_modes)
+
     def _update_mode(self) -> None:
         config = Configuration()
-        config.set("global", "internal", "last-mode", self.current.name)
+        self._store_last_mode()
         self.mode_changed.emit(self.current.name)
         if config.value("global", "behavior", "refresh-axis-on-mode-change"):
             RefreshPhysicalInputs.refresh_axes()

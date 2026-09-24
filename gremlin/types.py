@@ -353,6 +353,7 @@ class PropertyType(enum.Enum):
     Point2D = 18
     ScriptVariableType = 19
     Path = 20
+    Dict = 21
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -390,6 +391,7 @@ _PropertyType_to_string_lookup = {
     PropertyType.Point2D: "point2d",
     PropertyType.ScriptVariableType: "plugin_variable_type",
     PropertyType.Path: "path",
+    PropertyType.Dict: "dict",
 }
 _PropertyType_to_enum_lookup = {
     "string": PropertyType.String,
@@ -412,6 +414,7 @@ _PropertyType_to_enum_lookup = {
     "point2d": PropertyType.Point2D,
     "plugin_variable_type": PropertyType.ScriptVariableType,
     "path": PropertyType.Path,
+    "dict": PropertyType.Dict,
 }
 
 

@@ -349,7 +349,7 @@ class Backend(QtCore.QObject):
         if activate:
             # Generate the code for the profile and run it
             shared_state.set_suspend_input_highlighting(True)
-            self.runner.start(self.profile, self.profile.modes.first_mode)
+            self.runner.start(self.profile)
         else:
             # Stop running the code
             self.runner.stop()

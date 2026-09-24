@@ -82,7 +82,19 @@ class TestModeHierarchy:
 
         mh.rename_mode("Default", "Zeta")
         assert set(mh.mode_names()) == {"Zeta", "Second", "Third"}
-        assert mh.first_mode == "Zeta"
+        assert mh.first_mode == "Second"
+
+    def test_first_mode_is_alphabetical_root(self) -> None:
+        p = Profile()
+        mh = ModeHierarchy(p)
+
+        mh.add_mode("Charlie")
+        mh.add_mode("Bravo")
+        assert mh.first_mode == "Bravo"
+
+        mh.add_mode("Alpha")
+        mh.set_parent("Alpha", "Charlie")
+        assert mh.first_mode == "Bravo"
 
     def test_parent(self) -> None:
         p = Profile()
@@ -117,6 +129,44 @@ class TestModeHierarchy:
 
 
 class TestModeManager:
+    def test_last_mode_skips_temporary(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        p = Profile()
+        p.fpath = pathlib.Path("C:/profiles/test.xml")
+        gremlin.shared_state.current_profile = p
+
+        cfg = Configuration()
+        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
+        # Keep the per-profile map out of the real configuration file.
+        stored: dict[str, str] = {}
+        original_value = cfg.value
+        original_set = cfg.set
+        monkeypatch.setattr(
+            cfg,
+            "value",
+            lambda section, group, name: (
+                dict(stored)
+                if name == "last-mode-per-profile"
+                else original_value(section, group, name)
+            ),
+        )
+        monkeypatch.setattr(
+            cfg,
+            "set",
+            lambda section, group, name, value: (
+                stored.update(value)
+                if name == "last-mode-per-profile"
+                else original_set(section, group, name, value)
+            ),
+        )
+
+        mm = ModeManager()
+        mm.reset()
+        mm.switch_to(Mode("A", mm.current.name))
+        assert stored == {str(p.fpath): "A"}
+
+        mm.temporary(Mode("B", "A"))
+        assert stored == {str(p.fpath): "A"}
+
     def test_cycling(self) -> None:
         p = Profile()
         gremlin.shared_state.current_profile = p

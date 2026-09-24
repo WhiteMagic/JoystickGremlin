@@ -310,6 +310,32 @@ class CallbackObject:
         return [value]
 
 
+def resolve_start_mode(active_profile: profile.Profile) -> str:
+    """Returns the mode a profile should start in based on its settings.
+
+    Args:
+        active_profile: the profile being started
+
+    Returns:
+        Name of the mode to start in
+    """
+    mode_names = active_profile.modes.mode_names()
+    startup_mode = active_profile.settings.startup_mode
+    if startup_mode in mode_names:
+        return startup_mode
+
+    if startup_mode == "Last Active" and active_profile.fpath is not None:
+        last_mode = (
+            Configuration()
+            .value("global", "internal", "last-mode-per-profile")
+            .get(str(active_profile.fpath), None)
+        )
+        if last_mode in mode_names:
+            return last_mode
+
+    return active_profile.modes.first_mode
+
+
 class CodeRunner:
     """Runs the actual profile code."""
 
@@ -331,27 +357,17 @@ class CodeRunner:
         """
         return self._running
 
-    def start(self, profile: profile.Profile, start_mode: str) -> None:
+    def start(self, profile: profile.Profile) -> None:
         """Starts listening to events and loads all existing callbacks.
 
         Args:
             profile: the profile to use when generating all the callbacks
-            start_mode: the mode in which to start Gremlin
         """
         self._profile = profile
         self._reset_state()
 
-        # Check if we want to override the start mode as determined by the
-        # heuristic.
-        settings = self._profile.settings
-        if (
-            settings.startup_mode is not None
-            and settings.startup_mode in self._profile.modes.mode_names()
-        ):
-            start_mode = settings.startup_mode
-
         # Set default macro action delay.
-        macro.MacroManager().default_delay = settings.macro_default_delay
+        macro.MacroManager().default_delay = self._profile.settings.macro_default_delay
 
         try:
             # Process actions defined in user plugins.
@@ -394,7 +410,7 @@ class CodeRunner:
             tts.TTSManager().start()
 
             mode_manager.ModeManager().switch_to(
-                mode_manager.Mode(start_mode, "Default")
+                mode_manager.Mode(resolve_start_mode(self._profile), "Default")
             )
             self.event_handler.resume()
             self._running = True

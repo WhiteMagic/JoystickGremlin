@@ -109,6 +109,21 @@ def test_load_save(cfg: gremlin.config.Configuration) -> None:
     assert not cfg.expose("test", "case", "4")
 
 
+def test_dict_roundtrip(cfg: gremlin.config.Configuration) -> None:
+    cfg.register("test", "case", "dict", PropertyType.Dict, {}, "", {})
+    assert cfg.value("test", "case", "dict") == {}
+
+    cfg.set("test", "case", "dict", {"C:/profile.xml": "Flight"})
+    cfg.save()
+    with mock.patch.object(cfg, cfg._should_skip_reload.__name__, return_value=False):
+        cfg.load()
+
+    assert cfg.value("test", "case", "dict") == {"C:/profile.xml": "Flight"}
+    assert cfg.data_type("test", "case", "dict") == PropertyType.Dict
+    with pytest.raises(gremlin.error.GremlinError):
+        cfg.set("test", "case", "dict", ["not", "a", "dict"])
+
+
 def test_exceptions(cfg: gremlin.config.Configuration) -> None:
     cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     with pytest.raises(gremlin.error.GremlinError):
