@@ -305,8 +305,7 @@ class CubicSpline(AbstractCurve):
             Width of the segment, guarded against division by zero
         """
         return max(
-            self.points[index + 1].x - self.points[index].x,
-            self._MIN_SEGMENT_WIDTH
+            self.points[index + 1].x - self.points[index].x, self._MIN_SEGMENT_WIDTH
         )
 
     def _default_points(self) -> CoordinateList:

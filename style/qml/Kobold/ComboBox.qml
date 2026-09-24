@@ -43,7 +43,9 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height
         width: control.width
-        implicitHeight: Math.min(contentItem.contentHeight, Metrics.controlHeight * 8)
+        implicitHeight: Math.min(contentItem.contentHeight, Metrics.controlHeight * 16)
+        // Non-negative margins let Qt flip/shrink the popup to stay inside the window.
+        margins: Metrics.gapM
         padding: 0
 
         contentItem: ListView {
@@ -57,6 +59,10 @@ T.ComboBox {
             // Disable mobile-style kinetic/overshoot scrolling.
             flickableDirection: Flickable.VerticalFlick
             boundsBehavior: Flickable.StopAtBounds
+
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
 
             WheelHandler {
                 onWheel: (event) => {
@@ -82,7 +88,9 @@ T.ComboBox {
     }
 
     delegate: T.ItemDelegate {
+        // Keep row text clear of the overlay scrollbar.
         width: ListView.view.width
+            - (ListView.view.ScrollBar.vertical.visible ? ListView.view.ScrollBar.vertical.width : 0)
         height: Metrics.controlHeight
         highlighted: control.highlightedIndex === index
 

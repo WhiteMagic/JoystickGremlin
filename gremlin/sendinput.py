@@ -320,8 +320,7 @@ class MouseMotionManager(metaclass=SingletonMetaclass):
 
         self.reset()
         self._tick_interval = 1.0 / max(
-            1,
-            Configuration().value("action", "map-to-mouse", "update-rate")
+            1, Configuration().value("action", "map-to-mouse", "update-rate")
         )
         self._is_running = True
         self._thread = threading.Thread(target=self._control_loop, daemon=True)

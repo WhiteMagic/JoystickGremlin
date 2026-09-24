@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import (
     Any,
     ClassVar,
@@ -14,6 +15,20 @@ from gremlin.types import (
     InputType,
     ScanCode,
 )
+
+_DIGITS = re.compile(r"(\d+)")
+
+
+def natural_key(text: str) -> tuple[tuple[str | int, ...], str]:
+    """Returns a key sorting embedded numbers by value, e.g. 2 before 10."""
+    parts = _DIGITS.split(text)
+    return (
+        tuple(
+            int(part) if index % 2 else part.casefold()
+            for index, part in enumerate(parts)
+        ),
+        text,
+    )
 
 
 class SingletonDecorator[T]:

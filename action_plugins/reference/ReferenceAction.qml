@@ -47,12 +47,20 @@ ColumnLayout {
             icon.name: "share"
 
             onClicked: () => { root.action.referenceAction(root.referencesModel.currentValue) }
+
+            ToolTip.visible: hovered
+            ToolTip.delay: 200
+            ToolTip.text: qsTr("Link Action")
         }
 
         ToolButton {
             icon.name: "duplicate"
 
             onClicked: () => { root.action.duplicateAction(root.referencesModel.currentValue) }
+
+            ToolTip.visible: hovered
+            ToolTip.delay: 200
+            ToolTip.text: qsTr("Copy Action")
         }
     }
 }

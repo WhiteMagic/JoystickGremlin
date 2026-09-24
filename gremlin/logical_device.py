@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import collections
-import re
 import time
 from typing import cast
 
 import dill
-from gremlin.common import SingletonMetaclass
+from gremlin.common import (
+    SingletonMetaclass,
+    natural_key,
+)
 from gremlin.error import (
     GremlinError,
     MissingImplementationError,
@@ -17,13 +19,6 @@ from gremlin.types import (
     HatDirection,
     InputType,
 )
-
-
-_DIGITS = re.compile(r'(\d+)')
-
-def _natural_key(text: str) -> tuple[tuple[str | int, ...], str]:
-    parts = _DIGITS.split(text)
-    return (tuple(int(part) if index % 2 else part.casefold() for index, part in enumerate(parts)), text)
 
 
 class LogicalDevice(metaclass=SingletonMetaclass):
@@ -240,7 +235,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             e
             for e in sorted(
                 self._inputs.values(),
-                key=lambda x: (x.type.name, _natural_key(x.label)),
+                key=lambda x: (x.type.name, natural_key(x.label)),
             )
             if e.type in type_list
         ]

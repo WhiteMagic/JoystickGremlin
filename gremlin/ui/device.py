@@ -71,6 +71,23 @@ def _action_labels_from_item(item: InputItem) -> list[str]:
     return labels
 
 
+def device_and_input_names(
+    device_guid: uuid.UUID, input_type: InputType, input_id: int | ScanCode
+) -> tuple[str, str]:
+    """Returns the UI names of the given device and input."""
+    input_name = common.input_to_ui_string(input_type, input_id)
+    if device_guid == dill.UUID_LogicalDevice:
+        device_name = "Logical Device"
+    elif device_guid == dill.UUID_Keyboard:
+        device_name = "Keyboard"
+    else:
+        device_name = dill.DILL.get_device_name(dill.GUID.from_uuid(device_guid))
+        mapping = DeviceDatabase().get_mapping_by_uuid(device_guid)
+        if mapping is not None:
+            input_name = mapping.input_name((input_type, input_id))
+    return device_name, input_name
+
+
 @ta.QmlElement
 class InputIdentifier(QtCore.QObject):
     """Stores the identifier of a single input item."""
@@ -93,19 +110,10 @@ class InputIdentifier(QtCore.QObject):
     @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         if self.isValid:
-            input_name = common.input_to_ui_string(self.input_type, self.input_id)
-            if self.device_guid == dill.UUID_LogicalDevice:
-                dev_name = "Logical Device"
-            elif self.device_guid == dill.UUID_Keyboard:
-                dev_name = "Keyboard"
-            else:
-                dev_name = dill.DILL.get_device_name(
-                    dill.GUID.from_uuid(self.device_guid)
-                )
-                mapping = DeviceDatabase().get_mapping_by_uuid(self.device_guid)
-                if mapping is not None:
-                    input_name = mapping.input_name((self.input_type, self.input_id))
-            return f"{dev_name} - {input_name}"
+            device_name, input_name = device_and_input_names(
+                self.device_guid, self.input_type, self.input_id
+            )
+            return f"{device_name} - {input_name}"
         else:
             return "No input"
 
