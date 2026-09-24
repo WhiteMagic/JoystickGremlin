@@ -19,19 +19,11 @@ from gremlin.types import (
 )
 
 
-def _natural_sort_key(label: str) -> tuple[str, int]:
-    """Returns a key sorting embedded numbers by value, e.g. 2 before 10.
+_DIGITS = re.compile(r'(\d+)')
 
-    Expected label is of the form "Axis|Button|Hat \d+".
-
-    Args:
-        label: The label to process into a natural sorting key.
-
-    Returns:
-        The tuple containing the name and number split.
-    """
-    parts = label.split()
-    return ((parts[0], int(parts[1])))
+def _natural_key(text: str) -> tuple[tuple[str | int, ...], str]:
+    parts = _DIGITS.split(text)
+    return (tuple(int(part) if index % 2 else part.casefold() for index, part in enumerate(parts)), text)
 
 
 class LogicalDevice(metaclass=SingletonMetaclass):
@@ -248,7 +240,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             e
             for e in sorted(
                 self._inputs.values(),
-                key=lambda x: (x.type.name, _natural_sort_key(x.label)),
+                key=lambda x: (x.type.name, _natural_key(x.label)),
             )
             if e.type in type_list
         ]
