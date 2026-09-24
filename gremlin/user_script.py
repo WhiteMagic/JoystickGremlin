@@ -824,7 +824,7 @@ class KeyboardVariable(AbstractVariable):
             return lambda f: f
         else:
             assert isinstance(self._value, gremlin.keyboard.Key)
-            return keyboard(self._value.name, mode.value)
+            return keyboard(self._value, mode.value)
 
 
 class LogicalDeviceVariable(AbstractVariable):
@@ -1231,11 +1231,11 @@ def clamp_value(value: float, min_val: float, max_val: float) -> float:
     return min(max_val, max(min_val, value))
 
 
-def keyboard(key_name: str, mode: str) -> Callable:
+def keyboard(key: str | gremlin.keyboard.Key, mode: str) -> Callable:
     """Decorator for keyboard key callbacks.
 
     Args:
-        key_name: name of key triggering the callback
+        key: name of or Key instance of the key triggering the callback
         mode: mode in which this callback is active
     """
 
@@ -1245,8 +1245,12 @@ def keyboard(key_name: str, mode: str) -> Callable:
         def wrapper_fn(*args: Any, **kwargs: dict) -> None:  # noqa: ANN401
             callback(*args, **kwargs)
 
-        key = gremlin.keyboard.key_from_name(key_name)
-        event = event_handler.Event.from_key(key)
+        resolved_key = (
+            key
+            if isinstance(key, gremlin.keyboard.Key)
+            else gremlin.keyboard.key_from_name(key)
+        )
+        event = event_handler.Event.from_key(resolved_key)
         callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn

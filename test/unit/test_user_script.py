@@ -9,6 +9,8 @@ import uuid
 
 import pytest
 
+import dill
+import gremlin.keyboard
 from gremlin import (
     error,
     profile,
@@ -410,6 +412,27 @@ class TestScript:
             var_from_xml.from_xml(var.to_xml())
             assert var_from_xml.is_valid()
             assert var_from_xml.value == var.value
+
+    def test_keyboard_variable_decorator_numpad_key(
+        self, script_for_test: user_script.Script
+    ) -> None:
+        mode_variable = script_for_test.get_variable("A mode variable")
+        var = user_script.KeyboardVariable("", "", True)
+        var.value = gremlin.keyboard.key_from_code(0x4C, False)
+
+        user_script.callback_registry.clear()
+        try:
+
+            @var.decorator(mode_variable)
+            def callback() -> None:
+                pass
+
+            events = user_script.callback_registry.registry[dill.UUID_Keyboard][
+                mode_variable.value
+            ]
+            assert [event.identifier for event in events] == [(0x4C, False)]
+        finally:
+            user_script.callback_registry.clear()
 
     def test_swap_uuid(self, script_for_test: user_script.Script) -> None:
         var = script_for_test.get_variable("A physical axis input variable")
