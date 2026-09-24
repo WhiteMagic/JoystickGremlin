@@ -58,6 +58,7 @@ import gremlin.tts
 import gremlin.types
 import gremlin.ui.backend
 import gremlin.ui.icon_provider
+import gremlin.ui.log_viewer
 import gremlin.ui.option
 import gremlin.ui.system_tray
 import gremlin.ui.theme_manager
@@ -84,6 +85,12 @@ def configure_logger(config: dict[str, Any]) -> None:
     formatter = logging.Formatter(config["format"], "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+    if config.get("viewer", False):
+        viewer_handler = gremlin.ui.log_viewer.LogViewerHandler()
+        viewer_handler.setLevel(config["level"])
+        viewer_handler.setFormatter(formatter)
+        logger.addHandler(viewer_handler)
 
     if config["mode"] != "session":
         logger.debug("-" * 80)
@@ -135,6 +142,7 @@ def configure_loggers() -> None:
             "logfile": os.path.join(gremlin.util.userprofile_path(), "system.log"),
             "format": "%(asctime)s %(levelname)10s %(message)s",
             "mode": "rotate",
+            "viewer": True,
         }
     )
     configure_logger(
@@ -144,6 +152,7 @@ def configure_loggers() -> None:
             "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
             "format": "%(asctime)s %(message)s",
             "mode": "rotate",
+            "viewer": True,
         }
     )
     configure_logger(

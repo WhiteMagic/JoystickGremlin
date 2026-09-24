@@ -21,6 +21,7 @@ DialogAutoMapper      DialogAutoMapper.qml
 DialogCalibration     DialogCalibration.qml
 DialogDeviceInformation DialogDeviceInformation.qml
 DialogInputViewer     DialogInputViewer.qml
+DialogLogViewer       DialogLogViewer.qml
 DialogManageModes     DialogManageModes.qml
 DialogOptions         DialogOptions.qml
 DialogSwapDevices     DialogSwapDevices.qml

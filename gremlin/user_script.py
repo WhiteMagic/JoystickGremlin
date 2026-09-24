@@ -959,7 +959,7 @@ class SelectionVariable(AbstractVariable):
         if 0 <= index < len(self._option_list):
             self._current_index = index
         else:
-            logging.getLogger("user_script").warning(
+            logging.getLogger("system").warning(
                 f"Ignoring invalid index {index} for selection variable '{self.name}'"
             )
 

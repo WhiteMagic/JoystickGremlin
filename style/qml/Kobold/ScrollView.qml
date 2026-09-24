@@ -12,19 +12,13 @@ T.ScrollView {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    // Disable mobile device scrolling behaviors.
-    Binding {
-        target: control.contentItem
-        property: "boundsBehavior"
-        value: Flickable.StopAtBounds
-        restoreMode: Binding.RestoreNone
-    }
-
-    Binding {
-        target: control.contentItem
-        property: "boundsMovement"
-        value: Flickable.StopAtBounds
-        restoreMode: Binding.RestoreNone
+    // Disable mobile device scrolling behaviors. Child objects such as Binding would
+    // create the Flickable before the scrollbars attach, leaving them unconnected.
+    Component.onCompleted: () => {
+        if (contentItem) {
+            contentItem.boundsBehavior = Flickable.StopAtBounds
+            contentItem.boundsMovement = Flickable.StopAtBounds
+        }
     }
 
     ScrollBar.vertical: ScrollBar {

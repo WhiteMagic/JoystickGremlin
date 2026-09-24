@@ -253,6 +253,12 @@ ApplicationWindow {
                             Helpers.createComponent("DialogDeviceInformation.qml", _root)
                         }
                     }
+                    MenuItem {
+                        text: qsTr("View Logs")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogLogViewer.qml", _root)
+                        }
+                    }
                     MenuSeparator {}
                     MenuItem {
                         text: qsTr("Auto Mapper")
