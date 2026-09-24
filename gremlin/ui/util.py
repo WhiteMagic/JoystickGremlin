@@ -467,3 +467,20 @@ def to_local_path(path_or_url: str) -> Path:
     if path_or_url.startswith("file://"):
         return Path(QtCore.QUrl(path_or_url).toLocalFile())
     return Path(path_or_url)
+
+
+def updated_recent_profiles(recent: list[str], path: Path, limit: int) -> list[str]:
+    """Returns the recent profile list with the given path moved to the front.
+
+    Args:
+        recent: current list of recently used profile paths
+        path: path of the profile that was just used
+        limit: maximum number of entries to keep
+
+    Returns:
+        New list of recently used profile paths, most recent first
+    """
+    new_path = path.resolve()
+    # WindowsPath equality ignores case and separator differences.
+    remaining = [entry for entry in recent if Path(entry).resolve() != new_path]
+    return [str(new_path), *remaining][:limit]

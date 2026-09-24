@@ -9,6 +9,8 @@ import Kobold.Foundation
 T.MenuItem {
     id: control
 
+    property int elide: Text.ElideRight
+
     implicitHeight: Metrics.rowAction
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
     // Menu's contentItem is a ListView, so without this every item falls back to its
@@ -26,7 +28,7 @@ T.MenuItem {
         font: control.font
         color: control.enabled ? Theme.fg : Theme.fgDisabled
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+        elide: control.elide
     }
 
     indicator: Item {

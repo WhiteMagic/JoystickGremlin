@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import uuid
+from pathlib import Path
 
 from PySide6 import (
     QtCore,
@@ -38,11 +39,13 @@ from gremlin.signal import (
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
-from gremlin.ui.util import to_local_path
+from gremlin.ui.util import to_local_path, updated_recent_profiles
 from gremlin.ui.window_geometry import WindowGeometry
 
 QML_IMPORT_NAME = "Gremlin.UI"
 QML_IMPORT_MAJOR_VERSION = 1
+
+_max_recent_profiles = 5
 
 
 @ta.QmlElement
@@ -345,24 +348,13 @@ class Backend(QtCore.QObject):
         """
         if activate:
             # Generate the code for the profile and run it
-            # self._profile_auto_activated = False
             shared_state.set_suspend_input_highlighting(True)
             self.runner.start(self.profile, self.profile.modes.first_mode)
-            # self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
         else:
             # Stop running the code
             self.runner.stop()
             if self.config.value("global", "behavior", "input-highlighting"):
                 shared_state.set_suspend_input_highlighting(False)
-            # self._update_statusbar_active(False)
-            # self._profile_auto_activated = False
-            # current_tab = self.ui.devices.currentWidget()
-            # if type(current_tab) in [
-            #     gremlin.ui.device_tab.JoystickDeviceTabWidget,
-            #     gremlin.ui.device_tab.KeyboardDeviceTabWidget
-            # ]:
-            #     self.ui.devices.currentWidget().refresh()
-            # self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
         self.activityChanged.emit()
 
     def minimize(self) -> None:
@@ -489,7 +481,7 @@ class Backend(QtCore.QObject):
         path = to_local_path(qml_url)
         self.profile.fpath = path
         self.profile.to_xml(self.profile.fpath)
-        self.config.set("global", "internal", "last-profile", str(path))
+        self._record_profile_use(path)
         self.windowTitleChanged.emit()
 
     @QtCore.Slot(result=str)
@@ -510,8 +502,8 @@ class Backend(QtCore.QObject):
             fpath: File path to the profile file to load
         """
         local_path = to_local_path(fpath)
-        self._load_profile(str(local_path))
-        self.config.set("global", "internal", "last-profile", str(local_path))
+        if self._load_profile(str(local_path)):
+            self._record_profile_use(local_path)
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
 
@@ -545,16 +537,38 @@ class Backend(QtCore.QObject):
         else:
             return ""
 
-    def _load_profile(self, fpath: str) -> None:
+    def _record_profile_use(self, path: Path) -> None:
+        """Records the given profile as the most recently used one.
+
+        Args:
+            path: file path of the profile that was loaded or saved
+        """
+        self.config.set("global", "internal", "last-profile", str(path))
+        self.config.set(
+            "global",
+            "internal",
+            "recent-profiles",
+            updated_recent_profiles(
+                self.config.value("global", "internal", "recent-profiles"),
+                path,
+                _max_recent_profiles,
+            ),
+        )
+        self.recentProfilesChanged.emit()
+
+    def _load_profile(self, fpath: str) -> bool:
         """Attempts to load the profile at the provided path.
 
         Args:
             fpath: The file path from which to load the profile
+
+        Returns:
+            True if the profile was loaded, False otherwise
         """
         # Check if there exists a file with this path.
         if not os.path.isfile(fpath):
             display_error(f"Unable to load profile '{fpath}', no such file.")
-            return
+            return False
 
         # Disable the program if it is running when we're loading a
         # new profile.
@@ -583,8 +597,11 @@ class Backend(QtCore.QObject):
             # an empty profile instead.
             logging.getLogger("system").exception(f"Invalid profile content: {e}")
             self.newProfile()
+            return False
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an
             # empty profile.
             self.newProfile()
             display_error(f"Failed to load the profile {fpath}.", str(e))
+            return False
+        return True

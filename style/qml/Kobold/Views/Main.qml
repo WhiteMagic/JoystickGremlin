@@ -30,13 +30,20 @@ ApplicationWindow {
         _restoringGeometry = false
     }
 
-    // The only application termination path, use by both standard UI interaction as
+    // The only application termination path, used by both standard UI interaction as
     // well as the system tray.
     function quitGremlin() {
+        guardUnsavedChanges(() => { Qt.quit() })
+    }
+
+    // Executes the given action only after checking with the user if they want to save
+    // unsaved changes if any exist.
+    function guardUnsavedChanges(action) {
         if (backend.profileContainsUnsavedChanges) {
-            _saveBeforeQuitDialog.open()
+            _saveBeforeContinueDialog.pendingAction = action
+            _saveBeforeContinueDialog.open()
         } else {
-            Qt.quit()
+            action()
         }
     }
 
@@ -87,29 +94,33 @@ ApplicationWindow {
     }
 
     MessageDialog {
-        id: _saveBeforeQuitDialog
+        id: _saveBeforeContinueDialog
 
         title: "Save Changes?"
         modality: Qt.ApplicationModal
         buttons: MessageDialog.Save | MessageDialog.Discard | MessageDialog.Cancel
 
         text: "There are unsaved changes in the current profile, do you want " +
-              "to save them before quitting?"
+              "to save them before continuing?"
+
+        property var pendingAction: null
 
         onButtonClicked: (button, role) => {
+            let action = pendingAction
+            pendingAction = null
             switch (button) {
                 case MessageDialog.Save:
                     var fpath = backend.profilePath()
                     if(fpath === "") {
-                        _saveProfileFileDialog.quitAfterSave = true
+                        _saveProfileFileDialog.afterSave = action
                         _saveProfileFileDialog.open()
                     } else {
                         backend.saveProfile(fpath)
-                        Qt.quit()
+                        action()
                     }
                     break
                 case MessageDialog.Discard:
-                    Qt.quit()
+                    action()
                     break
                 case MessageDialog.Cancel:
                     break
@@ -122,7 +133,8 @@ ApplicationWindow {
 
         title: "Please choose a file"
 
-        property bool quitAfterSave: false
+        // Cancelling the dialog drops this, aborting the guarded action.
+        property var afterSave: null
 
         acceptLabel: "Save"
         defaultSuffix: "xml"
@@ -131,10 +143,13 @@ ApplicationWindow {
 
         onAccepted: () => {
             backend.saveProfile(currentFile)
-            if (quitAfterSave) {
-                Qt.quit()
+            let action = afterSave
+            afterSave = null
+            if (action) {
+                action()
             }
         }
+        onRejected: () => { afterSave = null }
     }
 
     FileDialog {
@@ -148,7 +163,8 @@ ApplicationWindow {
         nameFilters: ["Profile files (*.xml)"]
 
         onAccepted: () => {
-            backend.loadProfile(currentFile)
+            let file = currentFile
+            _root.guardUnsavedChanges(() => { backend.loadProfile(file) })
         }
     }
 
@@ -170,16 +186,22 @@ ApplicationWindow {
                     // File menu.
                     MenuItem {
                         text: qsTr("New Profile")
-                        onTriggered: () => { backend.newProfile() }
+                        onTriggered: () => {
+                            _root.guardUnsavedChanges(() => { backend.newProfile() })
+                        }
                     }
                     MenuItem {
                         text: qsTr("Load Profile")
                         onTriggered: () => { _loadProfileFileDialog.open() }
                     }
                     Menu {
-                        title: qsTr("Recent")
+                        id: _recentMenu
 
-                        width: {
+                        title: qsTr("Recent")
+                        enabled: backend.recentProfiles.length > 0
+
+                        // Popup windows size from implicitWidth, ignoring width.
+                        implicitWidth: {
                             let result = 0
                             let padding = 0
                             for (let i = 0; i < count; ++i) {
@@ -187,14 +209,26 @@ ApplicationWindow {
                                 result = Math.max(item.contentItem.implicitWidth, result)
                                 padding = Math.max(item.padding, padding)
                             }
-                            return result + padding * 2
+                            return Math.min(result + padding * 2, 2 * Metrics.labelColumn)
                         }
 
                         Repeater {
                             model: backend.recentProfiles
+
                             delegate: MenuItem {
                                 text: modelData
-                                onTriggered: () => { backend.loadProfile(modelData) }
+                                elide: Text.ElideLeft
+                                ToolTip.visible: hovered
+                                ToolTip.delay: 500
+                                ToolTip.text: modelData
+
+                                onTriggered: () => {
+                                    Qt.callLater(() => {
+                                        _root.guardUnsavedChanges(() => {
+                                            backend.loadProfile(modelData)
+                                        })
+                                    })
+                                }
                             }
                         }
                     }
@@ -215,13 +249,7 @@ ApplicationWindow {
                     }
                     MenuItem {
                         text: qsTr("Exit")
-                        onTriggered: () => {
-                            if (backend.profileContainsUnsavedChanges) {
-                                _saveBeforeQuitDialog.open()
-                            } else {
-                                Qt.quit()
-                            }
-                        }
+                        onTriggered: () => { _root.quitGremlin() }
                     }
                 }
 
@@ -307,7 +335,9 @@ ApplicationWindow {
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Create new profile")
 
-                onClicked: () => { backend.newProfile() }
+                onClicked: () => {
+                    _root.guardUnsavedChanges(() => { backend.newProfile() })
+                }
             }
             ToolButton {
                 icon.name: "save_profile"
@@ -532,7 +562,7 @@ ApplicationWindow {
 
     onClosing: (close) => {
         if (backend.profileContainsUnsavedChanges) {
-            _saveBeforeQuitDialog.open()
+            _root.quitGremlin()
             close.accepted = false
         }
     }

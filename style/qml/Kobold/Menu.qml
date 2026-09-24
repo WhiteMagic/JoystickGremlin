@@ -17,6 +17,9 @@ T.Menu {
     implicitWidth: Metrics.controlHeight * 8
     implicitHeight: contentItem.implicitHeight
 
+    // Creates the items for sub-menus, without this nested Menus don't show up.
+    delegate: MenuItem {}
+
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel
