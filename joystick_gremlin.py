@@ -34,6 +34,8 @@ from gremlin.config import Configuration
 install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
 os.chdir(install_path)
 
+# Disable high-dpi scaling as it messes with the UI which provides its own scaling.
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 # Setting some global QT configurations.
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
