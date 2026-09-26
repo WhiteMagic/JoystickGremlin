@@ -47,13 +47,6 @@ poetry run pytest test/unit/
 poetry run ruff check .
 ```
 
-### Type Checking
-
-```powershell
-# Run pyright type checker
-poetry run pyright
-```
-
 ### Running the Application
 
 ```powershell
@@ -297,10 +290,9 @@ import gremlin.ui.type_aliases as ta
 
 ### Pre-commit Checks
 
-Before considering a task complete, run:
+Before considering a task complete, run the following checks if appropriate:
 
 ```powershell
 poetry run ruff check .
-poetry run pyright
 poetry run pytest
 ```

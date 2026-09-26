@@ -1,5 +1,5 @@
 ---
-name: design-doc-explorer
+name: basic-explorer
 description: >-
   Read-only codebase explorer for the design-doc-writer skill. Spawned by the
   design-doc orchestrator to investigate how part of an existing codebase works
