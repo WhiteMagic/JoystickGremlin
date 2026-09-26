@@ -24,6 +24,7 @@ DialogInputViewer     DialogInputViewer.qml
 DialogLogViewer       DialogLogViewer.qml
 DialogManageModes     DialogManageModes.qml
 DialogOptions         DialogOptions.qml
+DialogReleaseNotes    DialogReleaseNotes.qml
 DialogSwapDevices     DialogSwapDevices.qml
 AxesStateCurrent      AxesStateCurrent.qml
 AxesStateSeries       AxesStateSeries.qml

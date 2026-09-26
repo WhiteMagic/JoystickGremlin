@@ -55,6 +55,15 @@ def _register_internal() -> None:
     cfg.register(
         "global",
         "internal",
+        "last-run-version",
+        PropertyType.String,
+        "",
+        "Version of Gremlin that was last run.",
+        {},
+    )
+    cfg.register(
+        "global",
+        "internal",
         "main-window-geometry",
         PropertyType.List,
         [],

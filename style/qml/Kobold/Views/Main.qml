@@ -28,6 +28,9 @@ ApplicationWindow {
 
     Component.onCompleted: () => {
         _restoringGeometry = false
+        if (backend.showReleaseNotesOnStartup) {
+            Helpers.createComponent("DialogReleaseNotes.qml", _root)
+        }
     }
 
     // The only application termination path, used by both standard UI interaction as
@@ -313,6 +316,12 @@ ApplicationWindow {
                 Menu {
                     title: qsTr("Help")
 
+                    MenuItem {
+                        text: qsTr("Release Notes")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogReleaseNotes.qml", _root)
+                        }
+                    }
                     MenuItem {
                         text: qsTr("About")
                         onTriggered: () => {

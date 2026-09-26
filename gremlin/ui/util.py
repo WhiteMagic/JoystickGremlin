@@ -10,6 +10,8 @@ from pathlib import Path
 
 from PySide6 import (
     QtCore,
+    QtGui,
+    QtQuick,
 )
 
 import dill
@@ -20,6 +22,7 @@ from gremlin import (
     keyboard,
     process_monitor,
     shared_state,
+    util,
     windows_event_hook,
 )
 from gremlin.config import Configuration
@@ -484,3 +487,74 @@ def updated_recent_profiles(recent: list[str], path: Path, limit: int) -> list[s
     # WindowsPath equality ignores case and separator differences.
     remaining = [entry for entry in recent if Path(entry).resolve() != new_path]
     return [str(new_path), *remaining][:limit]
+
+
+def read_release_notes() -> str:
+    """Returns the release notes of the running version.
+
+    Returns:
+        Markdown content of the changelog, empty if unavailable
+    """
+    try:
+        return Path(util.resource_path("changelog.md")).read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def format_release_notes(
+    document: QtGui.QTextDocument, heading_spacing: int, block_spacing: int
+) -> None:
+    """Adjusts heading sizes and block spacing of rendered release notes.
+
+    Args:
+        document: document containing the rendered markdown
+        heading_spacing: space above headings in pixels
+        block_spacing: space below every block in pixels
+    """
+    cursor = QtGui.QTextCursor(document)
+    block = document.begin()
+    while block.isValid():
+        block_format = block.blockFormat()
+        heading_level = block_format.headingLevel()
+        is_spaced_heading = heading_level > 0 and block.blockNumber() > 0
+        block_format.setTopMargin(heading_spacing if is_spaced_heading else 0)
+        block_format.setBottomMargin(block_spacing)
+        cursor.setPosition(block.position())
+        cursor.setBlockFormat(block_format)
+
+        if heading_level > 0:
+            # Size adjustment is relative to the item's font, keeping UI scaling.
+            char_format = QtGui.QTextCharFormat()
+            char_format.setProperty(
+                QtGui.QTextFormat.Property.FontSizeAdjustment,
+                max(0, 3 - heading_level),
+            )
+            cursor.movePosition(
+                QtGui.QTextCursor.MoveOperation.EndOfBlock,
+                QtGui.QTextCursor.MoveMode.KeepAnchor,
+            )
+            cursor.mergeCharFormat(char_format)
+        block = block.next()
+
+
+@ta.QmlElement
+class ReleaseNotes(QtCore.QObject):
+    """Exposes the release notes helpers to QML."""
+
+    def __init__(self, parent: ta.OQO = None) -> None:
+        super().__init__(parent)
+
+    @QtCore.Property(str, constant=True)
+    def text(self) -> str:
+        return read_release_notes()
+
+    @QtCore.Slot(QtQuick.QQuickTextDocument, int, int)
+    def format(
+        self,
+        quick_document: QtQuick.QQuickTextDocument,
+        heading_spacing: int,
+        block_spacing: int,
+    ) -> None:
+        format_release_notes(
+            quick_document.textDocument(), heading_spacing, block_spacing
+        )

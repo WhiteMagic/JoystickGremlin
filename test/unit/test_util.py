@@ -232,3 +232,23 @@ def test_property_to_string(
     property_string: str,
 ) -> None:
     assert gremlin.util.property_to_string(property, property_value) == property_string
+
+
+@pytest.mark.parametrize(
+    "last_run_version, current_version, expected",
+    [
+        pytest.param("", "15.0.0", True, id="never-run"),
+        pytest.param("15.0.0", "15.0.0", False, id="same"),
+        pytest.param("14.2.0", "15.0.0", True, id="upgrade"),
+        pytest.param("15.0.0", "15.0.1", True, id="patch-upgrade"),
+        pytest.param("15.1.0", "15.0.0", False, id="downgrade"),
+        pytest.param("9.0.0", "15.0.0", True, id="numeric-not-lexical"),
+    ],
+)
+def test_should_show_release_notes(
+    last_run_version: str, current_version: str, expected: bool
+) -> None:
+    assert (
+        gremlin.util.should_show_release_notes(last_run_version, current_version)
+        == expected
+    )

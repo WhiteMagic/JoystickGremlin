@@ -39,7 +39,11 @@ from gremlin.signal import (
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
-from gremlin.ui.util import to_local_path, updated_recent_profiles
+from gremlin.ui.util import (
+    read_release_notes,
+    to_local_path,
+    updated_recent_profiles,
+)
 from gremlin.ui.window_geometry import WindowGeometry
 
 QML_IMPORT_NAME = "Gremlin.UI"
@@ -170,6 +174,7 @@ class Backend(QtCore.QObject):
 
         self.engine = engine
         self.config = config.Configuration()
+        self._show_release_notes = self._update_last_run_version()
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self._last_error = ""
@@ -250,9 +255,6 @@ class Backend(QtCore.QObject):
         audio_player.AudioPlayer().refresh()
 
     def check_for_updates(self) -> None:
-        def parse_version(value: str) -> list[int]:
-            return [int(x) for x in value.split(".")]
-
         if self.config.value("global", "general", "check-for-updates"):
             # Attempt to retrieve the latest version information, if this fails
             # silently abort.
@@ -263,8 +265,8 @@ class Backend(QtCore.QObject):
             # Parse version strings into semantic versions and compare them. If
             # a newer version is available show a notification. Store the new
             # version so the user is only ever notified once.
-            version = parse_version(version_string)
-            last_version = parse_version(
+            version = util.parse_version(version_string)
+            last_version = util.parse_version(
                 self.config.value("global", "internal", "last-known-version")
             )
             if last_version < version:
@@ -277,6 +279,24 @@ class Backend(QtCore.QObject):
                 self.config.set(
                     "global", "internal", "last-known-version", version_string
                 )
+
+    def _update_last_run_version(self) -> bool:
+        """Records the running version and reports if release notes are due.
+
+        Returns:
+            True if the release notes should be shown on startup.
+        """
+        current_version = util.get_code_version()
+        show_notes = util.should_show_release_notes(
+            self.config.value("global", "internal", "last-run-version"),
+            current_version,
+        )
+        self.config.set("global", "internal", "last-run-version", current_version)
+        return show_notes
+
+    @QtCore.Property(bool, constant=True)
+    def showReleaseNotesOnStartup(self) -> bool:
+        return self._show_release_notes and read_release_notes().strip() != ""
 
     def _active_process_changed_cb(self, path: str) -> None:
         """Handles changes to the active process.

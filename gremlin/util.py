@@ -1060,6 +1060,33 @@ def get_code_version() -> str:
         return "0.0.0"
 
 
+def parse_version(value: str) -> list[int]:
+    """Returns the semantic version string as a comparable list of integers.
+
+    Args:
+        value: Version string of the form "major.minor.patch".
+
+    Returns:
+        List of the version's integer components.
+    """
+    return [int(component) for component in value.split(".")]
+
+
+def should_show_release_notes(last_run_version: str, current_version: str) -> bool:
+    """Returns whether the release notes should be shown on startup.
+
+    Args:
+        last_run_version: Version Gremlin was last run with, empty if unknown.
+        current_version: Version of the running Gremlin instance.
+
+    Returns:
+        True if Gremlin was never run before or has been upgraded.
+    """
+    if last_run_version == "":
+        return True
+    return parse_version(last_run_version) < parse_version(current_version)
+
+
 def get_code_release() -> str:
     """Returns the release string derived from the semantic version number,
 
