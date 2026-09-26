@@ -59,6 +59,11 @@ Item {
         width: parent.width * 0.8
         height: parent.height * 0.8
 
+        // Basic's button box stretches two or more buttons across the full width.
+        footer: DialogButtonBox {
+            alignment: Qt.AlignRight
+        }
+
         ColumnLayout {
             id: _dialogContent
 
@@ -80,9 +85,10 @@ Item {
                     contentItem: Label {
                         text: model.display
                         horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
                     }
 
-                    highlighted: index === _executableSelectorDialog.selectedIndex
+                    checked: index === _executableSelectorDialog.selectedIndex
 
                     onClicked: () => {
                         _executableSelectorDialog.selectedIndex = index
