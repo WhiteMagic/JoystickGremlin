@@ -1,11 +1,11 @@
----
-title: Download
-nav_order: 8
----
+# Release 16
 
-# Release 16 -- 2026-09-26
+## Important
 
-[Download Release 16](https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_16/Joystick.Gremlin.R16.zip){: .btn .btn-blue }
+- The new dill library may cause issues, please report them. You can always switch
+  to the legacy library through the options menu.
+- The new UI has changed certain underlygin aspects and as such could lead to
+  crashes when operating the UI, report these crashes too please.
 
 ## New Features
 
@@ -20,6 +20,7 @@ nav_order: 8
 - Position and size of main window and input viewer are remembered.
 - Map to vJoy actions pick first unused input when added.
 - Two new merge axis modes added.
+
 
 ## Bug Fixes
 
