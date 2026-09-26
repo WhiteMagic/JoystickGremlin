@@ -784,8 +784,11 @@ def no_center_calibration(value: int, minimum: int, maximum: int) -> float:
     Returns:
         the calibrated value in [-1, 1] corresponding to the provided raw value
     """
-    value = clamp(value, minimum, maximum)
-    return (value - minimum) / float(maximum - minimum) * 2.0 - 1.0
+    value_float = clamp(value, minimum, maximum)
+    value_range = maximum - minimum
+    if value_range == 0:
+        return 0.0
+    return ((value_float - minimum) / float(value_range)) * 2.0 - 1.0
 
 
 def linear_axis_value_interpolation(

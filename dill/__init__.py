@@ -452,31 +452,12 @@ def _dispatch_device_change(data: _DeviceSummary, action: int) -> None:
 _input_event_stub = C_EVENT_CALLBACK(_dispatch_input_event)
 _device_change_stub = C_DEVICE_CHANGE_CALLBACK(_dispatch_device_change)
 
-_dll_path = os.path.join(os.path.dirname(__file__), "dill.dll")
-if "_MEIPASS" in sys.__dict__:
-    _dll_path = os.path.join(sys._MEIPASS, "dill.dll")
-_di_listener_dll = ctypes.cdll.LoadLibrary(_dll_path)
-
-_di_listener_dll.get_device_information_by_index.argtypes = [ctypes.c_uint]
-_di_listener_dll.get_device_information_by_index.restype = _DeviceSummary
-
 
 class DILL:
     """Exposes functions of the DILL library in an easy to use manner."""
 
-    # Attempt to find the correct location of the dll for development
-    # and installed use cases.
-    _dev_path = os.path.join(os.path.dirname(__file__), "dill.dll")
-    if os.path.isfile("dill.dll"):
-        _dll_path = "dill.dll"
-    elif "_MEIPASS" in sys.__dict__:
-        _dll_path = os.path.join(sys._MEIPASS, "dill.dll")
-    elif os.path.isfile(_dev_path):
-        _dll_path = _dev_path
-    else:
-        raise DILLError("Unable to locate dill.dll library")
-
-    _dll = ctypes.cdll.LoadLibrary(_dll_path)
+    _dll: ctypes.CDLL | None = None
+    _dll_path: str | None = None
     # Should only be initialized once in a process's lifetime.
     _dill_initialized = False
 
@@ -509,11 +490,42 @@ class DILL:
     }
 
     @staticmethod
+    def load(use_legacy: bool = False) -> None:
+        """Loads the DILL library, either the current or the legacy version.
+
+        Args:
+            use_legacy: load the legacy dill.dll instead of dill2.dll
+        """
+        name = "dill.dll" if use_legacy else "dill2.dll"
+        if "_MEIPASS" in sys.__dict__:
+            path = os.path.join(sys._MEIPASS, name)
+        else:
+            path = os.path.join(os.path.dirname(__file__), name)
+
+        if DILL._dll is not None:
+            if DILL._dll_path == path:
+                return
+            # No unload in the C API, a second library would run its own listener.
+            raise DILLError(f"Cannot load {path}, {DILL._dll_path} is already loaded.")
+
+        if not os.path.isfile(path):
+            raise DILLError(f"Unable to locate {name} library.")
+        try:
+            DILL._dll = ctypes.cdll.LoadLibrary(path)
+        except OSError as e:
+            raise DILLError(f"Failed to load {path}: {e}.") from e
+        DILL._dll_path = path
+        DILL.initialize_capi()
+
+    @staticmethod
     def init() -> None:
         """Initializes the DILL library.
 
         This has to be called before any other DILL interactions can take place.
+        Loads the default library if DILL.load has not been called.
         """
+        if DILL._dll is None:
+            DILL.load()
         if not DILL._dill_initialized:
             DILL._dll.init()
             DILL._dill_initialized = True
@@ -653,7 +665,3 @@ class DILL:
                 dll_fn.argtypes = params["arguments"]
             if "returns" in params:
                 dll_fn.restype = params["returns"]
-
-
-# Initialize the class
-DILL.initialize_capi()

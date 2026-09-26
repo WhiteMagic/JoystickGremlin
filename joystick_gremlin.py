@@ -233,6 +233,8 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         sys.excepthook = exception_hook
 
         # Initialize joystick device handling.
+        dill.DILL.load(Configuration().value("global", "general", "use-legacy-dill"))
+        self.syslog.info(f"Using DILL library {dill.DILL._dll_path}")
         dill.DILL.init()
         device_initialization_error = None
         try:

@@ -96,6 +96,17 @@ def _register_global() -> None:
         {"is_folder": True},
         True,
     )
+    cfg.register(
+        "global",
+        "general",
+        "use-legacy-dill",
+        PropertyType.Bool,
+        False,
+        "Use the legacy DILL input library instead of the new one. "
+        "Requires restarting Joystick Gremlin.",
+        {},
+        True,
+    )
 
 
 def _register_appearance() -> None:

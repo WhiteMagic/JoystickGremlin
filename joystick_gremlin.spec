@@ -21,6 +21,7 @@ datas.extend(action_plugins_files)
 binaries = [
     ("vjoy/vJoyInterface.dll", "."),
     ("dill/dill.dll", "."),
+    ("dill/dill2.dll", "."),
 ]
 
 # List all action plugin code files by their import name as pyinstaller

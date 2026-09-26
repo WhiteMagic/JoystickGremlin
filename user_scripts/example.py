@@ -37,6 +37,17 @@ key_var = user_script.KeyboardVariable(
     is_optional=True,
 )
 
+loggical_Var = user_script.LogicalDeviceVariable(
+    "A logical device variable",
+    "Example logical device variable",
+    is_optional=True,
+    valid_types=[
+        types.InputType.JoystickAxis,
+        types.InputType.JoystickButton,
+        types.InputType.JoystickHat,
+    ],
+)
+
 mode_var = user_script.ModeVariable(
     "A mode variable",
     "Example mode variable",
