@@ -1,14 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-"""Measures round-trip latency from a physical button press to the mapped vJoy button.
+"""Measures latency from a physical button press to the mapped vJoy button.
 
-Requires a real, connected physical input device and a configured vJoy output
-device. Builds a profile mapping every button of the physical device 1:1 to
-the same-numbered button on the vJoy device, activates it through the real
-CodeRunner, then listens for DILL-reported state changes on both devices to
-time the round trip: physical press observed -> vJoy button change observed.
+Maps every button of the first physical device 1:1 onto the first vJoy output
+device, runs that profile through the real CodeRunner, and times each physical
+button event against the matching vJoy button event reported back by DILL.
 
-Usage: poetry run python scripts/benchmark_latency.py [--samples N] [--timeout SECONDS]
+Usage:
+    poetry run python scripts/benchmark_latency.py [--samples N] [--match-timeout S]
 """
 
 from __future__ import annotations
@@ -16,17 +15,17 @@ from __future__ import annotations
 import argparse
 import atexit
 import ctypes
+import math
+import signal
 import statistics
 import sys
 import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
-# dill/gremlin/vjoy/action_plugins live at the repo root and aren't an
-# installed package; running this script from scripts/ needs the root added
-# to sys.path explicitly (same fix test/unit/conftest.py, test/integration/
-# conftest.py apply for the same reason).
+# The repo root isn't an installed package.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from PySide6 import QtCore, QtWidgets
@@ -34,11 +33,11 @@ from PySide6 import QtCore, QtWidgets
 import dill
 import gremlin.code_runner
 import gremlin.config
+import gremlin.config_registry
 import gremlin.device_initialization
 import gremlin.event_handler
 import gremlin.event_helpers
 import gremlin.shared_state
-import joystick_gremlin
 from action_plugins.map_to_vjoy import MapToVjoyData
 from action_plugins.root import RootData
 from gremlin.event_handler import Event
@@ -46,23 +45,134 @@ from gremlin.profile import InputItemBinding, Profile
 from gremlin.types import InputType
 
 MAX_BUTTONS = 32
-DEFAULT_UNMATCHED_TIMEOUT_S = 2.0
+AXIS_REFRESH_OPTIONS = ("refresh-axis-on-activation", "refresh-axis-on-mode-change")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Sample:
+    """Latency of one matched physical and vJoy button event pair."""
+
     button_id: int
     is_pressed: bool
     latency_s: float
 
 
-def build_profile(
-    physical_guid: uuid.UUID, output_vjoy_id: int, button_count: int
-) -> Profile:
-    prof = Profile()
-    mode_name = prof.modes.first_mode
+class LatencyRecorder(QtCore.QObject):
+    """Pairs each physical button event with the vJoy event it produces.
+
+    Events are timestamped and paired on the DILL callback thread, while samples
+    are reported on the main thread via `sample_recorded`.
+    """
+
+    sample_recorded = QtCore.Signal(object)
+
+    def __init__(
+        self,
+        physical_guid: uuid.UUID,
+        output_guid: uuid.UUID,
+        button_count: int,
+        sample_target: int | None,
+        match_timeout_s: float,
+    ) -> None:
+        """Creates a new instance.
+
+        Args:
+            physical_guid: device whose button events start a measurement
+            output_guid: vJoy device whose button events end a measurement
+            button_count: number of mapped buttons, starting at button 1
+            sample_target: quit after this many samples, None runs indefinitely
+            match_timeout_s: seconds after which a pending event is unmatched
+        """
+        super().__init__()
+        self._physical_guid = physical_guid
+        self._output_guid = output_guid
+        self._button_count = button_count
+        self._sample_target = sample_target
+        self._match_timeout_s = match_timeout_s
+        self._pending: dict[tuple[int, bool], float] = {}
+        self.samples: list[Sample] = []
+        self.unmatched_count = 0
+
+        self.sample_recorded.connect(self._report_sample)
+
+    def on_joystick_event(self, event: Event) -> None:
+        """Records a button event, completing a sample if it matches.
+
+        Runs on the DILL callback thread, anything slow delays event delivery.
+
+        Args:
+            event: joystick event emitted by the EventListener
+        """
+        now = time.perf_counter()
+        if event.event_type != InputType.JoystickButton:
+            return
+        button_id = cast(int, event.identifier)
+        is_pressed = cast(bool, event.is_pressed)
+        if not 1 <= button_id <= self._button_count:
+            return
+
+        self._expire_pending(now)
+        key = (button_id, is_pressed)
+        if event.device_guid == self._physical_guid:
+            self._pending[key] = now
+        elif event.device_guid == self._output_guid and key in self._pending:
+            sample = Sample(button_id, is_pressed, now - self._pending.pop(key))
+            self.samples.append(sample)
+            self.sample_recorded.emit(sample)
+
+    def finish(self) -> None:
+        """Counts all events still awaiting a match as unmatched."""
+        self.unmatched_count += len(self._pending)
+        self._pending.clear()
+
+    def _expire_pending(self, now: float) -> None:
+        """Counts pending events older than the match timeout as unmatched.
+
+        Args:
+            now: current `time.perf_counter()` value
+        """
+        stale = [
+            key
+            for key, pressed_at in self._pending.items()
+            if now - pressed_at > self._match_timeout_s
+        ]
+        for key in stale:
+            del self._pending[key]
+        self.unmatched_count += len(stale)
+
+    def _report_sample(self, sample: Sample) -> None:
+        """Prints a sample and quits once the sample target is reached.
+
+        Args:
+            sample: the newly recorded sample
+        """
+        edge = "press" if sample.is_pressed else "release"
+        print(
+            f"button {sample.button_id:>2} {edge:<7} {sample.latency_s * 1000:7.2f} ms"
+        )
+
+        # MapToVjoy registers an auto-release per press; one mode never consumes it.
+        gremlin.event_helpers.ButtonReleaseActions().reset()
+
+        if self._sample_target and len(self.samples) >= self._sample_target:
+            QtWidgets.QApplication.quit()
+
+
+def build_profile(physical_guid: uuid.UUID, vjoy_id: int, button_count: int) -> Profile:
+    """Creates a profile mapping each physical button to the same vJoy button.
+
+    Args:
+        physical_guid: device providing the input buttons
+        vjoy_id: vJoy device receiving the output buttons
+        button_count: number of buttons to map, starting at button 1
+
+    Returns:
+        Single-mode profile containing the button mappings
+    """
+    profile = Profile()
+    mode_name = profile.modes.first_mode
     for button_id in range(1, button_count + 1):
-        item = prof.get_input_item(
+        item = profile.get_input_item(
             physical_guid,
             InputType.JoystickButton,
             button_id,
@@ -73,7 +183,7 @@ def build_profile(
 
         root_action = RootData(InputType.JoystickButton)
         map_action = MapToVjoyData(InputType.JoystickButton)
-        map_action.vjoy_device_id = output_vjoy_id
+        map_action.vjoy_device_id = vjoy_id
         map_action.vjoy_input_id = button_id
         map_action.button_inverted = False
         root_action.insert_action(map_action, "children")
@@ -83,218 +193,186 @@ def build_profile(
         binding.behavior = InputType.JoystickButton
         item.action_sequences.append(binding)
 
-        prof.library.add_action(root_action)
-        prof.library.add_action(map_action)
-    return prof
+        profile.library.add_action(root_action)
+        profile.library.add_action(map_action)
+    return profile
 
 
-class LatencyRecorder(QtCore.QObject):
-    """Pairs physical/vJoy button events observed on the same DILL callback stream."""
+def pick_device(
+    label: str, devices: list[dill.DeviceSummary]
+) -> dill.DeviceSummary | None:
+    """Lists the devices and returns the first one with buttons.
 
-    def __init__(
-        self,
-        physical_guid: uuid.UUID,
-        output_guid: uuid.UUID,
-        button_count: int,
-        sample_target: int | None,
-        unmatched_timeout_s: float,
-    ) -> None:
-        super().__init__()
-        self._physical_guid = physical_guid
-        self._output_guid = output_guid
-        self._button_count = button_count
-        self._sample_target = sample_target
-        self._unmatched_timeout_s = unmatched_timeout_s
-        self._pending: dict[tuple[int, bool], float] = {}
-        self.samples: list[Sample] = []
-        self.unmatched_count = 0
+    Args:
+        label: device category shown in the listing
+        devices: devices to list and pick from
 
-    @QtCore.Slot(Event)
-    def on_joystick_event(self, event: Event) -> None:
-        if event.event_type != InputType.JoystickButton:
-            return
-        button_id, is_pressed = event.identifier, event.is_pressed
-        if not isinstance(button_id, int) or is_pressed is None:
-            return
-        if not (1 <= button_id <= self._button_count):
-            return
+    Returns:
+        First device with at least one button, None if there is none
+    """
+    print(f"{label} devices:")
+    for device in devices:
+        print(
+            f"  {device.name}: {device.button_count} buttons, {device.axis_count} axes"
+        )
+    return next((device for device in devices if device.button_count > 0), None)
 
-        now = time.perf_counter()
-        self._expire_stale(now)
-        key = (button_id, is_pressed)
 
-        if event.device_guid == self._physical_guid:
-            self._pending[key] = now
-        elif event.device_guid == self._output_guid:
-            start = self._pending.pop(key, None)
-            if start is None:
-                return
-            latency = now - start
-            self.samples.append(Sample(button_id, is_pressed, latency))
-            edge = "press" if is_pressed else "release"
-            print(f"button {button_id:>2} {edge:<7} {latency * 1000:7.2f} ms")
+def percentile(sorted_values: list[float], fraction: float) -> float:
+    """Returns the nearest-rank percentile.
 
-            # MapToVjoyFunctor unconditionally registers a "different mode"
-            # auto-release entry per press (gremlin/event_helpers.py) that
-            # never gets consumed in a single-mode profile, so it grows
-            # forever and adds O(n) scan overhead to every later event on
-            # this button. Our profile doesn't rely on that safety net
-            # (press/release are both handled directly), so keep it empty.
-            gremlin.event_helpers.ButtonReleaseActions().reset()
+    Args:
+        sorted_values: values in ascending order, must not be empty
+        fraction: percentile as a fraction in [0, 1]
 
-            if self._sample_target and len(self.samples) >= self._sample_target:
-                app = QtWidgets.QApplication.instance()
-                assert app is not None
-                app.quit()
-
-    def finalize(self) -> None:
-        """Counts any presses still awaiting a match as unmatched."""
-        self.unmatched_count += len(self._pending)
-        self._pending.clear()
-
-    def _expire_stale(self, now: float) -> None:
-        stale = [
-            key
-            for key, started_at in self._pending.items()
-            if now - started_at > self._unmatched_timeout_s
-        ]
-        for key in stale:
-            del self._pending[key]
-            self.unmatched_count += 1
-            edge = "press" if key[1] else "release"
-            print(f"button {key[0]:>2} {edge:<7} unmatched (timed out)")
+    Returns:
+        Value at the requested percentile
+    """
+    return sorted_values[max(0, math.ceil(fraction * len(sorted_values)) - 1)]
 
 
 def print_summary(
-    samples: list[Sample], unmatched_count: int, unmatched_timeout_s: float
+    samples: list[Sample], unmatched_count: int, match_timeout_s: float
 ) -> None:
+    """Prints latency statistics and a warning for unmatched events.
+
+    Args:
+        samples: recorded samples
+        unmatched_count: number of physical events without a vJoy match
+        match_timeout_s: match timeout used, shown in the warning
+    """
     print("\n--- summary ---")
-    if not samples:
-        print("No completed round trips recorded.")
-    else:
-        latencies_ms = sorted(s.latency_s * 1000 for s in samples)
-
-        def percentile(p: float) -> float:
-            return latencies_ms[min(len(latencies_ms) - 1, int(len(latencies_ms) * p))]
-
+    if samples:
+        latencies_ms = sorted(sample.latency_s * 1000 for sample in samples)
         print(f"samples:  {len(latencies_ms)}")
         print(f"min:      {latencies_ms[0]:.2f} ms")
         print(f"mean:     {statistics.mean(latencies_ms):.2f} ms")
         print(f"median:   {statistics.median(latencies_ms):.2f} ms")
-        print(f"p95:      {percentile(0.95):.2f} ms")
-        print(f"p99:      {percentile(0.99):.2f} ms")
+        print(f"p95:      {percentile(latencies_ms, 0.95):.2f} ms")
+        print(f"p99:      {percentile(latencies_ms, 0.99):.2f} ms")
         print(f"max:      {latencies_ms[-1]:.2f} ms")
+    else:
+        print("No completed round trips recorded.")
 
     if unmatched_count:
         print(
-            f"\nWARNING: {unmatched_count} physical press(es)/release(s) had no "
-            f"matching vJoy output event within {unmatched_timeout_s:.0f}s. Either "
-            "a button wasn't actually pressed, or DILL may not deliver events for "
-            "this vJoy device's own state changes."
+            f"\nWARNING: {unmatched_count} physical button event(s) had no "
+            f"matching vJoy event within {match_timeout_s:g}s. Either the button "
+            "wasn't pressed or DILL doesn't report this vJoy device's state changes."
         )
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--samples",
-        type=int,
-        default=None,
-        help="Stop after this many completed round trips (default: run until Ctrl+C)",
-    )
-    parser.add_argument(
-        "--timeout",
-        type=float,
-        default=DEFAULT_UNMATCHED_TIMEOUT_S,
-        help="Seconds to wait for a matching vJoy event before a press is unmatched",
-    )
-    args = parser.parse_args()
+def run_benchmark(
+    app: QtWidgets.QApplication,
+    physical: dill.DeviceSummary,
+    output: dill.DeviceSummary,
+    args: argparse.Namespace,
+) -> None:
+    """Runs the benchmark until the sample target is reached or Ctrl+C.
 
-    # Windows' default system timer resolution is ~15.6ms, and dill.dll (a
-    # native DLL loaded into this process) is affected by it just like any
-    # other in-process code if its internal wait/poll loop relies on it.
-    # timeBeginPeriod is a per-process request but the finer resolution it
-    # asks for applies process-wide for as long as it's held, so requesting
-    # it here also sharpens dill.dll's own timing.
-    ctypes.windll.winmm.timeBeginPeriod(1)
-    atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
-
-    app = QtWidgets.QApplication(sys.argv)
-
-    joystick_gremlin.register_config_options()
-    dill.DILL.init()
-    gremlin.device_initialization.joystick_devices_initialization()
-
-    physical_devices = gremlin.device_initialization.physical_devices()
-    print("Physical devices found:")
-    for dev in physical_devices:
-        print(f"  {dev.name}: {dev.button_count} button(s), {dev.axis_count} axis(es)")
-    physical = next((d for d in physical_devices if d.button_count > 0), None)
-    if physical is None:
-        print(
-            "No physical (non-vJoy) device with at least one button found.",
-            file=sys.stderr,
-        )
-        return 1
-
-    output_devices = gremlin.device_initialization.output_vjoy_devices()
-    print("vJoy output devices found:")
-    for dev in output_devices:
-        buttons, axes = dev.button_count, dev.axis_count
-        print(f"  vjoy id {dev.vjoy_id}: {buttons} button(s), {axes} axis(es)")
-    output = next((d for d in output_devices if d.button_count > 0), None)
-    if output is None:
-        print("No vJoy output device with at least one button found.", file=sys.stderr)
-        return 1
-
+    Args:
+        app: application whose event loop drives the benchmark
+        physical: device whose buttons are pressed
+        output: vJoy device the buttons are mapped to
+        args: parsed command line arguments
+    """
     button_count = min(physical.button_count, output.button_count, MAX_BUTTONS)
-
-    print(f"\nPhysical device: {physical.name} ({physical.device_guid.uuid})")
-    print(f"vJoy output device: {output.name} (vjoy id {output.vjoy_id})")
-    print(f"Mapping {button_count} button(s) 1:1.\n")
+    print(
+        f"\nMapping {button_count} buttons of {physical.name} "
+        f"onto vJoy {output.vjoy_id}."
+    )
 
     event_listener = gremlin.event_handler.EventListener()
-
-    prof = build_profile(physical.device_guid.uuid, output.vjoy_id, button_count)
-    gremlin.shared_state.current_profile = prof
-
-    cfg = gremlin.config.Configuration()
-    cfg.set("global", "general", "refresh-axis-on-activation", False)
-    cfg.set("global", "general", "refresh-axis-on-mode-change", False)
-
+    profile = build_profile(physical.device_guid.uuid, output.vjoy_id, button_count)
+    gremlin.shared_state.current_profile = profile
     runner = gremlin.code_runner.CodeRunner()
-    runner.start(prof, prof.modes.first_mode)
-
     recorder = LatencyRecorder(
         physical.device_guid.uuid,
         output.device_guid.uuid,
         button_count,
         args.samples,
-        args.timeout,
+        args.match_timeout,
     )
-    event_listener.joystick_event.connect(recorder.on_joystick_event)
+    # Direct so timestamps aren't delayed by the main thread's event queue.
+    event_listener.joystick_event.connect(
+        recorder.on_joystick_event, QtCore.Qt.ConnectionType.DirectConnection
+    )
 
-    # Qt's C++ event loop never returns control to the interpreter, so a
-    # plain Ctrl+C only registers once another event wakes it up. A no-op
-    # timer keeps handing control back so KeyboardInterrupt actually fires.
-    keepalive_timer = QtCore.QTimer()
-    keepalive_timer.timeout.connect(lambda: None)
-    keepalive_timer.start(200)
+    # Python signal handlers only run once Qt's C++ event loop yields.
+    # https://docs.python.org/3/library/signal.html#execution-of-python-signal-handlers
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    wake_timer = QtCore.QTimer()
+    wake_timer.timeout.connect(lambda: None)
+    wake_timer.start(200)
 
-    print("Press physical buttons now. Ctrl+C to stop.\n")
     try:
+        runner.start(profile)
+        print("Press physical buttons now. Ctrl+C to stop.\n")
         app.exec()
-    except KeyboardInterrupt:
-        pass
+    finally:
+        runner.stop()
+        # EventListener's non-daemon threads keep the process alive otherwise.
+        event_listener.terminate()
 
-    runner.stop()
-    recorder.finalize()
-    print_summary(recorder.samples, recorder.unmatched_count, args.timeout)
+    recorder.finish()
+    print_summary(recorder.samples, recorder.unmatched_count, args.match_timeout)
 
-    # EventListener owns non-daemon threads (the DILL callback thread, the
-    # keyboard hook); without terminating it the process hangs after main()
-    # returns instead of exiting.
-    event_listener.terminate()
+
+def main() -> int:
+    """Sets up DILL and the devices, then runs the benchmark.
+
+    Returns:
+        Process exit code
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--samples",
+        type=int,
+        help="stop after this many round trips (default: until Ctrl+C)",
+    )
+    parser.add_argument(
+        "--match-timeout",
+        type=float,
+        default=2.0,
+        help="seconds to wait for the vJoy event before a press counts as unmatched",
+    )
+    args = parser.parse_args()
+
+    # 1 ms timer resolution for the whole process, including dill.dll.
+    ctypes.windll.winmm.timeBeginPeriod(1)
+    atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
+
+    app = QtWidgets.QApplication(sys.argv)
+
+    gremlin.config_registry.register_config_options()
+    config = gremlin.config.Configuration()
+    dill.DILL.load(config.value("global", "general", "use-legacy-dill"))
+    print(f"Using DILL library {dill.DILL._dll_path}")
+    dill.DILL.init()
+    gremlin.device_initialization.joystick_devices_initialization()
+
+    physical = pick_device("Physical", gremlin.device_initialization.physical_devices())
+    output = pick_device(
+        "vJoy output", gremlin.device_initialization.output_vjoy_devices()
+    )
+    if physical is None or output is None:
+        print(
+            "Need a physical and a vJoy output device with at least one button each.",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Configuration.set() saves to disk, so restore the user's values afterwards.
+    saved = {
+        name: config.value("global", "behavior", name) for name in AXIS_REFRESH_OPTIONS
+    }
+    try:
+        for name in AXIS_REFRESH_OPTIONS:
+            config.set("global", "behavior", name, False)
+        run_benchmark(app, physical, output, args)
+    finally:
+        for name, value in saved.items():
+            config.set("global", "behavior", name, value)
     return 0
 
 
