@@ -17,12 +17,13 @@ from PySide6 import QtCore
 import dill
 import gremlin.profile
 import gremlin.ui.backend
-import joystick_gremlin
 from gremlin import (
+    audio_player,
     code_runner,
     config,
     event_handler,
     mode_manager,
+    tts,
 )
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
@@ -30,6 +31,7 @@ from gremlin.types import (
     InputType,
 )
 from gremlin.util import clamp
+from vjoy import vjoy
 
 LDIdentifier = LogicalDevice.Input.Identifier
 
@@ -201,14 +203,15 @@ class JoystickGremlinBot:
 
     def start(self) -> None:
         """Starts the profile execution."""
-        self._event_listener.restart()
         self._runner.start(self._profile)
 
     def stop(self) -> None:
         """Stops the profile execution."""
+        # EventListener is session-wide; terminating it breaks later packages.
         self._runner.stop()
-        self._event_listener.terminate()
-        joystick_gremlin.shutdown_cleanup()
+        vjoy.VJoyProxy.reset()
+        audio_player.AudioPlayer().stop()
+        tts.TTSManager().stop()
 
     def wait(self, duration: float) -> None:
         """Blocking wait for the specified duration while processing events in

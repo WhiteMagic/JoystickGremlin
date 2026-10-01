@@ -182,22 +182,6 @@ def tear_down() -> Iterator[None]:
     vjoy.VJoyProxy.reset()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _terminate_event_listener_and_monitor(
-    request: pytest.FixtureRequest,
-) -> None:
-    """Terminates session-wide singletons once, after the entire run."""
-
-    # EventListener/Backend set up their DILL callback and process-monitor
-    # thread once per session with nothing to restart them; must not
-    # terminate them mid-session, only here.
-    def _finalize() -> None:
-        gremlin.event_handler.EventListener().terminate()
-        gremlin.ui.backend.Backend().process_monitor.stop()
-
-    request.addfinalizer(_finalize)
-
-
 # +-------------------------------------------------------------------------
 # | Fixture used for assertions in integration tests.
 # +-------------------------------------------------------------------------
