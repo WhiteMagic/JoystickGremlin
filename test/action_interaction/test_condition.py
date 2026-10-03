@@ -37,14 +37,14 @@ def test_release_during(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     assert not jgbot.button(inout.OUT_BUTTON_2)
     jgbot.release_button(inout.IN_BUTTON_2)
     jgbot.release_button(inout.IN_BUTTON_1)
-    assert jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
     assert not jgbot.button(inout.OUT_BUTTON_2)
 
     jgbot.press_button(inout.IN_BUTTON_1)
-    assert jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
     assert jgbot.button(inout.OUT_BUTTON_2)
     jgbot.release_button(inout.IN_BUTTON_1)
-    assert jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
     assert not jgbot.button(inout.OUT_BUTTON_2)
 
 
@@ -54,9 +54,10 @@ def test_current_input(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.press_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
     assert jgbot.button(inout.OUT_BUTTON_3)
+    # Release follows the press into the true branch whose macro is press-only.
     jgbot.release_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
-    assert not jgbot.button(inout.OUT_BUTTON_3)
+    assert jgbot.button(inout.OUT_BUTTON_3)
 
 
 def test_condition_with_tempo(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
@@ -83,3 +84,4 @@ def test_condition_with_tempo(jgbot: JoystickGremlinBot, profile_dir: Path) -> N
 
     jgbot.release_button(inout.IN_BUTTON_4)
     jgbot.release_button(inout.IN_BUTTON_2)
+    assert not jgbot.button(inout.OUT_BUTTON_2)

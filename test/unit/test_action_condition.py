@@ -14,9 +14,14 @@ import uuid
 import pytest
 
 from action_plugins import condition
-from action_plugins.condition import ConditionData
+from action_plugins.condition import (
+    ConditionData,
+    ConditionFunctor,
+)
 from action_plugins.description import DescriptionData
+from gremlin.base_classes import Value
 from gremlin.error import GremlinError
+from gremlin.event_handler import Event
 from gremlin.profile import Profile
 from gremlin.types import (
     DataInsertionMode,
@@ -193,3 +198,82 @@ def test_swap_uuid(xml_dir: pathlib.Path) -> None:
     assert a.conditions[0]._states[1].device_uuid == _INPUT_2_DEVICE_UUID
     assert a.conditions[1]._states[0].device_uuid == new_device_uuid
     assert a.conditions[2]._states[0].device_uuid == new_device_uuid
+
+
+class _BranchRecorder:
+    def __init__(self) -> None:
+        self.values: list[bool | float | HatDirection] = []
+
+    def __call__(self, event: Event, value: Value, properties: list = []) -> None:
+        self.values.append(value.current)
+
+
+def _make_functor(
+    behavior_type: InputType, truth: list[bool]
+) -> tuple[ConditionFunctor, _BranchRecorder, _BranchRecorder]:
+    functor = ConditionFunctor(ConditionData(behavior_type))
+    true_branch = _BranchRecorder()
+    false_branch = _BranchRecorder()
+    functor.functors["true"] = [true_branch]
+    functor.functors["false"] = [false_branch]
+    functor._condition_truth_state = lambda value: truth[0]
+    return functor, true_branch, false_branch
+
+
+def _send(
+    functor: ConditionFunctor,
+    input_type: InputType,
+    current: bool | float | HatDirection,
+) -> None:
+    event = Event(input_type, 1, uuid.uuid4(), "Default", value=current)
+    functor(event, Value(current))
+
+
+def test_functor_button_release_follows_press() -> None:
+    truth = [True]
+    functor, true_branch, false_branch = _make_functor(InputType.JoystickButton, truth)
+
+    _send(functor, InputType.JoystickButton, True)
+    truth[0] = False
+    _send(functor, InputType.JoystickButton, False)
+    assert true_branch.values == [True, False]
+    assert false_branch.values == []
+
+    _send(functor, InputType.JoystickButton, True)
+    truth[0] = True
+    _send(functor, InputType.JoystickButton, False)
+    assert true_branch.values == [True, False]
+    assert false_branch.values == [True, False]
+
+
+def test_functor_button_release_without_press_evaluates() -> None:
+    truth = [False]
+    functor, true_branch, false_branch = _make_functor(InputType.JoystickButton, truth)
+
+    _send(functor, InputType.JoystickButton, False)
+    assert true_branch.values == []
+    assert false_branch.values == [False]
+
+
+def test_functor_hat_branch_change_centres_old_branch() -> None:
+    truth = [True]
+    functor, true_branch, false_branch = _make_functor(InputType.JoystickHat, truth)
+
+    _send(functor, InputType.JoystickHat, HatDirection.North)
+    truth[0] = False
+    _send(functor, InputType.JoystickHat, HatDirection.NorthEast)
+    truth[0] = True
+    _send(functor, InputType.JoystickHat, HatDirection.Center)
+    assert true_branch.values == [HatDirection.North, HatDirection.Center]
+    assert false_branch.values == [HatDirection.NorthEast, HatDirection.Center]
+
+
+def test_functor_axis_evaluates_every_event() -> None:
+    truth = [True]
+    functor, true_branch, false_branch = _make_functor(InputType.JoystickAxis, truth)
+
+    _send(functor, InputType.JoystickAxis, 0.5)
+    truth[0] = False
+    _send(functor, InputType.JoystickAxis, 0.25)
+    assert true_branch.values == [0.5]
+    assert false_branch.values == [0.25]
