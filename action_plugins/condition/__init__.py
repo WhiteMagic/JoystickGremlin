@@ -30,6 +30,7 @@ from gremlin.tree import TreeNode
 from gremlin.types import (
     ActionProperty,
     ConditionType,
+    HatDirection,
     InputType,
     LogicalOperator,
     PropertyType,
@@ -51,6 +52,11 @@ class ConditionFunctor(AbstractFunctor):
     def __init__(self, action: ConditionModel) -> None:
         super().__init__(action)
 
+        # Holds the functors executed by the last activation of this action and a flag.
+        # This ensures a "release" event can be sent to the functors without knowing the
+        # state of the condition at the activation time.
+        self._functor_cache: tuple[list[AbstractFunctor], bool] = ([], False)
+
     @override
     def __call__(
         self,
@@ -61,9 +67,80 @@ class ConditionFunctor(AbstractFunctor):
         if not self._should_execute(value):
             return
 
-        actions = []
+        match self.data.behavior_type:
+            case InputType.JoystickAxis:
+                self._process_axis(event, value, properties)
+            case InputType.JoystickButton | InputType.Keyboard:
+                self._process_button(event, value, properties)
+            case InputType.JoystickHat:
+                self._process_hat(event, value, properties)
+
+    def _process_axis(
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
+    ) -> None:
+        self._process_event(self._select_functors(value), event, value, properties)
+
+    def _process_button(
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty],
+    ) -> None:
+        # On press, remember the executed functors.
+        if value.current:
+            self._functor_cache = (self._select_functors(value), True)
+            self._process_event(self._functor_cache[0], event, value, properties)
+        # On release execute remembered functors, otherwise evaluate condition, then
+        # clear the cache.
+        else:
+            self._process_event(
+                self._functor_cache[0]
+                if self._functor_cache[1]
+                else self._select_functors(value),
+                event,
+                value,
+                properties,
+            )
+            self._functor_cache = ([], False)
+
+    def _process_hat(
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty],
+    ) -> None:
+        # Hat center uses cached functors, if present, and resets the cache.
+        if value.current == HatDirection.Center:
+            self._process_event(
+                self._functor_cache[0]
+                if self._functor_cache[1]
+                else self._select_functors(value),
+                event,
+                value,
+                properties,
+            )
+            self._functor_cache = ([], False)
+        else:
+            # If cached functors exist and differ from the ones the condition would
+            # select now, send a center event to the cache functors first. Then run the
+            # functors and cache them.
+            current_functors = self._select_functors(value)
+            if self._functor_cache[0] != current_functors:
+                center_event = event.clone()
+                center_event.value = HatDirection.Center
+                self._process_event(
+                    self._functor_cache[0],
+                    center_event,
+                    Value(HatDirection.Center),
+                    properties,
+                )
+
+            self._functor_cache = (current_functors, True)
+            self._process_event(self._functor_cache[0], event, value, properties)
+
+    def _select_functors(self, value: Value) -> list[AbstractFunctor]:
         try:
-            actions = (
+            return (
                 self.functors["true"]
                 if self._condition_truth_state(value)
                 else self.functors["false"]
@@ -72,9 +149,7 @@ class ConditionFunctor(AbstractFunctor):
             logging.getLogger("system").error(
                 f"ConditionAction: Error executing condition - {e}"
             )
-            return
-        for action in actions:
-            action(event, value, properties)
+            return []
 
     def _condition_truth_state(self, value: Value) -> bool:
         """Returns the truth value of the condition.
