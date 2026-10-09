@@ -464,23 +464,28 @@ class CodeRunner:
         vjoy_state = {}
         for vjoy_dev in device_initialization.vjoy_devices():
             vjoy_state[vjoy_dev.vjoy_id] = {}
-            cache_dev = input_cache.Joystick()[vjoy_dev.device_guid.uuid]
-            for entry in vjoy_dev.axis_map:
-                # The axis_map may have empty entries, which need to be ignored.
-                if entry.axis_index == 0:
-                    continue
-                vjoy_state[vjoy_dev.vjoy_id][entry.axis_index] = cache_dev.axis(
-                    entry.axis_index
-                ).value
+            try:
+                cache_dev = input_cache.Joystick()[vjoy_dev.device_guid.uuid]
+                for entry in vjoy_dev.axis_map:
+                    # The axis_map may have empty entries, which need to be ignored.
+                    if entry.axis_index == 0:
+                        continue
+                    vjoy_state[vjoy_dev.vjoy_id][entry.axis_index] = cache_dev.axis(
+                        entry.axis_index
+                    ).value
+            except error.GremlinError as err:
+                logging.getLogger("system").warning(
+                    f"Unable to retrieve state for vJoy {vjoy_dev.vjoy_id} ({err})."
+                )
 
-        # Refresh physical input states.
-        if Configuration().value("global", "behavior", "refresh-axis-on-activation"):
-            RefreshPhysicalInputs.refresh_axes()
+            # Refresh physical input states.
+            if Configuration().value("global", "behavior", "refresh-axis-on-activation"):
+                RefreshPhysicalInputs.refresh_axes()
 
-        # Set vJoy axis default values unless the axis changed its value due
-        # to an axis refresh.
-        for vid, data in self._profile.settings.vjoy_initial_values.items():
-            vjoy_proxy = VJoyProxy()[vid]
+            # Set vJoy axis default values unless the axis changed its value due
+            # to an axis refresh.
+            for vid, data in self._profile.settings.vjoy_initial_values.items():
+                vjoy_proxy = VJoyProxy()[vid]
             for aid, value in data.items():
                 if value != 0.0 and vjoy_state[vid][aid] == 0.0:
                     vjoy_proxy.axis(linear_index=aid).value = value
