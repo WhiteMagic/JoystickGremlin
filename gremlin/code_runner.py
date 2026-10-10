@@ -486,9 +486,9 @@ class CodeRunner:
             # to an axis refresh.
             for vid, data in self._profile.settings.vjoy_initial_values.items():
                 vjoy_proxy = VJoyProxy()[vid]
-            for aid, value in data.items():
-                if value != 0.0 and vjoy_state[vid][aid] == 0.0:
-                    vjoy_proxy.axis(linear_index=aid).value = value
+                for aid, value in data.items():
+                    if value != 0.0 and vjoy_state[vid][aid] == 0.0:
+                        vjoy_proxy.axis(linear_index=aid).value = value
 
     def _setup_user_scripts(self) -> None:
         """Handles loading and configuring of user scripts."""
