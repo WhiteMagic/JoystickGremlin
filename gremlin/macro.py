@@ -5,17 +5,12 @@ from __future__ import annotations
 import collections
 import functools
 import logging
+import threading
 import time
 import uuid
 from abc import (
     ABC,
     abstractmethod,
-)
-from threading import (
-    Condition,
-    Event,
-    Lock,
-    Thread,
 )
 from typing import override
 from xml.etree import ElementTree
@@ -41,6 +36,7 @@ from gremlin.keyboard import (
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
     AxisMode,
+    Event,
     HatDirection,
     InputType,
     MouseButton,
@@ -59,8 +55,8 @@ class MacroManager(metaclass=SingletonMetaclass):
         self._queued_macros: list[MacroEntry] = []
         self._scheduled_macro: dict[int, Macro] = {}
         self._executing_macro: dict[int, bool] = {}
-        self._executing_macro_lock = Lock()
-        self._queued_macros_lock = Lock()
+        self._executing_macro_lock = threading.Lock()
+        self._queued_macros_lock = threading.Lock()
 
         # Default delay between subsequent message dispatch. This is to get
         # around some games not picking up messages if they are sent in too
@@ -69,9 +65,9 @@ class MacroManager(metaclass=SingletonMetaclass):
 
         self._is_executing_preemptive = False
         self._is_executing_exclusive = False
-        self._preemptive_condition = Condition()
+        self._preemptive_condition = threading.Condition()
         self._is_running = False
-        self._schedule_event = Event()
+        self._schedule_event = threading.Event()
 
         self._run_scheduler_thread = None
 
@@ -83,7 +79,7 @@ class MacroManager(metaclass=SingletonMetaclass):
         self._is_executing_exclusive = False
         self._is_running = True
         if self._run_scheduler_thread is None:
-            self._run_scheduler_thread = Thread(target=self._run_scheduler)
+            self._run_scheduler_thread = threading.Thread(target=self._run_scheduler)
         if not self._run_scheduler_thread.is_alive():
             self._run_scheduler_thread.start()
 
@@ -197,7 +193,7 @@ class MacroManager(metaclass=SingletonMetaclass):
         """
         if macro.id not in self._scheduled_macro:
             self._scheduled_macro[macro.id] = macro
-            Thread(target=functools.partial(self._execute_macro, macro)).start()
+            threading.Thread(target=functools.partial(self._execute_macro, macro)).start()
         else:
             logging.getLogger("system").warning(
                 "Attempting to dispatch an already running macro."
@@ -456,7 +452,7 @@ class JoystickAction(AbstractAction):
         """Emits an Event instance through the EventListener system."""
         el = event_handler.EventListener()
         if self.input_type == InputType.JoystickAxis:
-            event = event_handler.Event(
+            event = Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
@@ -464,7 +460,7 @@ class JoystickAction(AbstractAction):
                 value=self.value,
             )
         elif self.input_type == InputType.JoystickButton:
-            event = event_handler.Event(
+            event = Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
@@ -472,7 +468,7 @@ class JoystickAction(AbstractAction):
                 is_pressed=self.value,
             )
         elif self.input_type == InputType.JoystickHat:
-            event = event_handler.Event(
+            event = Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
@@ -650,7 +646,7 @@ class LogicalDeviceAction(AbstractAction):
         )
 
         self._event_listener.joystick_event.emit(
-            event_handler.Event(
+            Event(
                 event_type=self.input_type,
                 identifier=self.input_id,
                 device_guid=LogicalDevice.device_guid,

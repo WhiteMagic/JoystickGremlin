@@ -13,14 +13,16 @@ from PySide6 import QtCore
 import gremlin.ui.type_aliases as ta
 from gremlin import (
     common,
-    event_handler,
     keyboard,
     user_script,
 )
 from gremlin.error import GremlinError
 from gremlin.logical_device import LogicalDevice
 from gremlin.profile import ScriptManager
-from gremlin.types import InputType
+from gremlin.types import (
+    Event,
+    InputType,
+)
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.util import to_local_path
 
@@ -158,7 +160,7 @@ class KeyboardVariableModel(AbstractVariableModel):
         return "Record" if self._variable.value is None else self._variable.value.name
 
     @QtCore.Slot(list)
-    def updateKeyboard(self, data: list[event_handler.Event]) -> None:
+    def updateKeyboard(self, data: list[Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single input item, thus only store
@@ -299,7 +301,7 @@ class PhysicalInputVariableModel(AbstractVariableModel):
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
     @QtCore.Slot(list)
-    def updateJoystick(self, data: list[event_handler.Event]) -> None:
+    def updateJoystick(self, data: list[Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single input item, thus only store

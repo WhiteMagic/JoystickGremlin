@@ -13,8 +13,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
     fsm,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -24,7 +24,6 @@ from gremlin.base_classes import (
     Value,
 )
 from gremlin.config import Configuration
-from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -51,9 +50,7 @@ class SmartToggleFunctor(AbstractFunctor):
         def noop(*args: Any) -> None:  # noqa: ANN401
             pass
 
-        def process_event(
-            e: event_handler.Event, v: Value, p: list[ActionProperty]
-        ) -> None:
+        def process_event(e: types.Event, v: Value, p: list[ActionProperty]) -> None:
             self._process_event(self.functors["children"], e, v, p)
 
         states = ["wait", "down", "held", "toggle"]
@@ -84,27 +81,12 @@ class SmartToggleFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
-        if value.current:
-            ButtonReleaseActions().register_callback(
-                lambda release_event: self._release_cb(
-                    release_event, Value(False), properties
-                ),
-                event,
-            )
-
-            self.fsm.perform(
-                "press", event, value, properties + [ActionProperty.DisableAutoRelease]
-            )
-
-    def _release_cb(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
-    ) -> None:
         self.fsm.perform(
-            "release", event, value, properties + [ActionProperty.DisableAutoRelease]
+            "press" if value.current else "release", event, value, properties
         )
 
 
@@ -160,10 +142,7 @@ class SmartToggleData(AbstractActionData):
     functor = SmartToggleFunctor
     model = SmartToggleModel
 
-    properties = (
-        ActionProperty.ActivateDisabled,
-        ActionProperty.DisableAutoRelease,
-    )
+    properties = (ActionProperty.ActivateDisabled,)
     input_types = (InputType.JoystickButton, InputType.Keyboard)
 
     def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:

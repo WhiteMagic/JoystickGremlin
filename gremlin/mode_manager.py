@@ -72,7 +72,6 @@ class ModeSequence:
         Returns:
             Next mode in the sequence, wrapping around at the end.
         """
-        # next_index = self._current_index % len(self.modes)
         self._current_index = (self._current_index + 1) % len(self.modes)
         return self.modes[self._current_index]
 
@@ -81,7 +80,7 @@ class ModeSequence:
 class ModeManager(QtCore.QObject):
     """Manages the mode change history."""
 
-    mode_changed = QtCore.Signal(str)
+    modeChanged = QtCore.Signal(str, str)
 
     def __init__(self) -> None:
         QtCore.QObject.__init__(self)
@@ -114,12 +113,10 @@ class ModeManager(QtCore.QObject):
         last_modes[str(profile.fpath)] = last_mode.name
         config.set("global", "internal", "last-mode-per-profile", last_modes)
 
-    def _update_mode(self) -> None:
-        config = Configuration()
+    def _update_mode(self, previous_mode: str) -> None:
         self._store_last_mode()
-        self.mode_changed.emit(self.current.name)
-        if config.value("global", "behavior", "refresh-axis-on-mode-change"):
-            RefreshPhysicalInputs.refresh_axes()
+        self.modeChanged.emit(self.current.name, previous_mode)
+        RefreshPhysicalInputs.refresh_axes()
 
     def cycle(self, sequence: ModeSequence) -> None:
         self.switch_to(Mode(sequence.next(), self.current.name))
@@ -129,22 +126,24 @@ class ModeManager(QtCore.QObject):
             return
 
         # Swap the two top-most elements of the mode stack
+        previous_mode = self.current.name
         self._mode_stack[-1], self._mode_stack[-2] = (
             self._mode_stack[-2],
             self._mode_stack[-1],
         )
-        self._update_mode()
+        self._update_mode(previous_mode)
 
     def unwind(self) -> None:
         if len(self._mode_stack) < 2:
             return
 
         # Remove top mode in stack
-        self._mode_stack.pop()
-        self._update_mode()
+        previous_mode = self._mode_stack.pop().name
+        self._update_mode(previous_mode)
 
     def switch_to(self, mode: Mode) -> None:
         # Detect cycle in the mode stack and resolve it
+        previous_mode = self.current.name
         if self._exists(mode):
             resolution_mode = Configuration().value(
                 "action", "change-mode", "resolution-mode"
@@ -177,7 +176,7 @@ class ModeManager(QtCore.QObject):
                             b.previous = a.name
 
         self._mode_stack.append(mode)
-        self._update_mode()
+        self._update_mode(previous_mode)
 
     def temporary(self, mode: Mode) -> None:
         mode.is_temporary = True

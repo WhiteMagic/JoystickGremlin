@@ -16,8 +16,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
     fsm,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -31,7 +31,6 @@ from gremlin.error import (
     GremlinError,
     ProfileError,
 )
-from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -53,13 +52,13 @@ class TempoFunctor(AbstractFunctor):
 
         self.timer = None
         self.value_press: Value = Value(None)
-        self.event_press: event_handler.Event | None = None
+        self.event_press: types.Event | None = None
         self.fsm = self._create_fsm()
 
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -74,21 +73,12 @@ class TempoFunctor(AbstractFunctor):
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
-            # React to button release events to perform a fallback release in
-            # case of invalid FSM state transitions due to action interactions.
-            ButtonReleaseActions().register_callback(
-                lambda release_event: self._release_cb(
-                    release_event, Value(False), properties
-                ),
-                event,
-            )
-
         action = "press" if value.current else "release"
         if self.fsm.try_perform(action, event, value, properties) is None:
             self._reset_fsm(event, value, properties)
 
     def _reset_fsm(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
+        self, event: types.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         logging.getLogger("event").warning(
             "Tempo: Resetting due to invalid FSM transition."
@@ -100,42 +90,26 @@ class TempoFunctor(AbstractFunctor):
             self.functors["short"] + self.functors["long"], event, value, properties
         )
 
-    def _release_cb(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
-    ) -> None:
-        if (self.fsm.current_state, "press") not in self.fsm.transitions:
-            self._reset_fsm(event, value, properties)
-
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         T = fsm.Transition
 
-        def short_pulse(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def short_pulse(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             return self._short_pulse(p)
 
-        def short_press(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def short_press(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             self._process_event(
                 self.functors["short"], self.event_press, self.value_press, p
             )
 
-        def short_release(
-            e: event_handler.Event, v: Value, p: list[ActionProperty]
-        ) -> None:
+        def short_release(e: types.Event, v: Value, p: list[ActionProperty]) -> None:
             self._process_event(self.functors["short"], e, v, p)
 
-        def long_press(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def long_press(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             self._process_event(
                 self.functors["long"], self.event_press, self.value_press, p
             )
 
-        def long_release(
-            e: event_handler.Event, v: Value, p: list[ActionProperty]
-        ) -> None:
+        def long_release(e: types.Event, v: Value, p: list[ActionProperty]) -> None:
             self._process_event(self.functors["long"], e, v, [])
 
         def noop(*args: Any) -> None:  # noqa: ANN401

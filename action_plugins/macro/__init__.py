@@ -18,10 +18,9 @@ from PySide6 import QtCore
 import dill
 from action_plugins import common
 from gremlin import (
-    event_handler,
-    event_helpers,
     keyboard,
     macro,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -97,7 +96,7 @@ class JoystickActionModel(AbstractActionModel):
             )
 
     @QtCore.Slot(list)
-    def updateJoystick(self, data: list[event_handler.Event]) -> None:
+    def updateJoystick(self, data: list[types.Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single event and thus only store the
@@ -189,7 +188,7 @@ class KeyActionModel(AbstractActionModel):
         return "" if self._action.key is None else self._action.key.name
 
     @QtCore.Slot(list)
-    def updateKey(self, data: list[event_handler.Event]) -> None:
+    def updateKey(self, data: list[types.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the
@@ -345,7 +344,7 @@ class MouseButtonActionModel(AbstractActionModel):
         )
 
     @QtCore.Slot(list)
-    def updateButton(self, data: list[event_handler.Event]) -> None:
+    def updateButton(self, data: list[types.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the
@@ -579,17 +578,15 @@ class MacroFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
+        # Ensure a held macro is terminated when a release event arrives.
+        if self.data.repeat_mode == MacroRepeatModes.Hold and not value.current:
+            macro.MacroManager().terminate_macro(self.macro)
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
-            if self.data.repeat_mode == MacroRepeatModes.Hold:
-                event_helpers.ButtonReleaseActions().register_callback(
-                    lambda _event: macro.MacroManager().terminate_macro(self.macro),
-                    event,
-                )
 
 
 class ActionListModel(QtCore.QAbstractListModel):

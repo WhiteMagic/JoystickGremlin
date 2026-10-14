@@ -15,8 +15,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
     fsm,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -30,7 +30,6 @@ from gremlin.error import (
     GremlinError,
     ProfileError,
 )
-from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -58,7 +57,7 @@ class DoubleTapFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -73,15 +72,6 @@ class DoubleTapFunctor(AbstractFunctor):
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
-            # React to button release events to perform a fallback release in
-            # case of invalid FSM state transitions due to action interactions.
-            ButtonReleaseActions().register_callback(
-                lambda release_event: self._release_cb(
-                    release_event, Value(False), properties
-                ),
-                event,
-            )
-
         action = "press" if value.current else "release"
         if self.fsm.try_perform(action, event, value, properties) is None:
             self._reset_fsm(event, value, properties)
@@ -93,35 +83,25 @@ class DoubleTapFunctor(AbstractFunctor):
         def noop(*args: Any) -> None:  # noqa: ANN401
             pass
 
-        def single_pulse(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def single_pulse(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             self._pulse_event(
                 self.functors["single"], self.event_press, self.value_press, p
             )
 
-        def single_press(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def single_press(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             self._process_event(
                 self.functors["single"], self.event_press, self.value_press, p
             )
 
-        def single_release(
-            e: event_handler.Event, v: Value, p: list[ActionProperty]
-        ) -> None:
+        def single_release(e: types.Event, v: Value, p: list[ActionProperty]) -> None:
             self._process_event(self.functors["single"], e, v, p)
 
-        def double_press(
-            _e: event_handler.Event, _v: Value, p: list[ActionProperty]
-        ) -> None:
+        def double_press(_e: types.Event, _v: Value, p: list[ActionProperty]) -> None:
             self._process_event(
                 self.functors["double"], self.event_press, self.value_press, p
             )
 
-        def double_release(
-            e: event_handler.Event, v: Value, p: list[ActionProperty]
-        ) -> None:
+        def double_release(e: types.Event, v: Value, p: list[ActionProperty]) -> None:
             self._process_event(self.functors["double"], e, v, p)
 
         states = ["neutral", "p1", "p1+t", "p2+t", "t"]
@@ -154,7 +134,7 @@ class DoubleTapFunctor(AbstractFunctor):
         return fsm.FiniteStateMachine("neutral", states, actions, transitions)
 
     def _reset_fsm(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
+        self, event: types.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         logging.getLogger("event").warning(
             "DoubleTap: Resetting due to invalid FSM transition."
@@ -165,12 +145,6 @@ class DoubleTapFunctor(AbstractFunctor):
         self._process_event(
             self.functors["single"] + self.functors["double"], event, value, properties
         )
-
-    def _release_cb(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
-    ) -> None:
-        if (self.fsm.current_state, "press") not in self.fsm.transitions:
-            self._reset_fsm(event, value, properties)
 
     def _timeout(self) -> None:
         if (

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import enum
-import functools
 import math
 from typing import (
     TYPE_CHECKING,
@@ -15,10 +14,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
-    event_helpers,
-    mode_manager,
     sendinput,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -73,12 +70,12 @@ class MapToMouseFunctor(AbstractFunctor):
         super().__init__(action)
 
         self._motion = sendinput.MouseMotionManager()
-        self._mode_changes = event_helpers.ModeChangeActions()
+        self._active_motion_inputs: set[sendinput.MotionKey] = set()
 
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -95,7 +92,14 @@ class MapToMouseFunctor(AbstractFunctor):
         else:
             self._perform_mouse_button(event, value)
 
-    def _perform_mouse_button(self, event: event_handler.Event, value: Value) -> None:
+    @override
+    def reset(self) -> None:
+        # Stop all motion contributions on reset to prevent the mouse from drifting.
+        for key in self._active_motion_inputs:
+            self._motion.clear(key)
+        self._active_motion_inputs.clear()
+
+    def _perform_mouse_button(self, event: types.Event, value: Value) -> None:
         """Processes mouse button presses.
 
         Args:
@@ -113,7 +117,7 @@ class MapToMouseFunctor(AbstractFunctor):
             else:
                 sendinput.mouse_release(self.data.button)
 
-    def _motion_key(self, event: event_handler.Event) -> sendinput.MotionKey:
+    def _motion_key(self, event: types.Event) -> sendinput.MotionKey:
         """Returns the key identifying this action's contribution.
 
         Args:
@@ -123,54 +127,6 @@ class MapToMouseFunctor(AbstractFunctor):
             Key under which to register the motion contribution
         """
         return (self.data.id, event)
-
-    def _register_mode_change_cb(
-        self, key: sendinput.MotionKey, event: event_handler.Event
-    ) -> None:
-        """Adds a mode change callback for the given action.
-
-        Args:
-            key: identifier of the contribution to track
-            event: input event driving the motion
-        """
-        self._mode_changes.register(
-            key, functools.partial(self._mode_change_cb, key, event)
-        )
-
-    def _remove_mode_change_cb(self, key: sendinput.MotionKey) -> None:
-        """Removes the specified callback from the mode change handler.
-
-        Args:
-            key: identifier of the contribution no longer to track
-        """
-        self._mode_changes.unregister(key)
-
-    def _mode_change_cb(
-        self,
-        key: sendinput.MotionKey,
-        event: event_handler.Event,
-        _old_mode: mode_manager.Mode,
-        new_mode: mode_manager.Mode,
-    ) -> bool:
-        """Stops the action's mouse motino contributino if the new mode no longer
-        routes the input here.
-
-        Args:
-            key: identifier of the contribution to stop
-            event: input event that started the motion
-            _old_mode: mode active before the change
-            new_mode: mode active after the change
-
-        Returns:
-            True if the motion was stopped, False if the binding still applies
-        """
-        if event_handler.EventHandler().is_same_binding(
-            event.device_guid, event, event.mode, new_mode.name
-        ):
-            return False
-
-        self._motion.clear(key)
-        return True
 
     def _axis_compass_direction(self) -> float:
         """Returns the heading a positive axis value moves the cursor towards.
@@ -186,7 +142,7 @@ class MapToMouseFunctor(AbstractFunctor):
             float(self.data.direction), float(self.data.direction)
         )
 
-    def _perform_axis_motion(self, event: event_handler.Event, value: Value) -> None:
+    def _perform_axis_motion(self, event: types.Event, value: Value) -> None:
         """Processes axis-controlled motion.
 
         Args:
@@ -207,11 +163,11 @@ class MapToMouseFunctor(AbstractFunctor):
         )
         # A zero speed makes set_velocity drop the contribution.
         if speed == 0.0:
-            self._remove_mode_change_cb(key)
+            self._active_motion_inputs.discard(key)
         else:
-            self._register_mode_change_cb(key, event)
+            self._active_motion_inputs.add(key)
 
-    def _perform_button_motion(self, event: event_handler.Event, value: Value) -> None:
+    def _perform_button_motion(self, event: types.Event, value: Value) -> None:
         """Processes button-controlled motion.
 
         Args:
@@ -227,12 +183,10 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.max_speed,
                 self.data.time_to_max_speed,
             )
-            self._register_mode_change_cb(key, event)
         else:
             self._motion.clear(key)
-            self._remove_mode_change_cb(key)
 
-    def _perform_hat_motion(self, event: event_handler.Event, value: Value) -> None:
+    def _perform_hat_motion(self, event: types.Event, value: Value) -> None:
         """Processes hat-controlled motion.
 
         Args:
@@ -242,7 +196,6 @@ class MapToMouseFunctor(AbstractFunctor):
         key = self._motion_key(event)
         if value.current == HatDirection.Center:
             self._motion.clear(key)
-            self._remove_mode_change_cb(key)
         else:
             # Hat directions are cartesian with y pointing up, screen
             # coordinates have y growing downwards.
@@ -254,7 +207,6 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.max_speed,
                 self.data.time_to_max_speed,
             )
-            self._register_mode_change_cb(key, event)
 
 
 class MapToMouseModel(ActionModel):
@@ -329,7 +281,7 @@ class MapToMouseModel(ActionModel):
         return MouseButton.to_string(self._data.button)
 
     @QtCore.Slot(list)
-    def updateInputs(self, data: list[event_handler.Event]) -> None:
+    def updateInputs(self, data: list[types.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
         We only expect to receive a single button press and thus store the

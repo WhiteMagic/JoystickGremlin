@@ -35,6 +35,7 @@ from gremlin.logical_device import LogicalDevice
 from gremlin.profile import InputItem
 from gremlin.signal import signal
 from gremlin.types import (
+    Event,
     InputType,
     ScanCode,
 )
@@ -811,7 +812,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
             self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
         )
 
-    def _event_to_key(self, event: event_handler.Event) -> keyboard.Key:
+    def _event_to_key(self, event: Event) -> keyboard.Key:
         return keyboard.key_from_code(*event.identifier)
 
     @QtCore.Slot(int, result=InputIdentifier)
@@ -831,7 +832,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         self.endResetModel()
 
     @QtCore.Slot(list)
-    def addKey(self, data: list[event_handler.Event]) -> None:
+    def addKey(self, data: list[Event]) -> None:
         if not data:
             return
 
@@ -1169,13 +1170,13 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self._device_uuid = None
         self._state = []
 
-    def _event_callback(self, event: event_handler.Event) -> None:
+    def _event_callback(self, event: Event) -> None:
         if event.device_guid != self._device_uuid:
             return
 
         self._event_handler_impl(event)
 
-    def _event_handler_impl(self, event: event_handler.Event) -> None:
+    def _event_handler_impl(self, event: Event) -> None:
         raise GremlinError("AbstractDeviceState._event_handler_impl not implemented")
 
     def _get_guid(self) -> str:
@@ -1229,7 +1230,7 @@ class DeviceAxisState(AbstractDeviceState):
 
         self._identifier_map = {}
 
-    def _event_handler_impl(self, event: event_handler.Event) -> None:
+    def _event_handler_impl(self, event: Event) -> None:
         if event.event_type == InputType.JoystickAxis:
             index = self._identifier_map[event.identifier]
             self._state[index]["value"] = event.value
@@ -1248,7 +1249,7 @@ class DeviceButtonState(AbstractDeviceState):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-    def _event_handler_impl(self, event: event_handler.Event) -> None:
+    def _event_handler_impl(self, event: Event) -> None:
         if event.event_type == InputType.JoystickButton:
             idx = event.identifier - 1
             self._state[idx]["value"] = event.is_pressed
@@ -1264,7 +1265,7 @@ class DeviceHatState(AbstractDeviceState):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-    def _event_handler_impl(self, event: event_handler.Event) -> None:
+    def _event_handler_impl(self, event: Event) -> None:
         if event.event_type == InputType.JoystickHat:
             idx = event.identifier - 1
             pt = QtCore.QPoint(event.value.value[0], event.value.value[1])
@@ -1323,8 +1324,8 @@ class DeviceAxisSeries(QtCore.QObject):
             self._window_size = value
             self.windowSizeChanged.emit()
 
-    @QtCore.Slot(event_handler.Event)
-    def _event_callback(self, event: event_handler.Event) -> None:
+    @QtCore.Slot(Event)
+    def _event_callback(self, event: Event) -> None:
         if event.device_guid != self._device_uuid:
             return
 
@@ -1633,8 +1634,8 @@ class AxisCalibration(QtCore.QAbstractListModel):
             self._active_calibrations.append({"center": False, "extrema": False})
             self._update_calibration(i)
 
-    @QtCore.Slot(event_handler.Event)
-    def _event_callback(self, event: event_handler.Event) -> None:
+    @QtCore.Slot(Event)
+    def _event_callback(self, event: Event) -> None:
         if event.device_guid != self._device_uuid:
             return
 

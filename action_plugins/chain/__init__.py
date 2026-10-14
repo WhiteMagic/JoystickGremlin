@@ -12,7 +12,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -49,12 +49,14 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
         if self.data.timeout > 0.0:
-            if self.last_execution + self.data.timeout < time.time():
+            # Timeout is only checked on the press portion to ensure a release goes to
+            # the correct chain.
+            if value.current and self.last_execution + self.data.timeout < time.time():
                 self.current_index = 0
             self.last_execution = time.time()
 

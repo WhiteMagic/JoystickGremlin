@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from gremlin import (
     device_initialization,
+    event_handler,
     input_cache,
-    macro,
+    logical_device,
+    mode_manager,
 )
-from gremlin.types import InputType
+from gremlin.types import (
+    Event,
+    InputType,
+)
 
 
 class RefreshPhysicalInputs:
@@ -16,21 +21,32 @@ class RefreshPhysicalInputs:
 
     @classmethod
     def refresh_axes(cls) -> None:
-        """Refreshes input axes using cached values."""
+        """Refreshes input and logical device axes using cached values."""
         cache = input_cache.Joystick()
-        devices = device_initialization.input_devices()
-        macro_manager = macro.MacroManager()
-        for dev in devices:
+        listener = event_handler.EventListener()
+        modes = mode_manager.ModeManager()
+        for dev in device_initialization.input_devices():
             joy = cache[dev.device_guid.uuid]
             for index in range(joy.axis_count):
                 axis_id = dev.axis_map[index].axis_index
-                action = macro.Macro()
-                action.add_action(
-                    macro.JoystickAction(
-                        dev.device_guid.uuid,
-                        InputType.JoystickAxis,
-                        axis_id,
-                        joy.axis(axis_id).value,
+                listener.joystick_event.emit(
+                    Event(
+                        event_type=InputType.JoystickAxis,
+                        device_guid=dev.device_guid.uuid,
+                        identifier=axis_id,
+                        mode=modes.current.name,
+                        value=joy.axis(axis_id).value,
                     )
                 )
-                macro_manager.queue_macro(action)
+
+        logical = logical_device.LogicalDevice()
+        for axis in logical.inputs_of_type([InputType.JoystickAxis]):
+            listener.joystick_event.emit(
+                Event(
+                    event_type=InputType.JoystickAxis,
+                    device_guid=logical.device_guid,
+                    identifier=axis.id,
+                    mode=modes.current.name,
+                    value=axis.value,
+                )
+            )

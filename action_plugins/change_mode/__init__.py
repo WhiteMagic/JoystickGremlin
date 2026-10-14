@@ -14,10 +14,9 @@ from PySide6 import QtCore
 
 from gremlin import (
     error,
-    event_handler,
-    event_helpers,
     mode_manager,
     shared_state,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -78,7 +77,7 @@ class ChangeModeFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -103,10 +102,6 @@ class ChangeModeFunctor(AbstractFunctor):
                 mm.switch_to(
                     mode_manager.Mode(self.data.target_modes[0], mm.current.name, True)
                 )
-
-                event_helpers.ButtonReleaseActions().register_callback(
-                    lambda _event: self._release_temporary_mode(), event
-                )
             # Leave the temporary mode when the input is released while in the
             # correct mode
             else:
@@ -120,11 +115,6 @@ class ChangeModeFunctor(AbstractFunctor):
             f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], "
             + f"Action : {self.data.change_type.name}"
         )
-
-    def _release_temporary_mode(self) -> None:
-        mm = mode_manager.ModeManager()
-        if mm.current.name == self.data._target_modes[0] and mm.current.is_temporary:
-            mm.unwind()
 
 
 class ChangeModeModel(ActionModel):

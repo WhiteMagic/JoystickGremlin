@@ -17,7 +17,7 @@ from gremlin.config import Configuration
 from gremlin.types import MouseButton
 
 if TYPE_CHECKING:
-    from gremlin.event_handler import Event
+    from gremlin.types import Event
 
 
 """Defines flags used when specifying MOUSEINPUT structures.
