@@ -11,7 +11,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    event_handler,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -46,7 +46,7 @@ class AxisDeltaFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:

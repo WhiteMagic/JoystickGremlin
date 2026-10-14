@@ -209,16 +209,6 @@ def _register_behavior() -> None:
     cfg.register(
         "global",
         "behavior",
-        "refresh-axis-on-mode-change",
-        PropertyType.Bool,
-        True,
-        "Force an update of all axes by emitting axis events upon a mode change.",
-        {},
-        True,
-    )
-    cfg.register(
-        "global",
-        "behavior",
         "input-highlighting",
         PropertyType.Bool,
         True,

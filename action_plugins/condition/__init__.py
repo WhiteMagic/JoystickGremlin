@@ -14,8 +14,8 @@ from PySide6 import QtCore
 
 from gremlin import (
     error,
-    event_handler,
     plugin_manager,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -60,7 +60,7 @@ class ConditionFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -76,13 +76,13 @@ class ConditionFunctor(AbstractFunctor):
                 self._process_hat(event, value, properties)
 
     def _process_axis(
-        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
+        self, event: types.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         self._process_event(self._select_functors(value), event, value, properties)
 
     def _process_button(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty],
     ) -> None:
@@ -105,7 +105,7 @@ class ConditionFunctor(AbstractFunctor):
 
     def _process_hat(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty],
     ) -> None:

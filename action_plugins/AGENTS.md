@@ -45,7 +45,7 @@
 - Stores the *Data class* instances but no actual values from it.
 - Can store state if the action requires statefulness for execution.
 - The `__call__` method is called to execute the action.
-  - `event` is the actual `gremlin.event_handler.Event` instance that triggered the execution.
+  - `event` is the actual `gremlin.types.Event` instance that triggered the execution.
   - `value` is the derived value which contains the raw initial value as well as the current value after all previous actions have been executed.
 - If an action contains child action containers the functor has to make sure to call their functors using the `event` and `value` arguments.
 - Methods to implement:

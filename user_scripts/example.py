@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 from gremlin import (
-    event_handler,
     types,
     user_script,
 )
@@ -113,23 +112,23 @@ physical_input_hat_var = user_script.PhysicalInputVariable(
 
 
 @physical_input_axis_var.decorator(mode_var)
-def axis_handler(event: event_handler.Event) -> None:
+def axis_handler(event: types.Event) -> None:
     """Scales input axis by float_var and writes to output axis."""
     virtual_input_axis_var.remap(event.value * float_var.value)
 
 
 @physical_input_button_var.decorator(mode_var)
-def button_handler(event: event_handler.Event) -> None:
+def button_handler(event: types.Event) -> None:
     """XORs the input button with bool_var and writes to output button."""
     virtual_input_button_var.remap(event.is_pressed ^ bool_var.value)
 
 
 @physical_input_hat_var.decorator(mode_var)
-def hat_handler(event: event_handler.Event) -> None:
+def hat_handler(event: types.Event) -> None:
     """Forwards the input hat unmodified to output hat."""
     virtual_input_hat_var.remap(event.value)
 
 
 @key_var.decorator(mode_var)
-def keyboard_handler(event: event_handler.Event) -> None:
+def keyboard_handler(event: types.Event) -> None:
     print("Keyboard event:", event)

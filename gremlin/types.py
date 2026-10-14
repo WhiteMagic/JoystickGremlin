@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import enum
 import logging
+import uuid
 from typing import (
     NamedTuple,
 )
@@ -621,8 +622,6 @@ class ActionProperty(enum.Enum):
     ActivateOnRelease = 4
     ActivateOnBoth = 5
     ActivateDisabled = 6
-    # Disable auto release functionality for this action and child actions
-    DisableAutoRelease = 7
 
 
 class ActionActivationMode(enum.Enum):
@@ -785,3 +784,112 @@ class ValueRange[NumericType: (int, float)]:
                 f"range [{self._low}, {self._high}], clampping value."
             )
             self._value = max(self._low, min(val, self._high))
+
+
+class Event:
+    """Represents a single event captured by the system.
+
+    An event can originate from the keyboard or joystick which is
+    indicated by the EventType value. The value of the event has to
+    be interpreted based on the type of the event.
+
+    Keyboard and JoystickButton events have a simple True / False
+    value stored in is_pressed indicating whether or not the key has
+    been pressed. For JoystickAxis the value indicates the axis value
+    in the range [-1, 1] stored in the value field. JoystickHat events
+    represent the hat position as a unit tuple (x, y) representing
+    deflection in cartesian coordinates in the value field.
+
+    The extended field is used for Keyboard events only to indicate
+    whether or not the key's scan code is extended one.
+    """
+
+    def __init__(
+        self,
+        event_type: InputType,
+        identifier: int | ScanCode,
+        device_guid: uuid.UUID,
+        mode: str,
+        value: float | HatDirection | None = None,
+        is_pressed: bool | None = None,
+        raw_value: float | bool | HatDirection | None = None,
+    ) -> None:
+        """Creates a new Event object.
+
+        Args:
+            event_type: the type of input causing the event
+            identifier: the identifier of the event source
+            device_guid: uuid identifying the device causing this event
+            mode: name of the mode the system was in when the even was received
+            value: the value of the input
+            is_pressed: boolean flag indicating if a button or key is pressed
+            raw_value: the raw value of the axis being moved
+        """
+        self.event_type = event_type
+        self.identifier = identifier
+        self.device_guid = device_guid
+        self.mode = mode
+        self.is_pressed = is_pressed
+        self.value = value
+        self.raw_value = raw_value
+
+    def clone(self) -> Event:
+        """Returns a clone of the event.
+
+        Returns:
+            Cloned copy of this event.
+        """
+        return Event(
+            self.event_type,
+            self.identifier,
+            self.device_guid,
+            self.mode,
+            self.value,
+            self.is_pressed,
+            self.raw_value,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        assert isinstance(other, Event)
+        return self.__hash__() == other.__hash__()
+
+    def __ne__(self, other: object) -> bool:
+        assert isinstance(other, Event)
+        return not (self == other)
+
+    def __str__(self) -> str:
+        return f"{self.device_guid}: {self.event_type} {self.identifier}"
+
+    def __repr__(self) -> str:
+        value = (
+            self.is_pressed
+            if self.event_type in [InputType.JoystickButton, InputType.Keyboard]
+            else self.value
+        )
+        return (
+            f"Event({self.event_type}, {self.identifier}, "
+            + f"{self.device_guid}, {self.mode}, {value})"
+        )
+
+    def __hash__(self) -> int:
+        """Computes the hash value of this event.
+
+        The hash is comprised of the events type, identifier of the
+        event source and the id of the event device. Events from the same
+        input, e.g. axis, button, hat, key, with different values / states
+        shall have the same hash.
+
+        Returns:
+            Integer hash value of this event
+        """
+        if self.event_type == InputType.Keyboard:
+            return hash(
+                (
+                    self.device_guid,
+                    self.event_type.value,
+                    self.identifier[0],
+                    int(self.identifier[1]),
+                )
+            )
+        else:
+            return hash((self.device_guid, self.event_type.value, self.identifier, 0))

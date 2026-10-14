@@ -17,7 +17,6 @@ from gremlin import (
     device_initialization,
     error,
     event_handler,
-    event_helpers,
     fsm,
     input_cache,
     macro,
@@ -28,16 +27,32 @@ from gremlin import (
     tts,
     user_script,
 )
-from gremlin.base_classes import Value
+from gremlin.base_classes import (
+    AbstractFunctor,
+    Value,
+)
 from gremlin.config import Configuration
 from gremlin.input_refresh import RefreshPhysicalInputs
 from gremlin.types import (
     ActionProperty,
     AxisButtonDirection,
+    Event,
     HatDirection,
     InputType,
 )
 from vjoy.vjoy import VJoyProxy
+
+
+def _reset_functor_tree(functor: AbstractFunctor) -> None:
+    """Calls the reset method on every functor in the functor's tree.
+
+    Args:
+        functor: root of the functor tree to reset
+    """
+    functor.reset()
+    for children in functor.functors.values():
+        for child in children:
+            _reset_functor_tree(child)
 
 
 class VirtualButton(metaclass=ABCMeta):
@@ -69,8 +84,13 @@ class VirtualButton(metaclass=ABCMeta):
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
+    @property
+    def is_pressed(self) -> bool:
+        """Returns whether the virtual button is currently pressed."""
+        return self._fsm.current_state == "down"
+
     @abstractmethod
-    def __call__(self, event: event_handler.Event) -> list[bool]:
+    def __call__(self, event: Event) -> list[bool]:
         """Process the input event and updates the value as needed.
 
         Args:
@@ -91,7 +111,7 @@ class VirtualAxisButton(VirtualButton):
         self._direction = direction
         self._last_value = None
 
-    def __call__(self, event: event_handler.Event) -> list[bool]:
+    def __call__(self, event: Event) -> list[bool]:
         value = event.value if event.value is not None else 0.0
         forced_activation = False
         newly_initialized = False
@@ -149,7 +169,7 @@ class VirtualHatButton(VirtualButton):
         super().__init__()
         self._directions = directions
 
-    def __call__(self, event: event_handler.Event) -> list[bool]:
+    def __call__(self, event: Event) -> list[bool]:
         is_pressed = event.value in self._directions
         action = "press" if is_pressed else "release"
         has_changed = self._fsm.perform(action)[0]
@@ -158,13 +178,18 @@ class VirtualHatButton(VirtualButton):
 
 class VirtualButtonFunctor:
     def __init__(
-        self, virtual_button: VirtualButton, event_template: event_handler.Event
+        self, virtual_button: VirtualButton, event_template: Event
     ) -> None:
         self._virtual_button = virtual_button
         self._event_template = event_template
         self._event_listener = event_handler.EventListener()
 
-    def __call__(self, event: event_handler.Event, value: Value) -> None:
+    @property
+    def is_pressed(self) -> bool:
+        """Returns whether the virtual button is currently pressed."""
+        return self._virtual_button.is_pressed
+
+    def __call__(self, event: Event, value: Value) -> None:
         states = self._virtual_button(event)
         for state in states:
             new_event = self._event_template.clone()
@@ -185,7 +210,7 @@ class CallbackObject:
             action: actions bound to a single input item
         """
         self._binding = binding
-        self._functor = None
+        self._functor: AbstractFunctor | None = None
         self._virtual_identifier = 0
 
         # Differentiate between bindings utilizing virtual buttons and those
@@ -209,7 +234,7 @@ class CallbackObject:
         values = [ActionProperty.AlwaysExecute in a.properties for a in actions]
         return any(values)
 
-    def __call__(self, event: event_handler.Event) -> None:
+    def __call__(self, event: Event) -> None:
         values = self._generate_values(event)
         for i, value in enumerate(values):
             self._functor(event, value)
@@ -217,6 +242,21 @@ class CallbackObject:
             # Pause between the execution of subsequent bindings
             if i < len(values) - 1:
                 time.sleep(0.01)
+
+    def is_held(self) -> bool:
+        """Returns whether the binding's virtual button is currently pressed.
+
+        Returns:
+            True if the binding drives a virtual button which is pressed
+        """
+        return (
+            isinstance(self._functor, VirtualButtonFunctor) and self._functor.is_pressed
+        )
+
+    def reset(self) -> None:
+        """Resets every functor of the binding."""
+        if self._functor is not None:
+            _reset_functor_tree(self._functor)
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
@@ -236,7 +276,7 @@ class CallbackObject:
             return
 
         # Create template virtual event
-        virtual_event = event_handler.Event(
+        virtual_event = Event(
             event_type=InputType.VirtualButton,
             identifier=self._virtual_identifier,
             device_guid=dill.UUID_Virtual,
@@ -295,7 +335,7 @@ class CallbackObject:
             CallbackObject(virt_binding),
         )
 
-    def _generate_values(self, event: event_handler.Event) -> list[Value]:
+    def _generate_values(self, event: Event) -> list[Value]:
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             value = Value(event.value)
         elif event.event_type in [
@@ -435,7 +475,6 @@ class CodeRunner:
 
         # Empty various callback registries.
         user_script.callback_registry.clear()
-        event_helpers.ModeChangeActions().reset()
         self.event_handler.clear()
 
         # Stop periodic events and clear registry.
@@ -453,11 +492,7 @@ class CodeRunner:
 
     def _reset_state(self) -> None:
         """Resets all states to their default values."""
-        self.event_handler._active_mode = self._profile.modes.first_mode
-        self.event_handler._previous_mode = self._profile.modes.first_mode
         user_script.callback_registry.clear()
-        event_helpers.ButtonReleaseActions().reset()
-        event_helpers.ModeChangeActions().reset()
 
     def _refresh_axes(self) -> None:
         # Store state of all vJoy axes before we do anything.
@@ -479,7 +514,9 @@ class CodeRunner:
                 )
 
             # Refresh physical input states.
-            if Configuration().value("global", "behavior", "refresh-axis-on-activation"):
+            if Configuration().value(
+                "global", "behavior", "refresh-axis-on-activation"
+            ):
                 RefreshPhysicalInputs.refresh_axes()
 
             # Set vJoy axis default values unless the axis changed its value due
@@ -522,7 +559,7 @@ class CodeRunner:
         # Create executable unit for each action.
         for action in action_sequences:
             # Event on which to trigger this action.
-            event = event_handler.Event(
+            event = Event(
                 event_type=action.input_item.input_type,
                 device_guid=action.input_item.device_id,
                 identifier=action.input_item.input_id,

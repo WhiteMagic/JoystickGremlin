@@ -9,12 +9,9 @@ from typing import TYPE_CHECKING
 from gremlin import common
 from gremlin.types import (
     HatDirection,
+    Event,
     InputType,
 )
-
-if TYPE_CHECKING:
-    from gremlin import event_handler
-
 
 class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
     """Checks whether or not joystick inputs are significant."""
@@ -25,7 +22,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
         self._mre_registry = {}
         self._time_registry = {}
 
-    def should_process(self, event: event_handler.Event) -> bool:
+    def should_process(self, event: Event) -> bool:
         """Returns whether or not a particular event is significant enough to
         process.
 
@@ -48,7 +45,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
                 logging.getLogger("system").warning("Event with unknown type received")
                 return False
 
-    def last_event(self, event: event_handler.Event) -> event_handler.Event:
+    def last_event(self, event: Event) -> Event:
         """Returns the most recent event of this type.
 
         Args:
@@ -65,7 +62,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
         self._mre_registry = {}
         self._time_registry = {}
 
-    def _process_axis(self, event: event_handler.Event) -> bool:
+    def _process_axis(self, event: Event) -> bool:
         """Process an axis event.
 
         Args:
@@ -94,7 +91,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
             self._time_registry[event] = time.time()
             return False
 
-    def _process_button(self, event: event_handler.Event) -> bool:
+    def _process_button(self, event: Event) -> bool:
         """Process a button event.
 
         Args:
@@ -105,7 +102,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
         """
         return True
 
-    def _process_hat(self, event: event_handler.Event) -> bool:
+    def _process_hat(self, event: Event) -> bool:
         """Process a hat event.
 
         Args:

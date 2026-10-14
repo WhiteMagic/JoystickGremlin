@@ -14,7 +14,6 @@ from PySide6 import QtCore
 
 from gremlin import (
     event_handler,
-    event_helpers,
     mode_manager,
     util,
 )
@@ -31,6 +30,7 @@ from gremlin.signal import signal
 from gremlin.types import (
     ActionProperty,
     AxisMode,
+    Event,
     InputType,
     PropertyType,
 )
@@ -63,7 +63,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -102,11 +102,6 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
             if self.data.button_inverted:
                 is_pressed = not is_pressed
             input.update(is_pressed)
-
-            if is_pressed and ActionProperty.DisableAutoRelease not in properties:
-                event_helpers.ButtonReleaseActions().register_logical_button_release(
-                    input.id, event, self.data.button_inverted
-                )
         elif input.type == InputType.JoystickHat:
             input_value = value.current
             input.update(input_value)
@@ -114,7 +109,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
         # Emit an event with the LogicalDevice guid and the rest of the
         # system will then take care of executing it.
         self._event_listener.joystick_event.emit(
-            event_handler.Event(
+            Event(
                 event_type=input.type,
                 identifier=input.id,
                 device_guid=self._logical.device_guid,
@@ -124,6 +119,24 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                 raw_value=value.raw,
             )
         )
+
+    @override
+    def reset(self) -> None:
+        # Stop relative axis motion on reset and release buttons using inverted state.
+        self.thread_running = False
+
+        if (
+            self.data.button_inverted
+            and self.data.logical_input_type == InputType.JoystickButton
+        ):
+            identifier = LogicalDevice.Input.Identifier(
+                self.data.logical_input_type, self.data.logical_input_id
+            )
+            if (
+                self._logical.exists(identifier)
+                and self._logical[identifier].is_pressed
+            ):
+                self._logical[identifier].update(False)
 
     def relative_axis_thread(self) -> None:
         self.thread_running = True
@@ -147,7 +160,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
             )
             input.update(self.axis_value)
             self._event_listener.joystick_event.emit(
-                event_handler.Event(
+                Event(
                     event_type=input.type,
                     identifier=input.id,
                     device_guid=self._logical.device_guid,

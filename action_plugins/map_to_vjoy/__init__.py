@@ -17,10 +17,9 @@ from PySide6 import QtCore
 from gremlin import (
     device_initialization,
     error,
-    event_handler,
-    event_helpers,
     shared_state,
     signal,
+    types,
     util,
 )
 from gremlin.base_classes import (
@@ -58,7 +57,6 @@ class MapToVjoyFunctor(AbstractFunctor):
     def __init__(self, action: MapToVjoyData) -> None:
         super().__init__(action)
 
-        self.needs_auto_release = False  # self._check_for_auto_release(action)
         self.thread_running = False
         self.should_stop_thread = False
         self.thread_last_update = time.time()
@@ -69,7 +67,7 @@ class MapToVjoyFunctor(AbstractFunctor):
     @override
     def __call__(
         self,
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -105,13 +103,6 @@ class MapToVjoyFunctor(AbstractFunctor):
                     self.data.vjoy_input_id
                 ).is_pressed = is_pressed
 
-                if is_pressed and ActionProperty.DisableAutoRelease not in properties:
-                    event_helpers.ButtonReleaseActions().register_vjoy_button_release(
-                        (self.data.vjoy_device_id, self.data.vjoy_input_id),
-                        event,
-                        self.data.button_inverted,
-                    )
-
             elif self.data.vjoy_input_type == InputType.JoystickHat:
                 VJoyProxy()[self.data.vjoy_device_id].hat(
                     self.data.vjoy_input_id
@@ -120,6 +111,24 @@ class MapToVjoyFunctor(AbstractFunctor):
             logging.getLogger("event").error(
                 f"Failed to execute {self.data.name} action due to vJoy error: {e}."
             )
+
+    @override
+    def reset(self) -> None:
+        # Stop relative axis motion on reset and release buttons using inverted state.
+        self.thread_running = False
+
+        if self.data.button_inverted and self.data.vjoy_input_type in [
+            InputType.JoystickButton,
+            InputType.Keyboard,
+        ]:
+            try:
+                VJoyProxy()[self.data.vjoy_device_id].button(
+                    self.data.vjoy_input_id
+                ).is_pressed = False
+            except error.VJoyError as e:
+                logging.getLogger("event").error(
+                    f"Failed to reset {self.data.name} action due to vJoy error: {e}."
+                )
 
     def relative_axis_thread(self) -> None:
         self.thread_running = True

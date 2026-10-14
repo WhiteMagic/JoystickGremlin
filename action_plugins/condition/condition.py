@@ -29,7 +29,7 @@ from gremlin import (
     common,
     device_initialization,
     error,
-    event_handler,
+    types,
     util,
 )
 from gremlin.base_classes import Value
@@ -518,7 +518,7 @@ class KeyboardCondition(AbstractCondition):
         return node
 
     @QtCore.Slot(list)
-    def updateFromUserInput(self, data: list[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: list[types.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.
@@ -643,7 +643,7 @@ class JoystickCondition(AbstractCondition):
         return node
 
     @QtCore.Slot(list)
-    def updateFromUserInput(self, data: list[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: list[types.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.

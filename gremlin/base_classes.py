@@ -20,7 +20,7 @@ from typing import (
 from xml.etree import ElementTree
 
 from gremlin import (
-    event_handler,
+    types,
     util,
 )
 from gremlin.error import (
@@ -39,7 +39,7 @@ from gremlin.types import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.event_handler import Event
+    from gremlin.types import Event
 
 
 class UserFeedback:
@@ -536,10 +536,16 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
                 functors
         """
 
+    def reset(self) -> None:
+        """Stops outputs that persist without further input events.
+
+        Called when a mode change routes the functor's input to another binding.
+        """
+
     def _process_event(
         self,
         functors: list[AbstractFunctor],
-        event: event_handler.Event,
+        event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> None:
@@ -558,7 +564,7 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
     def _pulse_event(
         self,
         functors: list[AbstractFunctor],
-        event_press: event_handler.Event,
+        event_press: types.Event,
         value_press: Value,
         properties: list[ActionProperty] = [],
     ) -> None:

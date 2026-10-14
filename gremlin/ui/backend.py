@@ -29,6 +29,7 @@ from gremlin import (
     process_monitor,
     profile,
     shared_state,
+    types,
     util,
 )
 from gremlin.logical_device import LogicalDevice
@@ -189,7 +190,7 @@ class Backend(QtCore.QObject):
 
         # Hookup various mode change related callbacks
         mm = mode_manager.ModeManager()
-        mm.mode_changed.connect(self._emit_change)
+        mm.modeChanged.connect(self._emit_change)
         self.profileChanged.connect(mm.reset)
         self.profileChanged.connect(
             lambda: self.ui_state.setCurrentMode(mm.current.name)
@@ -205,7 +206,7 @@ class Backend(QtCore.QObject):
 
         self.profileChanged.emit()
 
-    def _highlight_input(self, event: event_handler.Event) -> None:
+    def _highlight_input(self, event: types.Event) -> None:
         if (
             not self.config.value("global", "behavior", "input-highlighting")
             or shared_state.suspend_input_highlighting()

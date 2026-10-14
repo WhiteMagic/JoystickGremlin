@@ -31,7 +31,7 @@ import dill
 import gremlin.keyboard
 from gremlin import (
     error,
-    event_handler,
+    mode_manager,
     shared_state,
     util,
 )
@@ -41,6 +41,7 @@ from gremlin.input_cache import (
 )
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
+    Event,
     HatDirection,
     InputType,
     PropertyType,
@@ -73,7 +74,7 @@ class CallbackRegistry:
         self._registry = {}
         self._current_id = 0
 
-    def add(self, callback: Callable, event: event_handler.Event, mode: str) -> None:
+    def add(self, callback: Callable, event: Event, mode: str) -> None:
         """Adds a new callback to the registry.
 
         Args:
@@ -1231,6 +1232,24 @@ def clamp_value(value: float, min_val: float, max_val: float) -> float:
     return min(max_val, max(min_val, value))
 
 
+def _event_from_key(key: gremlin.keyboard.Key) -> Event:
+    """Creates an event object corresponding to the provided key.
+
+    Args:
+        key: the Key object from which to create the Event
+
+    Returns:
+        Event object corresponding to the provided key
+    """
+    assert isinstance(key, gremlin.keyboard.Key)
+    return Event(
+        event_type=InputType.Keyboard,
+        identifier=(key.scan_code, key.is_extended),
+        device_guid=dill.UUID_Keyboard,
+        mode=mode_manager.ModeManager().current.name,
+    )
+
+
 def keyboard(key: str | gremlin.keyboard.Key, mode: str) -> Callable:
     """Decorator for keyboard key callbacks.
 
@@ -1250,7 +1269,7 @@ def keyboard(key: str | gremlin.keyboard.Key, mode: str) -> Callable:
             if isinstance(key, gremlin.keyboard.Key)
             else gremlin.keyboard.key_from_name(key)
         )
-        event = event_handler.Event.from_key(resolved_key)
+        event = _event_from_key(resolved_key)
         callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn
@@ -1299,7 +1318,7 @@ def _input_callback(
         def wrapper_fn(*args: Any, **kwargs: dict) -> None:  # noqa: ANN401
             callback(*args, **kwargs)
 
-        event = event_handler.Event(
+        event = Event(
             event_type=input_type,
             identifier=input_id,
             device_guid=device_guid,
