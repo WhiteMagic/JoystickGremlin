@@ -53,6 +53,7 @@ Button {
 
     Component.onCompleted: () => { _updateShownChipCount() }
     onActionSequenceDisplayModeChanged: () => { _updateShownChipCount() }
+    onActionLabelsChanged: () => { _updateShownChipCount() }
 
     Timer {
         id: _delayedUpdate
