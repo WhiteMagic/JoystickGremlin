@@ -36,16 +36,14 @@ import gremlin.config
 import gremlin.config_registry
 import gremlin.device_initialization
 import gremlin.event_handler
-import gremlin.event_helpers
 import gremlin.shared_state
 from action_plugins.map_to_vjoy import MapToVjoyData
 from action_plugins.root import RootData
-from gremlin.event_handler import Event
 from gremlin.profile import InputItemBinding, Profile
-from gremlin.types import InputType
+from gremlin.types import Event, InputType
 
 MAX_BUTTONS = 32
-AXIS_REFRESH_OPTIONS = ("refresh-axis-on-activation", "refresh-axis-on-mode-change")
+AXIS_REFRESH_OPTIONS = ("refresh-axis-on-activation",)
 
 
 @dataclass(frozen=True)
@@ -150,9 +148,6 @@ class LatencyRecorder(QtCore.QObject):
         print(
             f"button {sample.button_id:>2} {edge:<7} {sample.latency_s * 1000:7.2f} ms"
         )
-
-        # MapToVjoy registers an auto-release per press; one mode never consumes it.
-        gremlin.event_helpers.ButtonReleaseActions().reset()
 
         if self._sample_target and len(self.samples) >= self._sample_target:
             QtWidgets.QApplication.quit()

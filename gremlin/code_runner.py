@@ -177,9 +177,7 @@ class VirtualHatButton(VirtualButton):
 
 
 class VirtualButtonFunctor:
-    def __init__(
-        self, virtual_button: VirtualButton, event_template: Event
-    ) -> None:
+    def __init__(self, virtual_button: VirtualButton, event_template: Event) -> None:
         self._virtual_button = virtual_button
         self._event_template = event_template
         self._event_listener = event_handler.EventListener()
@@ -210,7 +208,7 @@ class CallbackObject:
             action: actions bound to a single input item
         """
         self._binding = binding
-        self._functor: AbstractFunctor | None = None
+        self._functor: AbstractFunctor | VirtualButtonFunctor | None = None
         self._virtual_identifier = 0
 
         # Differentiate between bindings utilizing virtual buttons and those
@@ -254,8 +252,8 @@ class CallbackObject:
         )
 
     def reset(self) -> None:
-        """Resets every functor of the binding."""
-        if self._functor is not None:
+        """Resets action functors of the binding."""
+        if isinstance(self._functor, AbstractFunctor):
             _reset_functor_tree(self._functor)
 
     def _physical_event_setup(self) -> None:
