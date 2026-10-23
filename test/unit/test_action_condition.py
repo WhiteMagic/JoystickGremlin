@@ -21,10 +21,10 @@ from action_plugins.condition import (
 from action_plugins.description import DescriptionData
 from gremlin.base_classes import Value
 from gremlin.error import GremlinError
-from gremlin.event_handler import Event
 from gremlin.profile import Profile
 from gremlin.types import (
     DataInsertionMode,
+    Event,
     HatDirection,
     InputType,
 )

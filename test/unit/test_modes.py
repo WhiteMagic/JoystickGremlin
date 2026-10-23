@@ -135,7 +135,6 @@ class TestModeManager:
         gremlin.shared_state.current_profile = p
 
         cfg = Configuration()
-        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
         # Keep the per-profile map out of the real configuration file.
         stored: dict[str, str] = {}
         original_value = cfg.value
@@ -167,6 +166,27 @@ class TestModeManager:
         mm.temporary(Mode("B", "A"))
         assert stored == {str(p.fpath): "A"}
 
+    def test_mode_changed_reports_previous_mode(self) -> None:
+        gremlin.shared_state.current_profile = Profile()
+
+        mm = ModeManager()
+        mm.reset()
+        changes: list[tuple[str, str]] = []
+
+        def record(mode_name: str, previous_mode: str) -> None:
+            changes.append((mode_name, previous_mode))
+
+        mm.modeChanged.connect(record)
+        try:
+            mm.switch_to(Mode("A", "Default"))
+            mm.switch_to(Mode("B", "A"))
+            mm.previous()
+            mm.unwind()
+        finally:
+            mm.modeChanged.disconnect(record)
+
+        assert changes == [("A", "Default"), ("B", "A"), ("A", "B"), ("B", "A")]
+
     def test_cycling(self) -> None:
         p = Profile()
         gremlin.shared_state.current_profile = p
@@ -174,9 +194,7 @@ class TestModeManager:
         mm = ModeManager()
         cfg = Configuration()
         cfg.set("action", "change-mode", "resolution-mode", "Oldest")
-        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
         mm.reset()
-        del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
         mm.switch_to(Mode("B", "A"))
         mm.switch_to(Mode("C", "B"))
@@ -184,12 +202,11 @@ class TestModeManager:
         mm.switch_to(Mode("B", "A"))
 
         ml = mm._mode_stack
-        assert ml[0].name == "A"
-        assert ml[1].name == "B"
+        assert ml[1].name == "A"
+        assert ml[2].name == "B"
 
         cfg.set("action", "change-mode", "resolution-mode", "Newest")
         mm.reset()
-        del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
         mm.switch_to(Mode("B", "A"))
         mm.switch_to(Mode("C", "B"))
@@ -210,9 +227,7 @@ class TestModeManager:
         # Simple case with oldest mode retainment
         cfg = Configuration()
         cfg.set("action", "change-mode", "resolution-mode", "Oldest")
-        cfg.set("global", "behavior", "refresh-axis-on-mode-change", False)
         mm.reset()
-        del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
         mm.switch_to(Mode("B", "A"))
         mm.switch_to(Mode("C", "B", True))
@@ -222,18 +237,17 @@ class TestModeManager:
         mm.switch_to(Mode("D", "C", True))
 
         ml = mm._mode_stack
-        assert len(ml) == 4
-        assert ml[0].name == "A"
-        assert ml[1].name == "B"
-        assert ml[2].name == "C"
-        assert ml[3].name == "D"
-        assert ml[2].is_temporary
+        assert len(ml) == 5
+        assert ml[1].name == "A"
+        assert ml[2].name == "B"
+        assert ml[3].name == "C"
+        assert ml[4].name == "D"
         assert ml[3].is_temporary
+        assert ml[4].is_temporary
 
         # Newest mode retainment with requirement to keep some older modes
         cfg.set("action", "change-mode", "resolution-mode", "Newest")
         mm.reset()
-        del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
         mm.switch_to(Mode("B", "A"))
         mm.switch_to(Mode("C", "B", True))

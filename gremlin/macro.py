@@ -193,7 +193,9 @@ class MacroManager(metaclass=SingletonMetaclass):
         """
         if macro.id not in self._scheduled_macro:
             self._scheduled_macro[macro.id] = macro
-            threading.Thread(target=functools.partial(self._execute_macro, macro)).start()
+            threading.Thread(
+                target=functools.partial(self._execute_macro, macro)
+            ).start()
         else:
             logging.getLogger("system").warning(
                 "Attempting to dispatch an already running macro."

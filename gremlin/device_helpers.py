@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING
 
 from gremlin import common
 from gremlin.types import (
-    HatDirection,
     Event,
+    HatDirection,
     InputType,
 )
+
 
 class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
     """Checks whether or not joystick inputs are significant."""

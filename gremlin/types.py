@@ -7,6 +7,8 @@ import logging
 import uuid
 from typing import (
     NamedTuple,
+    Protocol,
+    runtime_checkable,
 )
 
 import gremlin.error
@@ -893,3 +895,17 @@ class Event:
             )
         else:
             return hash((self.device_guid, self.event_type.value, self.identifier, 0))
+
+
+@runtime_checkable
+class InputBindingCallback(Protocol):
+    """Callback executing a profile binding's actions."""
+
+    @property
+    def always_execute(self) -> bool: ...
+
+    def __call__(self, event: Event) -> None: ...
+
+    def is_held(self) -> bool: ...
+
+    def reset(self) -> None: ...

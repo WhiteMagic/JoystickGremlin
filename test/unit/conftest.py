@@ -15,6 +15,7 @@ import dill
 import gremlin.config_registry
 import gremlin.device_initialization
 import gremlin.event_handler
+import gremlin.input_cache
 
 # Import creates required user profile directory.
 import joystick_gremlin  # noqa: F401
@@ -72,6 +73,7 @@ def joystick_init() -> None:
         0: _make_fake_device(is_virtual=False),
         1: _make_fake_device(is_virtual=True),
     }
+    devices_by_uuid = {dev.device_guid.uuid: dev for dev in di_stub_devices.values()}
     with (
         mock.patch.object(
             dill.DILL,
@@ -84,6 +86,18 @@ def joystick_init() -> None:
             dill.DILL.get_device_information_by_index.__name__,
             autospec=True,
             side_effect=di_stub_devices.get,
+        ),
+        mock.patch.object(
+            dill.DILL,
+            dill.DILL.device_exists.__name__,
+            autospec=True,
+            side_effect=lambda guid: guid.uuid in devices_by_uuid,
+        ),
+        mock.patch.object(
+            dill.DILL,
+            dill.DILL.get_device_information_by_guid.__name__,
+            autospec=True,
+            side_effect=lambda guid: devices_by_uuid[guid.uuid],
         ),
         mock.patch.object(
             vjoy,
@@ -117,6 +131,9 @@ def joystick_init() -> None:
         ),
     ):
         gremlin.device_initialization.joystick_devices_initialization()
+        # Cache entries are created on first access, which needs the mocks above.
+        for device_uuid in devices_by_uuid:
+            gremlin.input_cache.Joystick()[device_uuid]
 
 
 @pytest.fixture(scope="package", autouse=True)
