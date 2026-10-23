@@ -126,6 +126,27 @@ def test_simple_action(xml_dir: pathlib.Path) -> None:
     assert actions[2].id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
 
 
+def test_unsaved_changes_non_ascii(
+    xml_dir: pathlib.Path, tmp_path: pathlib.Path
+) -> None:
+    gremlin.plugin_manager.PluginManager()
+
+    p = Profile()
+    p.from_xml(xml_dir / "profile_simple.xml")
+    guid = get_fake_device_guid(is_virtual=False).uuid
+    action = p.inputs[guid][0].action_sequences[0].root_action.get_actions()[0][0]
+    # UTF-8 encoding of "Ł" contains 0x81 which cp1252 cannot decode.
+    action.description = "Łódź 中文"
+
+    profile_path = tmp_path / "profile.xml"
+    p.to_xml(profile_path)
+    p.fpath = profile_path
+    assert not p.has_unsaved_changes()
+
+    action.description = "Changed"
+    assert p.has_unsaved_changes()
+
+
 def test_hierarchy(xml_dir: pathlib.Path) -> None:
     gremlin.plugin_manager.PluginManager()
 
