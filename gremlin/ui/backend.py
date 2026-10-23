@@ -119,6 +119,12 @@ class UIState(QtCore.QObject):
             self.modeChanged.emit()
             self.inputChanged.emit()
 
+    def reset_mode(self, mode_name: str) -> None:
+        # Emits even if unchanged, as the profile's mode list may have changed.
+        self._current_mode = mode_name
+        self.modeChanged.emit()
+        self.inputChanged.emit()
+
     @QtCore.Slot(str)
     def setCurrentTab(self, tab: str) -> None:
         if tab != self._current_tab:
@@ -191,10 +197,6 @@ class Backend(QtCore.QObject):
         # Hookup various mode change related callbacks
         mm = mode_manager.ModeManager()
         mm.modeChanged.connect(self._emit_change)
-        self.profileChanged.connect(mm.reset)
-        self.profileChanged.connect(
-            lambda: self.ui_state.setCurrentMode(mm.current.name)
-        )
         self.profileChanged.connect(self._profile_change_handler)
         self.process_monitor.process_changed.connect(self._active_process_changed_cb)
 
@@ -228,11 +230,13 @@ class Backend(QtCore.QObject):
     def _profile_change_handler(self) -> None:
         # Update shared state before any other parts update.
         shared_state.current_profile = self.profile
+        mode_manager.ModeManager().reset()
 
         # Emit signals for various parts of the system.
         self.windowTitleChanged.emit()
         signal.reloadUi.emit()
         signal.profileChanged.emit()
+        self.ui_state.reset_mode(mode_manager.ModeManager().current.name)
 
     def _device_change(self) -> None:
         behavior = self.config.value("global", "behavior", "device-change-behavior")
