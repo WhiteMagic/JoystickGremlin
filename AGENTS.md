@@ -99,8 +99,6 @@ Profiles are XML files. `gremlin.profile.Profile` owns load/save and dispatches 
 
 Every Python file must include:
 ```python
-# -*- coding: utf-8; -*-
-
 # SPDX-License-Identifier: GPL-3.0-only
 ```
 
@@ -110,6 +108,7 @@ Every Python file must include:
 - Sort imports: stdlib, third-party, local (alphabetically within groups)
 - Use absolute imports within the package (e.g., `from gremlin.types import InputType`)
 - Use `TYPE_CHECKING` guard for imports only needed for type hints to avoid circular imports
+- Never function local imports, ever.
 
 Example:
 ```python
