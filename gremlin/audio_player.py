@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import array
-import logging
 import threading
 import time
 from collections.abc import Generator
@@ -38,54 +37,68 @@ class AudioSample:
         """
         decoded = miniaudio.decode_file(sound_file)
         volume_factor = clamp(play_volume / 100.0, 0.0, 1.0)
-        samples = array.array(
+        self._samples = array.array(
             "h", [int(sample * volume_factor) for sample in decoded.samples]
         )
+        self._nchannels = decoded.nchannels
 
-        self.stream = miniaudio.stream_raw_pcm_memory(
-            samples, decoded.nchannels, decoded.sample_width
-        )
         self.device = miniaudio.PlaybackDevice(
             sample_rate=decoded.sample_rate,
             nchannels=decoded.nchannels,
             output_format=decoded.sample_format,
+            buffersize_msec=50,
         )
-        self._playback_done_event = threading.Event()
-        self._generator: AudioSample.Generator_T | None = None
+        # Events to manage playback.
+        self._stream_done = threading.Event()
+        self._cancel_requested = threading.Event()
+        self._playback_done = threading.Event()
 
     def block(self) -> None:
         """Blocks the calling thread until playback is complete."""
-        self._playback_done_event.wait()
+        self._playback_done.wait()
+
+    def is_done(self) -> bool:
+        """Returns whether playback has completed and the device is closed."""
+        return self._playback_done.is_set()
 
     def cancel(self) -> None:
-        """Stops the playback immediately."""
-        if not self._playback_done_event.is_set() and self._generator:
-            try:
-                self._generator.close()
-            except ValueError:
-                logging.getLogger("system").debug(
-                    "Audio playback generator already running error raised."
-                )
+        """Stops the playback after the device's buffered audio drains."""
+        self._cancel_requested.set()
 
     def play(self) -> None:
         """Starts playing the audio file.
 
-        Sets up the generator and notification events to control and manage
-        playback.
+        Starts the device with the sample generator and a thread that closes
+        the device once all samples have been consumed.
         """
-        self._playback_done_event.clear()
+        self.device.start(self._build_sample_generator())
+        threading.Thread(target=self._close_when_done).start()
 
-        def sample_generator() -> AudioSample.Generator_T:
+    def _build_sample_generator(self) -> AudioSample.Generator_T:
+        """Returns a started generator yielding the requested frames per callback."""
+
+        def generate() -> AudioSample.Generator_T:
             try:
-                yield from self.stream
+                frame_count = yield b""
+                offset = 0
+                while (
+                    offset < len(self._samples) and not self._cancel_requested.is_set()
+                ):
+                    end = offset + frame_count * self._nchannels
+                    frame_count = yield self._samples[offset:end]
+                    offset = end
             finally:
-                self._playback_done_event.set()
-                self.device.close()
+                self._stream_done.set()
 
-        # Create generator and initialize it such that the .send() method works.
-        self._generator = sample_generator()
-        next(self._generator)
-        self.device.start(self._generator)
+        generator = generate()
+        next(generator)
+        return generator
+
+    def _close_when_done(self) -> None:
+        """Closes the device once the sample generator has finished."""
+        self._stream_done.wait()
+        self.device.close()
+        self._playback_done.set()
 
 
 class AudioPlayer(metaclass=SingletonMetaclass):
@@ -137,6 +150,9 @@ class AudioPlayer(metaclass=SingletonMetaclass):
         """Background thread which ensures audio is played."""
         self._is_ready = True
         while self._is_ready:
+            self._currently_playing = [
+                sample for sample in self._currently_playing if not sample.is_done()
+            ]
             match self._playback_mode:
                 case "Sequential":
                     if self._play_list:
