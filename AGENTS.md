@@ -222,7 +222,7 @@ Each plugin under `action_plugins/<name>/` defines:
 - `AbstractFunctor` subclass — actual runtime behavior
 - `ActionModel` — QML UI model, enabling modifying the data via the UI
 
-Required overrides on `AbstractActionData`: `_from_xml()`, `_to_xml()`, `is_valid()`, `_valid_selectors()`, `_get_container()`, `_handle_behavior_change()`.
+Required overrides on `AbstractActionData`: `_from_xml()`, `_to_xml()`, `is_valid()`, `_valid_selectors()`, `_get_container()`.
 
 
 Example:
