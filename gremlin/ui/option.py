@@ -18,7 +18,6 @@ import gremlin.ui.type_aliases as ta
 from gremlin.common import SingletonMetaclass
 from gremlin.error import (
     GremlinError,
-    MissingImplementationError,
 )
 from gremlin.signal import signal
 from gremlin.tts import TTSManager
@@ -42,6 +41,7 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
 
         self._config = gremlin.config.Configuration()
         self._option = MetaConfigOption()
+        self._group_models: dict[str, ConfigGroupModel] = {}
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._combined_sections())
@@ -60,7 +60,10 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
             case "name":
                 return sections[index.row()]
             case "groupModel":
-                return ConfigGroupModel(sections[index.row()])
+                section = sections[index.row()]
+                if section not in self._group_models:
+                    self._group_models[section] = ConfigGroupModel(section, self)
+                return self._group_models[section]
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
@@ -99,6 +102,7 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
         self._config = gremlin.config.Configuration()
         self._option = MetaConfigOption()
         self._section_name = section
+        self._entry_models: dict[str, ConfigEntryModel] = {}
 
     @QtCore.Property(str, notify=changed)
     def sectionName(self) -> str:
@@ -116,7 +120,12 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
 
         match cast(str, self.roles[role]):
             case "entryModel":
-                return ConfigEntryModel(self._section_name, groups[index.row()])
+                group = groups[index.row()]
+                if group not in self._entry_models:
+                    self._entry_models[group] = ConfigEntryModel(
+                        self._section_name, group, self
+                    )
+                return self._entry_models[group]
             case "groupName":
                 return groups[index.row()]
             case _:
@@ -193,7 +202,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                     case "value":
                         value = self._option.qml_widget(
                             self._section_name, self._group_name, name
-                        )().qml_type
+                        ).qml_type
                     case "data_type":
                         value = "meta_option"
         return value
@@ -243,15 +252,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
 
 class BaseMetaConfigOptionWidget:
-    @property
-    def qml_type(self) -> str:
-        return self._qml_type()
-
-    def _qml_type(self) -> str:
-        raise MissingImplementationError(
-            "BaseMetaConfigOptionWidget: Subclasses must implement the "
-            + "qml_type method."
-        )
+    qml_type: ClassVar[str]
 
 
 @ta.QmlElement
@@ -261,6 +262,7 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"visible"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"index"),
     }
+    qml_type: ClassVar[str] = "OptionActionSequenceOrdering"
 
     def __init__(self, parent: ta.OQO = None) -> None:
         QtCore.QAbstractListModel.__init__(self, parent)
@@ -331,9 +333,6 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
         self._config.set(*self._cfg_key, data)
 
-    def _qml_type(self) -> str:
-        return "OptionActionSequenceOrdering"
-
 
 @ta.QmlElement
 class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
@@ -342,6 +341,7 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"executable"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"isEnabled"),
     }
+    qml_type: ClassVar[str] = "OptionProfileAutoLoading"
 
     def __init__(self, parent: ta.OQO = None) -> None:
         QtCore.QAbstractListModel.__init__(self, parent)
@@ -410,15 +410,13 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _qml_type(self) -> str:
-        return "OptionProfileAutoLoading"
-
 
 @ta.QmlElement
 class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
     roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
     }
+    qml_type: ClassVar[str] = "OptionTTSVoiceSelection"
 
     currentIndexChanged = QtCore.Signal()
 
@@ -443,9 +441,6 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
-
-    def _qml_type(self) -> str:
-        return "OptionTTSVoiceSelection"
 
     def _get_current_index(self) -> int:
         try:
@@ -473,6 +468,7 @@ class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget)
     roles: ClassVar[dict] = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
     }
+    qml_type: ClassVar[str] = "OptionThemeSelection"
 
     currentIndexChanged = QtCore.Signal()
 
@@ -496,9 +492,6 @@ class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget)
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
-
-    def _qml_type(self) -> str:
-        return "OptionThemeSelection"
 
     def _get_current_index(self) -> int:
         try:

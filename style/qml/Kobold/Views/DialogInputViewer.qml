@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Foundation
 import "helpers.js" as Helpers
 
@@ -18,9 +19,11 @@ Window {
 
     readonly property int deviceListMinWidth: Metrics.dp(250)
     readonly property int deviceListMaxWidth: Metrics.dp(400)
+    readonly property DeviceListModel _deviceData:
+        ModelFactory.deviceListModel(_inputViewer, "all")
 
-    property var _geom: backend.windowGeometry(
-        "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
+    property var _geom: ModelFactory.windowGeometry(
+        _inputViewer, "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
         minimumWidth, minimumHeight
     )
     // True until Component.onCompleted, suppresses saving geometry information before
@@ -43,7 +46,6 @@ Window {
             _stateDisplay.children.forEach((child) => {
                 child.destroy()
             })
-            _deviceData.destroy()
             backend.resumeInputHighlighting()
         }
     }
@@ -73,12 +75,6 @@ Window {
     onYChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
     onWidthChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
     onHeightChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
-
-    DeviceListModel {
-        id: _deviceData
-
-        deviceType: "all"
-    }
 
     function create_widget(type_name, guid, name) {
         let component = Qt.createComponent("Kobold.Views", type_name)
@@ -113,7 +109,7 @@ Window {
                 anchors.fill: parent
 
                 Repeater {
-                    model: _deviceData
+                    model: _inputViewer._deviceData
                     delegate: _deviceDelegate
                 }
             }

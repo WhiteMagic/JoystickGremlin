@@ -5,26 +5,25 @@ import QtQuick
 import QtQuick.Controls
 
 import Gremlin.Config
+import Gremlin.UI
 
 Item {
     id: _root
 
+    readonly property ThemeSelectionModel _model: ModelFactory.themeSelectionModel(_root)
+
     implicitHeight: _combo.implicitHeight
     implicitWidth: _combo.implicitWidth
-
-    ThemeSelectionModel {
-        id: _model
-    }
 
     ComboBox {
         id: _combo
 
         anchors.fill: parent
 
-        model: _model
+        model: _root._model
         textRole: "name"
-        currentIndex: _model.currentIndex
+        currentIndex: _root._model.currentIndex
 
-        onActivated: (index) => { _model.currentIndex = index }
+        onActivated: (index) => { _root._model.currentIndex = index }
     }
 }

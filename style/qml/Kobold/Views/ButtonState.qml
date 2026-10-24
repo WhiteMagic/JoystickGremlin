@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -20,7 +21,15 @@ Item {
     readonly property int buttonSize:   Metrics.dp(40)
     readonly property int buttonRadius: Metrics.even(10)
 
+    readonly property DeviceButtonState _button_state: ModelFactory.deviceButtonState(_root)
+    readonly property DeviceHatState _hat_state: ModelFactory.deviceHatState(_root)
+
     implicitHeight: _content.implicitHeight
+
+    Component.onCompleted: () => {
+        _button_state.guid = deviceGuid
+        _hat_state.guid = deviceGuid
+    }
 
     function computeButtonHeight() {
         let columns =  Math.floor(
@@ -33,18 +42,6 @@ Item {
 
     function computeHatHeight(cellHeight) {
         return Math.ceil(_hat_grid.count / 2) * cellHeight
-    }
-
-    DeviceButtonState {
-        id: _button_state
-
-        guid: deviceGuid
-    }
-
-    DeviceHatState {
-        id: _hat_state
-
-        guid: deviceGuid
     }
 
     ColumnLayout {
@@ -87,7 +84,7 @@ Item {
                 cellWidth: Metrics.dp(50)
                 cellHeight: Metrics.dp(50)
 
-                model: _button_state
+                model: _root._button_state
                 delegate: Component {
                     Rectangle {
                         id: _button
@@ -131,7 +128,7 @@ Item {
                 cellWidth: Metrics.dp(100)
                 cellHeight: Metrics.dp(100)
 
-                model: _hat_state
+                model: _root._hat_state
                 delegate: Component {
                     HatView {
                         required property int identifier

@@ -455,31 +455,6 @@ class Backend(QtCore.QObject):
     def resumeInputHighlighting(self) -> None:
         shared_state.set_suspend_input_highlighting(False)
 
-    @QtCore.Slot(str, int, int, int, int, result=WindowGeometry)
-    def windowGeometry(
-        self,
-        name: str,
-        defaultWidth: int,
-        defaultHeight: int,
-        minWidth: int,
-        minHeight: int,
-    ) -> WindowGeometry:
-        """Returns the persisted (or defaulted) geometry for a window.
-
-        Args:
-            name: config entry name, e.g. "main-window-geometry"
-            defaultWidth: width to fall back to if nothing was persisted
-            defaultHeight: height to fall back to if nothing was persisted
-            minWidth: minimum width the window accepts, used for validation
-            minHeight: minimum height the window accepts, used for validation
-
-        Returns:
-            A WindowGeometry object exposing x/y/width/height and a save() slot.
-        """
-        return WindowGeometry(
-            self.config, name, defaultWidth, defaultHeight, minWidth, minHeight, self
-        )
-
     @QtCore.Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> list[str]:
         """Returns a list of recently used profiles.

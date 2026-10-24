@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import Gremlin.UI
 import Gremlin.Util
 import Kobold.Foundation
 
@@ -18,8 +19,8 @@ ToolButton {
     id: control
 
     // Options used to configure the recording behavior.
-    property alias eventTypes: _listener.eventTypes
-    property alias multipleInputs: _listener.multipleInputs
+    property var eventTypes: []
+    property bool multipleInputs: false
     property var callback
 
     // Style selection, "ghost" or "bordered". The background color of the button can
@@ -29,6 +30,9 @@ ToolButton {
 
     readonly property bool bordered: variant === "bordered"
     readonly property bool ghostActive: !bordered && (hovered || down)
+
+    // Model responsible to handle the actual user input capture.
+    readonly property InputListenerModel _listener: ModelFactory.inputListenerModel(control)
 
     text: "Record Inputs"
 
@@ -44,6 +48,14 @@ ToolButton {
     bottomPadding: 0
 
     onClicked: { _popup.open() }
+    onEventTypesChanged: () => { if (_listener) _listener.eventTypes = eventTypes }
+    onMultipleInputsChanged: () => { if (_listener) _listener.multipleInputs = multipleInputs }
+
+    Component.onCompleted: () => {
+        _listener.eventTypes = eventTypes
+        _listener.multipleInputs = multipleInputs
+    }
+    Component.onDestruction: () => { _listener.enabled = false }
 
     contentItem: RowLayout {
         spacing: Metrics.gapM
@@ -102,11 +114,10 @@ ToolButton {
         }
     }
 
-    // Model responsible to handle the actual user input capture.
-    InputListenerModel {
-        id: _listener
+    Connections {
+        target: control._listener
 
-        onListeningTerminated: function(inputs) {
+        function onListeningTerminated(inputs) {
             control.callback(inputs)
         }
     }
@@ -127,7 +138,7 @@ ToolButton {
             }
 
             onEntered: function() {
-                _listener.enabled = false
+                control._listener.enabled = false
                 _popup.close()
             }
         }
@@ -142,11 +153,11 @@ ToolButton {
 
             DSM.SignalTransition {
                 targetState: disabled
-                signal: _listener.listeningTerminated
+                signal: control._listener.listeningTerminated
             }
 
             onEntered: function() {
-                _listener.enabled = true
+                control._listener.enabled = true
             }
         }
     }
@@ -176,7 +187,7 @@ ToolButton {
                 text: "Waiting for user input. Hold ESC to abort."
             }
             Label {
-                text: _listener.currentInput
+                text: control._listener.currentInput
             }
         }
     }

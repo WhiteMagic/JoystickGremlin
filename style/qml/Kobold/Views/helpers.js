@@ -14,6 +14,8 @@ function createComponent(componentSpec, parent, initialProperties = {"x": 100, "
     {
         let window = component.createObject(parent, initialProperties);
         window.show();
+        window.closing.connect(() => window.destroy())
+        return window
     }
 }
 

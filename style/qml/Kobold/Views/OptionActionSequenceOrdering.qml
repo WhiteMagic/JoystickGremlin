@@ -6,12 +6,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.Config
+import Gremlin.UI
 import Kobold.Foundation
 
 Item {
-    ActionSequenceOrdering {
-        id: _data
-    }
+    id: _root
+
+    readonly property ActionSequenceOrdering _data: ModelFactory.actionSequenceOrdering(_root)
 
     implicitHeight: _content.implicitHeight
     implicitWidth: _content.implicitWidth
@@ -21,7 +22,7 @@ Item {
         anchors.fill: parent
 
         Repeater {
-            model: _data
+            model: _root._data
 
             delegate: ActionDisplay {
                 Layout.fillWidth: true
@@ -39,7 +40,7 @@ Item {
             Layout.preferredHeight: Metrics.controlHeight
 
             onDropped: (drop) => {
-                _data.move(drop.text, _data.rowCount())
+                _root._data.move(drop.text, _root._data.rowCount())
             }
 
             Rectangle {
@@ -131,7 +132,7 @@ Item {
             y: _item.y - height/2
 
             onDropped: (drop) => {
-                _data.move(drop.text, index)
+                _root._data.move(drop.text, index)
             }
 
             Rectangle {

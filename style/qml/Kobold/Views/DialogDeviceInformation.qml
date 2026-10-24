@@ -6,7 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 
-import Gremlin.Device
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -88,7 +88,7 @@ Window {
             Layout.fillHeight: true
 
             reuseItems: true
-            model: DeviceListModel {}
+            model: ModelFactory.deviceListModel(_list, "all")
 
             delegate: Rectangle {
                 id: _outer

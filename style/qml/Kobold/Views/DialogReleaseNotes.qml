@@ -5,20 +5,21 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 
+import Gremlin.UI
 import Gremlin.Util
 import Kobold.Foundation
 
 Window {
+    id: _root
+
+    readonly property ReleaseNotes _releaseNotes: ModelFactory.releaseNotes(_root)
+
     minimumWidth: Metrics.dp(600)
     minimumHeight: Metrics.dp(400)
 
     color: Theme.bg
 
     title: qsTr("Release Notes")
-
-    ReleaseNotes {
-        id: _releaseNotes
-    }
 
     ScrollView {
         id: _pane
@@ -37,7 +38,7 @@ Window {
             selectByMouse: true
             wrapMode: TextEdit.Wrap
             textFormat: TextEdit.MarkdownText
-            text: _releaseNotes.text
+            text: _root._releaseNotes.text
 
             color: Theme.fg
             selectionColor: Theme.bgSelected
@@ -46,7 +47,7 @@ Window {
             font.pixelSize: Metrics.textBody
 
             Component.onCompleted: () => {
-                _releaseNotes.format(textDocument, Metrics.gapL * 2, Metrics.gapS)
+                _root._releaseNotes.format(textDocument, Metrics.gapL * 2, Metrics.gapS)
             }
         }
     }

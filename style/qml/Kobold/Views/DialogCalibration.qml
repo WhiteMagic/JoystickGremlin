@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -22,6 +23,9 @@ Window {
     readonly property int progressBarHeight: Metrics.dp(30)
     readonly property int buttonColumnWidth: Metrics.dp(150)
 
+    readonly property DeviceListModel _deviceData:
+        ModelFactory.deviceListModel(_calibrationDialog, "physical")
+
     color: Theme.bg
 
     title: "Calibration"
@@ -32,21 +36,16 @@ Window {
         target: _calibrationDialog
 
         function onClosing() {
-            _axisView.model.destroy()
-            _axisView.destroy()
-            _deviceData.destroy()
             backend.resumeInputHighlighting()
         }
     }
 
     Component.onCompleted: () => {
         backend.pauseInputHighlighting()
-    }
-
-    DeviceListModel {
-        id: _deviceData
-
-        deviceType: "physical"
+        // Undefined when no physical device exists.
+        if (_deviceSelection.currentValue) {
+            _axisView.model.guid = _deviceSelection.currentValue
+        }
     }
 
     ColumnLayout {
@@ -65,10 +64,16 @@ Window {
             ComboBox {
                 id: _deviceSelection
 
-                model: _deviceData
+                model: _calibrationDialog._deviceData
                 textRole: "name"
                 valueRole: "guid"
                 implicitContentWidthPolicy: ComboBox.WidestText
+
+                onCurrentValueChanged: () => {
+                    if (currentValue && _axisView.model) {
+                        _axisView.model.guid = currentValue
+                    }
+                }
             }
 
             Spacer {}
@@ -82,9 +87,7 @@ Window {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: AxisCalibration {
-                guid: _deviceSelection.currentValue
-            }
+            model: ModelFactory.axisCalibration(_axisView)
 
             delegate: CalibrationItem {
                 width: ListView.view.width

@@ -12,6 +12,7 @@ import QtQuick.Window
 import Gremlin.Device
 import Gremlin.Profile
 import Gremlin.Tools
+import Gremlin.UI
 import Kobold.Foundation
 
 Window {
@@ -24,19 +25,11 @@ Window {
 
     title: "Swap Devices"
 
-    DeviceListModel {
-        id: _physicalDevices
-
-        deviceType: "physical"
-    }
-
-    ProfileDeviceListModel {
-        id: _profileDevices
-    }
-
-    Tools {
-        id: _tools
-    }
+    readonly property DeviceListModel _physicalDevices:
+        ModelFactory.deviceListModel(_root, "physical")
+    readonly property ProfileDeviceListModel _profileDevices:
+        ModelFactory.profileDeviceListModel(_root)
+    readonly property Tools _tools: ModelFactory.tools(_root)
 
     ColumnLayout {
         id: _content
@@ -57,7 +50,7 @@ Window {
 
                 Layout.fillWidth: true
 
-                model: _profileDevices
+                model: _root._profileDevices
 
                 textRole: "nameAndActions"
                 valueRole: "uuid"
@@ -77,7 +70,7 @@ Window {
 
                 Layout.fillWidth: true
 
-                model: _physicalDevices
+                model: _root._physicalDevices
 
                 textRole: "name"
                 valueRole: "guid"
@@ -143,7 +136,7 @@ Window {
             Button {
                 text: "Swap Bindings"
                 onClicked: () => {
-                    _statusMessage.text = _tools.swapDevices(
+                    _statusMessage.text = _root._tools.swapDevices(
                         _profileDeviceSelection.currentValue,
                         _physicalDeviceSelection.currentValue
                     )

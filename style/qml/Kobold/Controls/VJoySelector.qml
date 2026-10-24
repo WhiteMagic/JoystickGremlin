@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Foundation
 
 // UI item used to select a vJoy input, this is intended to be used everywhere a vJoy
@@ -13,14 +14,19 @@ import Kobold.Foundation
 Item {
     id: root
 
-    property alias validTypes: _vjoy.validTypes
+    property var validTypes: []
+
+    readonly property VJoyDevices _vjoy: ModelFactory.vjoyDevices(root)
 
     signal selectionChanged(int deviceId, string inputType, int inputId)
 
     implicitHeight: _content.implicitHeight
     implicitWidth: _content.implicitWidth
 
+    onValidTypesChanged: () => { if (_vjoy) _vjoy.validTypes = validTypes }
+
     function initialize(vjoyId, inputType, inputId) {
+        _vjoy.validTypes = validTypes
         _vjoy.setInitialState(vjoyId, inputType, inputId)
     }
 
@@ -28,14 +34,14 @@ Item {
         _vjoy.setState(_deviceCombo.currentText, _inputCombo.currentText)
     }
 
-    VJoyDevices {
-        id: _vjoy
+    Connections {
+        target: root._vjoy
 
-        onCurrentSelectionChanged: (vjoyId, inputType, inputId) => {
+        function onCurrentSelectionChanged(vjoyId, inputType, inputId) {
             root.selectionChanged(vjoyId, inputType, inputId)
         }
 
-        onCurrentValuesChanged: (vjoyName, inputName) => {
+        function onCurrentValuesChanged(vjoyName, inputName) {
             _deviceCombo.currentIndex = _deviceCombo.find(vjoyName)
             _inputCombo.currentIndex = _inputCombo.find(inputName)
         }
@@ -51,7 +57,7 @@ Item {
         ComboBox {
             id: _deviceCombo
 
-            model: _vjoy.vjoyDevices
+            model: root._vjoy.vjoyDevices
 
             onActivated: root.updateState()
         }
@@ -59,13 +65,13 @@ Item {
         ComboBox {
             id: _inputCombo
 
-            model: _vjoy.inputChoices
+            model: root._vjoy.inputChoices
 
             onActivated: root.updateState()
         }
 
         Label {
-            visible: !_vjoy.hasValidVJoyDevices
+            visible: !root._vjoy.hasValidVJoyDevices
             text: "No vJoy devices available."
             color: Theme.error
         }

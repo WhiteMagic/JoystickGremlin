@@ -7,8 +7,8 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
 
-import Gremlin.Profile
 import Gremlin.Script
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -163,8 +163,8 @@ Item {
                         validTypes: modelData.validTypes
                         logicalInputIdentifier: modelData.logicalInputIdentifier
 
-                        onLogicalInputIdentifierChanged: () => {
-                            modelData.logicalInputIdentifier = logicalInputIdentifier
+                        onLogicalInputSelected: (identifier) => {
+                            modelData.logicalInputIdentifier = identifier
                         }
                     }
                 }
@@ -189,7 +189,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignRight
 
-                        model: ModeListModel {}
+                        model: ModelFactory.modeListModel(_mode)
                         textRole: "name"
                         valueRole: "name"
 

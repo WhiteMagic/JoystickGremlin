@@ -8,6 +8,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Foundation
 
 // Visualizes a chart showing the temporal evolution of a device's axes. This is used
@@ -19,24 +20,27 @@ Item {
     property string title
     property var colors: themeManager.chartSeriesColors
 
+    readonly property DeviceAxisSeries _axis_series: ModelFactory.deviceAxisSeries(_root)
+
     implicitHeight: _content.implicitHeight
 
-    DeviceAxisSeries {
-        id: _axis_series
+    // Assigned after the Connections exist, as the handler builds the series.
+    Component.onCompleted: () => { _axis_series.guid = deviceGuid }
 
-        guid: deviceGuid
+    Connections {
+        target: _root._axis_series
 
-        onDeviceChanged: () => {
+        function onDeviceChanged() {
             _chart.removeAllSeries()
 
-            for(var i=0; i<axisCount; i++) {
+            for(var i=0; i<_root._axis_series.axisCount; i++) {
                 var series = _chart.createSeries(
                     ChartView.SeriesTypeLine,
-                    "Axis " + axisIdentifier(i),
+                    "Axis " + _root._axis_series.axisIdentifier(i),
                     _x_axis,
                     _y_axis
                 )
-               series.color = colors[i]
+               series.color = _root.colors[i]
             }
         }
     }
@@ -47,7 +51,7 @@ Item {
         repeat: true
         onTriggered: () => {
             for(var i=0; i<_chart.count; i++) {
-                _axis_series.updateSeries(_chart.series(i), i)
+                _root._axis_series.updateSeries(_chart.series(i), i)
             }
         }
     }
@@ -124,7 +128,7 @@ Item {
                 ValueAxis {
                     id: _x_axis
 
-                    min: -_axis_series.windowSize
+                    min: -_root._axis_series.windowSize
                     max: 0
 
                     color: Theme.line

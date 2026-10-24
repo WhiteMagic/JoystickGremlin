@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -22,17 +23,15 @@ Item {
     readonly property int axisBarHeight:   Metrics.dp(100)
     readonly property int axisBarSize:     Metrics.dp(20)
 
+    readonly property DeviceAxisState _axis_state: ModelFactory.deviceAxisState(_root)
+
     implicitHeight: _content.implicitHeight
+
+    Component.onCompleted: () => { _axis_state.guid = deviceGuid }
 
     function format_percentage(value)
     {
         return Math.round(value * 100)
-    }
-
-    DeviceAxisState {
-        id: _axis_state
-
-        guid: deviceGuid
     }
 
     ColumnLayout {
@@ -70,7 +69,7 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
             interactive: false
 
-            model: _axis_state
+            model: _root._axis_state
             delegate: Component {
                 ColumnLayout {
                     required property int index

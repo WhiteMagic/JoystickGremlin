@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Config
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 import "helpers.js" as Helpers
@@ -21,12 +22,11 @@ Window {
 
     title: "Options"
 
+    readonly property ConfigSectionModel _sectionModel:
+        ModelFactory.configSectionModel(_optionsDialog)
+
     onClosing: () => {
         backend.emitConfigChanged()
-    }
-
-    ConfigSectionModel {
-        id: _sectionModel
     }
 
     RowLayout {
@@ -50,7 +50,7 @@ Window {
                 spacing: Metrics.gapS
                 scrollbarAlwaysVisible: false
 
-                model: _sectionModel
+                model: _optionsDialog._sectionModel
                 delegate: ConfigSectionButton {}
 
                 footer: Item {
