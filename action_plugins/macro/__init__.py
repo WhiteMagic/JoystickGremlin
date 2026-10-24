@@ -1077,12 +1077,6 @@ class MacroData(AbstractActionData):
         raise GremlinError(f"{self.name}: has no containers")
 
     @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
-    @override
     def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
         performed_swap = False
         for action in self.actions:

@@ -180,9 +180,6 @@ class HatButtonsModel(ActionModel):
             + QtCore.QFile("core_plugins:hat_buttons/HatButtonsAction.qml").fileName()
         )
 
-    def _action_behavior(self) -> str:
-        return "button"
-
     @QtCore.Slot(int, result=str)
     def buttonName(self, index: int) -> str:
         key = (self._data.button_count, index)
@@ -219,6 +216,7 @@ class HatButtonsData(AbstractActionData):
 
     properties = (ActionProperty.ActivateDisabled,)
     input_types = (InputType.JoystickHat,)
+    child_behavior_type = InputType.JoystickButton
 
     name_list: ClassVar[dict] = {
         4: ["North", "East", "South", "West", "Center"],
@@ -294,12 +292,6 @@ class HatButtonsData(AbstractActionData):
         if selector not in self.direction:
             raise GremlinError(f"Key {selector} invalid as hat direction")
         return self.direction[selector]
-
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
 
 
 create = HatButtonsData

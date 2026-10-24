@@ -292,12 +292,6 @@ class DoubleTapData(AbstractActionData):
         elif selector == "double":
             return self.double_actions
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = DoubleTapData
 

@@ -196,11 +196,5 @@ class MapToKeyboardData(AbstractActionData):
     def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = MapToKeyboardData

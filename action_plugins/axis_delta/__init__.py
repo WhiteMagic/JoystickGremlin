@@ -95,9 +95,6 @@ class AxisDeltaModel(ActionModel):
             + QtCore.QFile("core_plugins:axis_delta/AxisDeltaAction.qml").fileName()
         )
 
-    def _action_behavior(self) -> str:
-        return "button"
-
     def _get_change_threshold(self) -> float:
         return self._data.change_threshold
 
@@ -122,6 +119,7 @@ class AxisDeltaData(AbstractActionData):
 
     properties = (ActionProperty.ActivateDisabled,)
     input_types = (InputType.JoystickAxis,)
+    child_behavior_type = InputType.JoystickButton
 
     def __init__(self, behavior_type: InputType = InputType.JoystickAxis) -> None:
         super().__init__(behavior_type)
@@ -185,12 +183,6 @@ class AxisDeltaData(AbstractActionData):
                 raise GremlinError(
                     f"{self.name}: has no container with name {selector}"
                 )
-
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
 
 
 create = AxisDeltaData

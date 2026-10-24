@@ -187,11 +187,5 @@ class ChainData(AbstractActionData):
             raise GremlinError(f"Index {index} invalid as chain container")
         return self.chain_sequences[index]
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = ChainData

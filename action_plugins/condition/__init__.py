@@ -420,14 +420,6 @@ class ConditionData(AbstractActionData):
                 )
 
     @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        if old_behavior != new_behavior:
-            for condition in self.conditions:
-                condition.set_input_type(new_behavior)
-
-    @override
     def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
         performed_swap = False
         for condition in self.conditions:

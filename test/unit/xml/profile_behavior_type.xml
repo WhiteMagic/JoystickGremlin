@@ -1,0 +1,113 @@
+<profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <inputs>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>axis</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e01</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>hat</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e02</root-action>
+                <behavior>hat</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <library>
+        <action id="3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e11" type="condition">
+            <true-actions/>
+            <false-actions/>
+            <property type="string">
+                <name>logical-operator</name>
+                <value>all</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+
+        <action id="3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e12" type="condition">
+            <true-actions/>
+            <false-actions/>
+            <property type="string">
+                <name>logical-operator</name>
+                <value>all</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+
+        <action id="3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e21" type="hat-buttons">
+            <property type="int">
+                <name>button-count</name>
+                <value>4</value>
+            </property>
+            <North>
+                <action-id>3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e12</action-id>
+            </North>
+            <East/>
+            <South/>
+            <West/>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e01" type="root">
+            <actions>
+                <action-id>3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e11</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e02" type="root">
+            <actions>
+                <action-id>3f9c0b8e-1d2a-4c55-9a51-0c6a2f7b1e21</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+</profile>

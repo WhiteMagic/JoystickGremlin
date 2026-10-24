@@ -333,6 +333,8 @@ class ActionModel(QtCore.QObject):
         return self._parent_sequence_index
 
     def _action_behavior(self) -> str:
+        if self._data.child_behavior_type is not None:
+            return InputType.to_string(self._data.child_behavior_type)
         raise MissingImplementationError(
             "ActionModel._action_behavior not implemented in subclass"
         )

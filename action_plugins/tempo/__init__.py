@@ -287,12 +287,6 @@ class TempoData(AbstractActionData):
         elif selector == "long":
             return self.long_actions
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = TempoData
 
