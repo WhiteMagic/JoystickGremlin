@@ -203,9 +203,14 @@ def test_swap_uuid(xml_dir: pathlib.Path) -> None:
 class _BranchRecorder:
     def __init__(self) -> None:
         self.values: list[bool | float | HatDirection] = []
+        self.functors: dict = {}
+        self.reset_count = 0
 
     def __call__(self, event: Event, value: Value, properties: list = []) -> None:
         self.values.append(value.current)
+
+    def reset(self) -> None:
+        self.reset_count += 1
 
 
 def _make_functor(
@@ -277,3 +282,5 @@ def test_functor_axis_evaluates_every_event() -> None:
     _send(functor, InputType.JoystickAxis, 0.25)
     assert true_branch.values == [0.5]
     assert false_branch.values == [0.25]
+    assert true_branch.reset_count == 1
+    assert false_branch.reset_count == 0
