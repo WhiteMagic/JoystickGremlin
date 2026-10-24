@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Log
+import Gremlin.UI
 import Kobold.Foundation
 
 Window {
@@ -59,6 +60,7 @@ Window {
 
         property string loggerName
 
+        readonly property LogSource _source: ModelFactory.logSource(_pane)
         readonly property Flickable flickable: contentItem
         // Only changed by contentY moves, so growing content keeps following.
         property bool following: true
@@ -79,17 +81,12 @@ Window {
         }
 
         Component.onCompleted: () => {
+            _source.loggerName = loggerName
             _text.text = _source.snapshot()
         }
 
-        LogSource {
-            id: _source
-
-            loggerName: _pane.loggerName
-        }
-
         Connections {
-            target: _source
+            target: _pane._source
 
             function onRecordAppended(text, evictedChars) {
                 _text.append(text)

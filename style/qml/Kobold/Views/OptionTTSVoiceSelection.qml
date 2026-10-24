@@ -5,26 +5,25 @@ import QtQuick
 import QtQuick.Controls
 
 import Gremlin.Config
+import Gremlin.UI
 
 Item {
     id: _root
 
+    readonly property TTSVoiceSelectionModel _model: ModelFactory.ttsVoiceSelectionModel(_root)
+
     implicitHeight: _combo.implicitHeight
     implicitWidth: _combo.implicitWidth
-
-    TTSVoiceSelectionModel {
-        id: _model
-    }
 
     ComboBox {
         id: _combo
 
         anchors.fill: parent
 
-        model: _model
+        model: _root._model
         textRole: "name"
-        currentIndex: _model.currentIndex
+        currentIndex: _root._model.currentIndex
 
-        onActivated: (index) => { _model.currentIndex = index }
+        onActivated: (index) => { _root._model.currentIndex = index }
     }
 }

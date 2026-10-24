@@ -54,8 +54,8 @@ ApplicationWindow {
     readonly property int _headerControlSize: Metrics.dp(28)
     readonly property int _headerIconSize: Metrics.dp(18)
 
-    property var _geom: backend.windowGeometry(
-        "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
+    property var _geom: ModelFactory.windowGeometry(
+        _root, "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
         minimumWidth, minimumHeight
     )
 

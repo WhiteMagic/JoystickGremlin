@@ -7,13 +7,15 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 
 import Gremlin.Config
+import Gremlin.UI
 import Gremlin.Util
 import Kobold.Controls
 
 Item {
-    ProfileAutoLoadingModel {
-        id: _model
-    }
+    id: _root
+
+    readonly property ProfileAutoLoadingModel _model:
+        ModelFactory.profileAutoLoadingModel(_root)
 
     FileDialog {
         id: _profileFileDialog
@@ -77,7 +79,7 @@ Item {
 
                 spacing: Metrics.gapS
 
-                model: ProcessListModel {}
+                model: ModelFactory.processListModel(_root)
 
                 delegate: Button {
                     width: ListView.view.width
@@ -117,7 +119,7 @@ Item {
         anchors.fill: parent
 
         Repeater {
-            model: _model
+            model: _root._model
 
             delegate: AutoLoadEntry {
                 Layout.fillWidth: true
@@ -134,7 +136,7 @@ Item {
 
             text: "New Entry"
 
-            onClicked: () => { _model.newEntry() }
+            onClicked: () => { _root._model.newEntry() }
         }
     }
 
@@ -191,7 +193,7 @@ Item {
                 ToolButton {
                     icon.name: "delete"
 
-                    onClicked: () => { _model.removeEntry(index) }
+                    onClicked: () => { _root._model.removeEntry(index) }
                 }
 
             }

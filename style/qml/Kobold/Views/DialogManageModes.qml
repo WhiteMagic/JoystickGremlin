@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Profile
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -20,8 +21,8 @@ Window {
 
     title: "Manage Modes"
 
-    property ModeHierarchyModel modeHierarchy : ModeHierarchyModel {}
-    property ModeListModel modeList : ModeListModel {}
+    readonly property ModeHierarchyModel modeHierarchy: ModelFactory.modeHierarchyModel(_root)
+    readonly property ModeListModel modeList: ModelFactory.modeListModel(_root)
 
     TextInputDialog {
         id: _textInput

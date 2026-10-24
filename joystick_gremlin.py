@@ -61,6 +61,7 @@ import gremlin.types
 import gremlin.ui.backend
 import gremlin.ui.icon_provider
 import gremlin.ui.log_viewer
+import gremlin.ui.model_factory
 import gremlin.ui.option
 import gremlin.ui.system_tray
 import gremlin.ui.theme_manager

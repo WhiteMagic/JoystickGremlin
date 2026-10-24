@@ -7,12 +7,14 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
-import Gremlin.Profile
 import Gremlin.Tools
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
 Window {
+    id: _root
+
     minimumWidth: Metrics.dp(900)
     minimumHeight: Metrics.dp(400)
 
@@ -20,19 +22,11 @@ Window {
 
     title: "Auto Mapper"
 
-    DeviceListModel {
-        id: _physicalDevices
-        deviceType: "physical"
-    }
-
-    DeviceListModel {
-        id: _virtualDevices
-        deviceType: "virtual"
-    }
-
-    Tools {
-        id: tools
-    }
+    readonly property DeviceListModel _physicalDevices:
+        ModelFactory.deviceListModel(_root, "physical")
+    readonly property DeviceListModel _virtualDevices:
+        ModelFactory.deviceListModel(_root, "virtual")
+    readonly property Tools _tools: ModelFactory.tools(_root)
 
     // Properties to track the selected devices and user selections.
     property var selectedPhysicalDevices: ({})
@@ -60,7 +54,7 @@ Window {
                     Layout.fillHeight: true
                     Layout.fillWidth: true
 
-                    model: _physicalDevices
+                    model: _root._physicalDevices
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
@@ -92,7 +86,7 @@ Window {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    model: _virtualDevices
+                    model: _root._virtualDevices
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
@@ -117,7 +111,7 @@ Window {
             ComboBox {
                 id: _modeSelector
 
-                model: ModeListModel {}
+                model: ModelFactory.modeListModel(_modeSelector)
 
                 textRole: "name"
             }
@@ -144,7 +138,7 @@ Window {
                 text: "Create 1:1 mappings"
 
                 onClicked: () => {
-                    _statusMessage.text = tools.createMappings(
+                    _statusMessage.text = _root._tools.createMappings(
                         _modeSelector.currentText,
                         selectedPhysicalDevices,
                         selectedVJoyDevices,

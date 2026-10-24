@@ -6,7 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.ActionPlugins
-import Gremlin.Profile
+import Gremlin.UI
 import Kobold.Controls
 import Kobold.Foundation
 
@@ -49,7 +49,7 @@ ColumnLayout {
 
                 Layout.preferredWidth: 200
 
-                model: ModeListModel {}
+                model: ModelFactory.modeListModel(_switchCombo)
                 textRole: "name"
                 valueRole: "name"
 
@@ -117,9 +117,11 @@ ColumnLayout {
                         spacing: Metrics.gapM
 
                         ComboBox {
+                            id: _cycleCombo
+
                             Layout.preferredWidth: 200
 
-                            model: ModeListModel {}
+                            model: ModelFactory.modeListModel(_cycleCombo)
                             textRole: "name"
                             valueRole: "name"
 
@@ -162,7 +164,7 @@ ColumnLayout {
 
                 Layout.preferredWidth: 200
 
-                model: ModeListModel {}
+                model: ModelFactory.modeListModel(_temporaryCombo)
                 textRole: "name"
                 valueRole: "name"
 
