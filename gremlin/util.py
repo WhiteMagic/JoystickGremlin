@@ -939,6 +939,20 @@ def clamp_analog_axis(value: float) -> float:
     return clamp(value, -1.0, 1.0)
 
 
+def join_thread(thread: threading.Thread | None) -> None:
+    """Waits for the thread to finish unless it is the calling thread.
+
+    Args:
+        thread: the thread to wait for, None is ignored
+    """
+    if (
+        thread is not None
+        and thread.is_alive()
+        and thread is not threading.current_thread()
+    ):
+        thread.join()
+
+
 def setup_userprofile() -> None:
     """Initializes the data folder in the user's profile folder."""
     folder = userprofile_path()

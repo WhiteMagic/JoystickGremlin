@@ -59,11 +59,16 @@ def _resolve_path(script_path: Path) -> Path:
 
 def _current_script_id() -> uuid.UUID | None:
     """Returns the id of the Script currently executing, if any."""
-    for frame in inspect.stack():
-        identifier = frame.frame.f_locals.get("_script_id", None)
-        if isinstance(identifier, uuid.UUID):
-            return identifier
-    return None
+    frame = inspect.currentframe()
+    try:
+        while frame is not None:
+            identifier = frame.f_locals.get("_script_id", None)
+            if isinstance(identifier, uuid.UUID):
+                return identifier
+            frame = frame.f_back
+        return None
+    finally:
+        del frame
 
 
 class CallbackRegistry:
@@ -138,6 +143,7 @@ class PeriodicRegistry:
         self._running = False
         if self._thread.is_alive():
             self._thread.join()
+        self._queue = []
 
     def add(self, callback: Callable, interval: float) -> None:
         """Adds a function to execute periodically.

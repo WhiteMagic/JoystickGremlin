@@ -524,6 +524,12 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
         Called when a mode change routes the functor's input to another binding.
         """
 
+    def teardown(self) -> None:
+        """Stops work the functor runs on its own, such as timers and threads.
+
+        Called once when the profile stops, must not produce outputs.
+        """
+
     def _process_event(
         self,
         functors: list[AbstractFunctor],
@@ -607,3 +613,15 @@ def reset_functor_tree(functor: AbstractFunctor) -> None:
     for children in functor.functors.values():
         for child in children:
             reset_functor_tree(child)
+
+
+def teardown_functor_tree(functor: AbstractFunctor) -> None:
+    """Calls the teardown method on every functor in the functor's tree.
+
+    Args:
+        functor: root of the functor tree to tear down
+    """
+    functor.teardown()
+    for children in functor.functors.values():
+        for child in children:
+            teardown_functor_tree(child)

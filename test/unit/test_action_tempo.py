@@ -85,3 +85,16 @@ def test_ctor() -> None:
     assert a.threshold == c.value("action", "tempo", "duration")
     assert a.activate_on == "release"
     assert a.is_valid()
+
+
+def test_teardown_cancels_timer() -> None:
+    data = tempo.TempoData(types.InputType.JoystickButton)
+    data.insert_action(DescriptionData(), "short")
+    data.threshold = 60.0
+    functor = tempo.TempoFunctor(data)
+
+    functor._start_timer()
+    functor.teardown()
+
+    assert functor.timer.finished.is_set()
+    assert not functor.timer.is_alive()

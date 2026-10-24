@@ -31,6 +31,7 @@ from gremlin.base_classes import (
     AbstractFunctor,
     Value,
     reset_functor_tree,
+    teardown_functor_tree,
 )
 from gremlin.config import Configuration
 from gremlin.input_refresh import RefreshPhysicalInputs
@@ -244,6 +245,11 @@ class CallbackObject:
         """Resets action functors of the binding."""
         if isinstance(self._functor, AbstractFunctor):
             reset_functor_tree(self._functor)
+
+    def teardown(self) -> None:
+        """Stops timers and threads of the binding's action functors."""
+        if isinstance(self._functor, AbstractFunctor):
+            teardown_functor_tree(self._functor)
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
@@ -460,6 +466,9 @@ class CodeRunner:
             evt_lst.gremlin_active = False
         self._running = False
 
+        # Stop functor timers and threads before dropping the callbacks.
+        self.event_handler.teardown_bindings()
+
         # Empty various callback registries.
         user_script.callback_registry.clear()
         self.event_handler.clear()
@@ -476,6 +485,8 @@ class CodeRunner:
 
         # Remove all claims on VJoy devices.
         VJoyProxy.reset()
+
+        self._profile = None
 
     def _reset_state(self) -> None:
         """Resets all states to their default values."""
@@ -526,7 +537,7 @@ class CodeRunner:
                 continue
 
             # Perform system path mangling for import statements.
-            script_folder = str(script.path.parent)
+            script_folder = os.path.normcase(os.path.abspath(script.path.parent))
             if script_folder not in system_paths:
                 system_paths.append(script_folder)
 
