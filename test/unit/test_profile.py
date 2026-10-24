@@ -126,6 +126,21 @@ def test_simple_action(xml_dir: pathlib.Path) -> None:
     assert actions[2].id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
 
 
+def test_behavior_type_restored_on_load(xml_dir: pathlib.Path) -> None:
+    gremlin.plugin_manager.PluginManager()
+
+    p = Profile()
+    p.from_xml(xml_dir / "profile_behavior_type.xml")
+
+    axis_item, hat_item = p.inputs[get_fake_device_guid(is_virtual=False).uuid]
+    axis_condition = axis_item.action_sequences[0].root_action.get_actions()[0][0]
+    hat_buttons = hat_item.action_sequences[0].root_action.get_actions()[0][0]
+    hat_condition = hat_buttons.get_actions("North")[0][0]
+
+    assert axis_condition.behavior_type == InputType.JoystickAxis
+    assert hat_condition.behavior_type == InputType.JoystickButton
+
+
 def test_unsaved_changes_non_ascii(
     xml_dir: pathlib.Path, tmp_path: pathlib.Path
 ) -> None:

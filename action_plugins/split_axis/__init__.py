@@ -163,11 +163,5 @@ class SplitAxisData(AbstractActionData):
                     f"{self.name}: has no container with name {selector}"
                 )
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = SplitAxisData

@@ -930,6 +930,7 @@ class InputItemBinding:
             )
         self.root_action = self.input_item.library.get_action(root_id)
         self.behavior = read_subelement(node, "behavior")
+        self._apply_behavior(self.root_action, self.behavior)
         self.virtual_button = self._parse_virtual_button(node)
 
     def to_xml(self) -> ElementTree.Element:
@@ -950,6 +951,17 @@ class InputItemBinding:
             Library instance of the profile
         """
         return self.input_item.library
+
+    def _apply_behavior(self, action: AbstractActionData, behavior: InputType) -> None:
+        """Sets the behavior type of the action and all its children.
+
+        Args:
+            action: root of the action tree to update
+            behavior: behavior type the action operates under
+        """
+        action.behavior_type = behavior
+        for child in action.get_actions()[0]:
+            self._apply_behavior(child, action.child_behavior_type or behavior)
 
     def _parse_virtual_button(self, node: ElementTree.Element) -> AbstractVirtualButton:
         # Ensure the configuration requires a virtual button

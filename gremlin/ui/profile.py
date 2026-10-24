@@ -694,6 +694,7 @@ class InputItemBindingModel(QtCore.QObject):
 
             # Remove all actions when the behavior changes.
             root_action = self.root_action
+            root_action.behavior_type = behavior
             children, selectors = root_action.get_actions()
             for i in range(len(children) - 1, -1, -1):
                 root_action.remove_action(i, selectors[i])

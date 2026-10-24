@@ -115,6 +115,8 @@ class AbstractActionData(ABC):
     model = None
     properties: tuple[ActionProperty, ...] = ()
     input_types: tuple[InputType, ...] = ()
+    # Behavior given to child actions, None passes on the action's own behavior
+    child_behavior_type: InputType | None = None
 
     def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         """Creates a new action data instance.
@@ -190,16 +192,9 @@ class AbstractActionData(ABC):
         """
         return self._behavior_type
 
-    def set_behavior_type(self, new_behavior: InputType) -> None:
-        """Sets the behavior type of the action.
-
-        Args:
-            new_behavior: new InputType corresponding to the behavior type
-        """
-        old_behavior = self._behavior_type
-        self._behavior_type = new_behavior
-        if old_behavior != new_behavior:
-            self._handle_behavior_change(old_behavior, new_behavior)
+    @behavior_type.setter
+    def behavior_type(self, value: InputType) -> None:
+        self._behavior_type = value
 
     @property
     def action_label(self) -> str:
@@ -463,19 +458,6 @@ class AbstractActionData(ABC):
 
         Returns:
             List container with actions referenced by the selector
-        """
-
-    @abstractmethod
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        """Handles changing of the behavior type of the action.
-
-        This function will only be called when the two behaviors are different.
-
-        Args:
-            old_behavior: type describing the old behavior
-            new_behavior: type describing the new behavior
         """
 
     # General utility functions, supporting the implementation of actions.

@@ -371,11 +371,5 @@ class DualAxisDeadzoneData(AbstractActionData):
             performed_swap = True
         return performed_swap
 
-    @override
-    def _handle_behavior_change(
-        self, old_behavior: InputType, new_behavior: InputType
-    ) -> None:
-        pass
-
 
 create = DualAxisDeadzoneData
