@@ -23,6 +23,7 @@ from gremlin.base_classes import (
     AbstractFunctor,
     UserFeedback,
     Value,
+    reset_functor_tree,
 )
 from gremlin.profile import Library
 from gremlin.signal import display_error
@@ -78,6 +79,13 @@ class ConditionFunctor(AbstractFunctor):
     def _process_axis(
         self, event: types.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
+        functors = self._select_functors(value)
+        # When the condition state changed, reset the underlying functors to ensure
+        # things can stop and reset properly.
+        if functors != self._functor_cache[0]:
+            for functor in self._functor_cache[0]:
+                reset_functor_tree(functor)
+        self._functor_cache = (functors, True)
         self._process_event(self._select_functors(value), event, value, properties)
 
     def _process_button(

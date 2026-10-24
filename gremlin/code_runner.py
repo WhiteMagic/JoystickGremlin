@@ -30,6 +30,7 @@ from gremlin import (
 from gremlin.base_classes import (
     AbstractFunctor,
     Value,
+    reset_functor_tree,
 )
 from gremlin.config import Configuration
 from gremlin.input_refresh import RefreshPhysicalInputs
@@ -41,18 +42,6 @@ from gremlin.types import (
     InputType,
 )
 from vjoy.vjoy import VJoyProxy
-
-
-def _reset_functor_tree(functor: AbstractFunctor) -> None:
-    """Calls the reset method on every functor in the functor's tree.
-
-    Args:
-        functor: root of the functor tree to reset
-    """
-    functor.reset()
-    for children in functor.functors.values():
-        for child in children:
-            _reset_functor_tree(child)
 
 
 class VirtualButton(metaclass=ABCMeta):
@@ -254,7 +243,7 @@ class CallbackObject:
     def reset(self) -> None:
         """Resets action functors of the binding."""
         if isinstance(self._functor, AbstractFunctor):
-            _reset_functor_tree(self._functor)
+            reset_functor_tree(self._functor)
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
