@@ -89,6 +89,12 @@ class SmartToggleFunctor(AbstractFunctor):
             "press" if value.current else "release", event, value, properties
         )
 
+    @override
+    def teardown(self) -> None:
+        if self.timer:
+            self.timer.cancel()
+            util.join_thread(self.timer)
+
 
 class SmartToggleModel(ActionModel):
     changed = QtCore.Signal()

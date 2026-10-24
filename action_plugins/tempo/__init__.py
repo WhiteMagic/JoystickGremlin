@@ -77,6 +77,12 @@ class TempoFunctor(AbstractFunctor):
         if self.fsm.try_perform(action, event, value, properties) is None:
             self._reset_fsm(event, value, properties)
 
+    @override
+    def teardown(self) -> None:
+        if self.timer:
+            self.timer.cancel()
+            util.join_thread(self.timer)
+
     def _reset_fsm(
         self, event: types.Event, value: Value, properties: list[ActionProperty]
     ) -> None:

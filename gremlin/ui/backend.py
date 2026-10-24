@@ -193,6 +193,7 @@ class Backend(QtCore.QObject):
         self.joystick_change_monitor = device_helpers.JoystickInputSignificant()
 
         self._current_input_item_model: InputItemModel | None = None
+        self._script_list_model = ScriptListModel(self.profile.scripts, self)
 
         # Hookup various mode change related callbacks
         mm = mode_manager.ModeManager()
@@ -231,6 +232,7 @@ class Backend(QtCore.QObject):
         # Update shared state before any other parts update.
         shared_state.current_profile = self.profile
         mode_manager.ModeManager().reset()
+        self._script_list_model.set_script_manager(self.profile.scripts)
 
         # Emit signals for various parts of the system.
         self.windowTitleChanged.emit()
@@ -542,9 +544,9 @@ class Backend(QtCore.QObject):
         """
         return self.profile.has_unsaved_changes()
 
-    @QtCore.Property(type=ScriptListModel, notify=profileChanged)
+    @QtCore.Property(type=ScriptListModel, constant=True)
     def scriptListModel(self) -> ScriptListModel:
-        return ScriptListModel(self.profile.scripts, self)
+        return self._script_list_model
 
     @QtCore.Property(type=str, notify=propertyChanged)
     def currentMode(self) -> str:
@@ -605,9 +607,10 @@ class Backend(QtCore.QObject):
             new_profile = profile.Profile()
             profile_was_converted = new_profile.from_xml(fpath)
 
-            profile_folder = os.path.dirname(fpath)
-            if profile_folder not in sys.path:
-                sys.path = list(set(sys.path))
+            profile_folder = os.path.normcase(os.path.abspath(os.path.dirname(fpath)))
+            if profile_folder not in [
+                os.path.normcase(os.path.abspath(path)) for path in sys.path
+            ]:
                 sys.path.insert(0, profile_folder)
 
             self.profile = new_profile

@@ -89,6 +89,8 @@ class MapToVjoyFunctor(AbstractFunctor):
                     if self.thread_running is False:
                         if isinstance(self.thread, threading.Thread):
                             self.thread.join()
+                        # Set before start so a teardown in between can't be undone.
+                        self.thread_running = True
                         self.thread = threading.Thread(target=self.relative_axis_thread)
                         self.thread.start()
 
@@ -130,8 +132,12 @@ class MapToVjoyFunctor(AbstractFunctor):
                     f"Failed to reset {self.data.name} action due to vJoy error: {e}."
                 )
 
+    @override
+    def teardown(self) -> None:
+        self.thread_running = False
+        util.join_thread(self.thread)
+
     def relative_axis_thread(self) -> None:
-        self.thread_running = True
         vjoy_dev = VJoyProxy()[self.data.vjoy_device_id]
         self.axis_value = vjoy_dev.axis(self.data.vjoy_input_id).value
         while self.thread_running:

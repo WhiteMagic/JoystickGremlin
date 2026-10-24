@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from typing import (
     ClassVar,
@@ -411,6 +412,19 @@ class ScriptListModel(QtCore.QAbstractListModel):
         super().__init__(parent)
 
         self._script_manager = script_manager
+        self._variable_models: dict[uuid.UUID, list[AbstractVariableModel]] = {}
+
+    def set_script_manager(self, script_manager: ScriptManager) -> None:
+        """Replaces the scripts shown by this model.
+
+        Args:
+            script_manager: the script manager of the newly active profile
+        """
+        self.beginResetModel()
+        self._script_manager = script_manager
+        for script_id in list(self._variable_models):
+            self._discard_variable_models(script_id)
+        self.endResetModel()
 
     @QtCore.Slot(str)
     def addScript(self, qml_url: str) -> None:
@@ -422,6 +436,7 @@ class ScriptListModel(QtCore.QAbstractListModel):
     def removeScript(self, path: str, name: str) -> None:
         index = self._script_manager.index_of(Path(path), name)
         self.beginRemoveRows(QtCore.QModelIndex(), index, index)
+        self._discard_variable_models(self._script_manager.scripts[index].id)
         self._script_manager.remove_script(Path(path), name)
         self.endRemoveRows()
 
@@ -448,12 +463,18 @@ class ScriptListModel(QtCore.QAbstractListModel):
             case "name":
                 return script.name
             case "variables":
-                return [
-                    ScriptListModel.data_class_lookup[type(var)](var, self)
-                    for var in script.variables.values()
-                ]
+                if script.id not in self._variable_models:
+                    self._variable_models[script.id] = [
+                        ScriptListModel.data_class_lookup[type(var)](var, self)
+                        for var in script.variables.values()
+                    ]
+                return self._variable_models[script.id]
             case _:
                 return None
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return ScriptListModel.roles
+
+    def _discard_variable_models(self, script_id: uuid.UUID) -> None:
+        for model in self._variable_models.pop(script_id, []):
+            model.deleteLater()

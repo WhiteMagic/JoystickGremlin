@@ -21,6 +21,15 @@ Item {
     readonly property int configMinWidth:     Metrics.dp(600)
     readonly property int pathWidthReserve:   Metrics.dp(400)
 
+    // Variable models of the previous profile are deleted on profile change.
+    Connections {
+        target: backend
+
+        function onProfileChanged() {
+            _config.model = []
+        }
+    }
+
     // Dialog to select a script to add.
     FileDialog {
         id: _selectScript

@@ -1210,12 +1210,16 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
 
         self._profile = shared_state.current_profile
         self._vjoy_devices = self._output_devices()
+        self._initial_values_models = self._create_initial_values_models()
         signal.profileChanged.connect(self._reset)
 
     def _reset(self) -> None:
         self.beginResetModel()
         self._profile = shared_state.current_profile
         self._vjoy_devices = self._output_devices()
+        for model in self._initial_values_models:
+            model.deleteLater()
+        self._initial_values_models = self._create_initial_values_models()
         self.endResetModel()
 
     @override
@@ -1233,9 +1237,7 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
             case "vjoyId":
                 return self._vjoy_devices[index.row()].vjoy_id
             case "initialValuesModel":
-                return OutputVJoyInitialValuesModel(
-                    self._vjoy_devices[index.row()], self
-                )
+                return self._initial_values_models[index.row()]
 
     @override
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
@@ -1246,6 +1248,11 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
             d
             for d in device_initialization.vjoy_devices()
             if self._profile.settings.vjoy_as_input.get(d.vjoy_id, False) is False
+        ]
+
+    def _create_initial_values_models(self) -> list[OutputVJoyInitialValuesModel]:
+        return [
+            OutputVJoyInitialValuesModel(device, self) for device in self._vjoy_devices
         ]
 
 
@@ -1263,12 +1270,6 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
 
         self._device = device
         self._profile = shared_state.current_profile
-        signal.profileChanged.connect(self._reset)
-
-    def _reset(self) -> None:
-        self.beginResetModel()
-        self._profile = shared_state.current_profile
-        self.endResetModel()
 
     @override
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:

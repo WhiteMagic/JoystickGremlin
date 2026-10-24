@@ -648,6 +648,18 @@ class EventHandler(QtCore.QObject):
         self.callbacks = {}
         self._event_generator.reset()
 
+    def teardown_bindings(self) -> None:
+        """Tears down the functors of every attached input binding callback."""
+        bindings = {}
+        for modes in self.callbacks.values():
+            for events in modes.values():
+                for callback_list in events.values():
+                    for callback in callback_list:
+                        if isinstance(callback, InputBindingCallback):
+                            bindings[id(callback)] = callback
+        for binding in bindings.values():
+            binding.teardown()
+
     @QtCore.Slot(Event)
     def process_event(self, input_event: Event) -> None:
         """Passes the event to all callbacks registered for it.
@@ -658,6 +670,7 @@ class EventHandler(QtCore.QObject):
         Args:
             event: the event to process
         """
+        callbacks = self.callbacks
         for event in self._event_generator(input_event):
             for cb in self._matching_callbacks(event):
                 try:
@@ -666,6 +679,9 @@ class EventHandler(QtCore.QObject):
                     signal.display_error("Error encountered with vJoy.", str(e))
                     logging.getLogger("system").exception(f"VJoy error: '{e}'")
                     self.pause()
+                # In case a callback triggered a profile reload, stop here.
+                if self.callbacks is not callbacks:
+                    return
 
     def _matching_callbacks(self, event: Event) -> list[Callable[[Event], None]]:
         """Returns the list of callbacks to execute in response to

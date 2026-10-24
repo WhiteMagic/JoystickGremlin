@@ -92,6 +92,8 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                 if self.thread_running is False:
                     if isinstance(self.thread, threading.Thread):
                         self.thread.join()
+                    # Set before start so a teardown in between can't be undone.
+                    self.thread_running = True
                     self.thread = threading.Thread(target=self.relative_axis_thread)
                     self.thread.start()
                 # Don't emit an event in relative mode.
@@ -138,8 +140,12 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
             ):
                 self._logical[identifier].update(False)
 
+    @override
+    def teardown(self) -> None:
+        self.thread_running = False
+        util.join_thread(self.thread)
+
     def relative_axis_thread(self) -> None:
-        self.thread_running = True
         input = self._logical[
             LogicalDevice.Input.Identifier(
                 self.data.logical_input_type, self.data.logical_input_id
