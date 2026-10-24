@@ -24,20 +24,20 @@
   - `model`: Class type of the UI model class.
   - `properties`: Set of `gremlin.types.ActionProperty` values that define the properties of the action.
   - `input_types`: Set of `gremlin.types.InputType` values defining which input types this action is valid for.
+  - `child_behavior_type`: Optional, behavior given to child actions when it differs from the action's own, such as the "Hat to Buttons" action.
 - Methods to implement:
   - `_from_xml`: Parses an XML node, populating the member variables.
   - `_to_xml`: Serializes the instance's member variables into an XML node.
   - `user_feedback`: Returns a list of issues to display to the user, indicating a misconfigured action.
   - `_valid_selectors`: The list of selector names of containers containing child actions.
   - `_get_container`: Returns the container for the given selector name.
-  - `_handle_behavior_change`: If an action behaves differently or has constraints based on the type of input it is assigned to, this function handles that.
 
 # Model Class
 
 - Exposes user modifiable values from the *Data class* to the QML UI.
 - Supports operations a user needs to do on the action in order to configure it.
 - Methods to implement:
-  - `_action_behavior`: the behavior (axis, button, hat) this action has in the current input, allows overriding action selection options in rare scenarios, such as the "Hat to Buttons" action.
+  - `_action_behavior`: the behavior (axis, button, hat) this action has in the current input. Not needed when the data class sets `child_behavior_type`.
   - `_qml_path_impl`: the path of the QML file to dynamically load for this action.
 
 # Functor
