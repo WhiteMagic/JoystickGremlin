@@ -595,3 +595,15 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
                     "Invalid activation mode encountered when executing "
                     + f"action '{self.data.id}'"
                 )
+
+
+def reset_functor_tree(functor: AbstractFunctor) -> None:
+    """Calls the reset method on every functor in the functor's tree.
+
+    Args:
+        functor: root of the functor tree to reset
+    """
+    functor.reset()
+    for children in functor.functors.values():
+        for child in children:
+            reset_functor_tree(child)
