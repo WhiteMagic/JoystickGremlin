@@ -17,8 +17,6 @@ Rectangle {
 
     color: Theme.bgAlt
 
-    property int inputIndex
-    property InputIdentifier inputIdentifier
     property alias device: _inputList.model
 
     // Modal window to allow renaming of inputs.
@@ -94,8 +92,10 @@ Rectangle {
             }
 
             onCurrentIndexChanged: () => {
-                inputIndex = currentIndex
-                inputIdentifier = model.inputIdentifier(currentIndex)
+                uiState.setCurrentInput(
+                    model.inputIdentifier(currentIndex),
+                    currentIndex
+                )
             }
         }
 

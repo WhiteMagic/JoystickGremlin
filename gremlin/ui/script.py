@@ -24,7 +24,10 @@ from gremlin.types import (
     Event,
     InputType,
 )
-from gremlin.ui.device import InputIdentifier
+from gremlin.ui.device import (
+    InputIdentifier,
+    reuse_or_replace_identifier,
+)
 from gremlin.ui.util import to_local_path
 
 QML_IMPORT_NAME = "Gremlin.Script"
@@ -183,6 +186,7 @@ class LogicalDeviceModel(AbstractVariableModel):
         self, variable: user_script.LogicalDeviceVariable, parent: ta.OQO = None
     ) -> None:
         super().__init__(variable, parent)
+        self._logical_input_identifier: InputIdentifier | None = None
 
     @QtCore.Property(str, notify=changed)
     def label(self) -> str:
@@ -193,12 +197,14 @@ class LogicalDeviceModel(AbstractVariableModel):
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
-        return InputIdentifier(
+        self._logical_input_identifier = reuse_or_replace_identifier(
+            self._logical_input_identifier,
             LogicalDevice.device_guid,
             self._variable.value.type,
             self._variable.value.id,
-            parent=self,
+            self,
         )
+        return self._logical_input_identifier
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
         if identifier.input_type not in self._variable.valid_types:
