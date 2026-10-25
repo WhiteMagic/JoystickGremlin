@@ -50,7 +50,10 @@ from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
-from gremlin.ui.device import InputIdentifier
+from gremlin.ui.device import (
+    InputIdentifier,
+    reuse_or_replace_identifier,
+)
 from gremlin.ui.util import MacroRecorder
 
 if TYPE_CHECKING:
@@ -217,17 +220,20 @@ class LogicalDeviceActionModel(AbstractActionModel):
         self, action: macro.LogicalDeviceAction, parent: ta.OQO = None
     ) -> None:
         super().__init__(action, parent)
+        self._logical_input_identifier: InputIdentifier | None = None
 
     def _action_type(self) -> str:
         return "logical-device"
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
-        return InputIdentifier(
+        self._logical_input_identifier = reuse_or_replace_identifier(
+            self._logical_input_identifier,
             LogicalDevice.device_guid,
             self._action.input_type,
             self._action.input_id,
-            parent=self,
+            self,
         )
+        return self._logical_input_identifier
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
         if (identifier.input_type != self._action.input_type) or (
@@ -655,8 +661,9 @@ class ActionListModel(QtCore.QAbstractListModel):
             return
         self.beginRemoveRows(QtCore.QModelIndex(), index, index)
         del self._actions[index]
-        del self._wrappers[index]
+        wrapper = self._wrappers.pop(index)
         self.endRemoveRows()
+        wrapper.deleteLater()
 
     def move_from_to(self, source_index: int, destination_index: int) -> bool:
         """Move an item from a source to a destination index.

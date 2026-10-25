@@ -245,8 +245,8 @@ ColumnLayout {
                         validTypes: ["axis", "button", "hat"]
                         logicalInputIdentifier: modelData.logicalInputIdentifier
 
-                        onLogicalInputIdentifierChanged: {
-                            modelData.logicalInputIdentifier = logicalInputIdentifier
+                        onLogicalInputSelected: (identifier) => {
+                            modelData.logicalInputIdentifier = identifier
                         }
                     }
 

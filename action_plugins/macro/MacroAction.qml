@@ -296,13 +296,11 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     LogicalDeviceSelector {
-                        // The ordering is important, swapping it will result in the
-                        // wrong item being displayed.
                         validTypes: ["axis", "button", "hat"]
                         logicalInputIdentifier: modelData.logicalInputIdentifier
 
-                        onLogicalInputIdentifierChanged: {
-                            modelData.logicalInputIdentifier = logicalInputIdentifier
+                        onLogicalInputSelected: (identifier) => {
+                            modelData.logicalInputIdentifier = identifier
                         }
                     }
 

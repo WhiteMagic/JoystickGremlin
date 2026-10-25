@@ -722,11 +722,6 @@ ApplicationWindow {
 
                 visible: uiState.currentTab === "logical"
                 SplitView.minimumWidth: Metrics.leftPaneMin
-
-                // Trigger a model update on the InputConfiguration.
-                onInputIdentifierChanged: () => {
-                    uiState.setCurrentInput(inputIdentifier, inputIndex)
-                }
             }
 
             // List keyboard inputs (left panel).

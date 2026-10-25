@@ -38,7 +38,10 @@ from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
-from gremlin.ui.device import InputIdentifier
+from gremlin.ui.device import (
+    InputIdentifier,
+    reuse_or_replace_identifier,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -197,6 +200,7 @@ class MapToLogicalDeviceModel(ActionModel):
         parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
+        self._logical_input_identifier: InputIdentifier | None = None
         signal.logicalDeviceModified.emit()
 
     def _qml_path_impl(self) -> str:
@@ -213,21 +217,21 @@ class MapToLogicalDeviceModel(ActionModel):
         ).actionBehavior
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
-        return InputIdentifier(
+        self._logical_input_identifier = reuse_or_replace_identifier(
+            self._logical_input_identifier,
             LogicalDevice.device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
-            parent=self,
+            self,
         )
+        return self._logical_input_identifier
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
-        new_identifier = InputIdentifier(
-            LogicalDevice.device_guid,
-            self._data.logical_input_type,
-            self._data.logical_input_id,
-            parent=self,
-        )
-        if new_identifier != identifier:
+        if (
+            identifier.device_guid != LogicalDevice.device_guid
+            or identifier.input_type != self._data.logical_input_type
+            or identifier.input_id != self._data.logical_input_id
+        ):
             self._data.logical_input_id = identifier.input_id
             self._data.logical_input_type = identifier.input_type
             self.logicalInputIdentifierChanged.emit()

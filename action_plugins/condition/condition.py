@@ -46,7 +46,10 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-from gremlin.ui.device import InputIdentifier
+from gremlin.ui.device import (
+    InputIdentifier,
+    reuse_or_replace_identifier,
+)
 from vjoy.vjoy import VJoyProxy
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -758,6 +761,7 @@ class LogicalDeviceCondition(AbstractCondition):
         self._states = [self.State(logical_input.type, logical_input.id)]
         self._condition_type = ConditionType.LogicalDevice
         self._create_comparator(self._states[0].input_type)
+        self._logical_input_identifier: InputIdentifier | None = None
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._comparator_from_xml(node)
@@ -783,12 +787,14 @@ class LogicalDeviceCondition(AbstractCondition):
         pass
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
-        return InputIdentifier(
+        self._logical_input_identifier = reuse_or_replace_identifier(
+            self._logical_input_identifier,
             LogicalDevice.device_guid,
             self._states[0].input_type,
             self._states[0].input_id,
-            parent=self,
+            self,
         )
+        return self._logical_input_identifier
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
         if (identifier.input_type != self._states[0].input_type) or (

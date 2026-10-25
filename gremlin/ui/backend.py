@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 import sys
@@ -45,12 +46,19 @@ from gremlin.ui.util import (
     to_local_path,
     updated_recent_profiles,
 )
-from gremlin.ui.window_geometry import WindowGeometry
 
 QML_IMPORT_NAME = "Gremlin.UI"
 QML_IMPORT_MAJOR_VERSION = 1
 
 _max_recent_profiles = 5
+
+
+@dataclasses.dataclass(frozen=True)
+class InputSelection:
+    """Input selected on a device together with its index in the input list."""
+
+    identifier: InputIdentifier
+    index: int
 
 
 @ta.QmlElement
@@ -67,11 +75,13 @@ class UIState(QtCore.QObject):
     tabChanged = QtCore.Signal()
     selectIndex = QtCore.Signal(int)
 
+    _NO_SELECTION = InputSelection(InputIdentifier(), 0)
+
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._current_device = dill.UUID_Invalid
-        self._current_input = {}
+        self._selection_by_device: dict[uuid.UUID | None, InputSelection] = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
 
@@ -107,9 +117,19 @@ class UIState(QtCore.QObject):
 
     @QtCore.Slot(InputIdentifier, int)
     def setCurrentInput(self, input: InputIdentifier, index: int) -> None:
-        value = (input, index)
-        if value != self._current_input.get(input.device_guid, None):
-            self._current_input[input.device_guid] = value
+        # Takes ownership of the identifier.
+        previous = self._selection_by_device.get(input.device_guid)
+        if (
+            previous is not None
+            and previous.identifier == input
+            and previous.index == index
+        ):
+            input.deleteLater()
+        else:
+            input.setParent(self)
+            if previous is not None:
+                previous.identifier.deleteLater()
+            self._selection_by_device[input.device_guid] = InputSelection(input, index)
             self.inputChanged.emit()
 
     @QtCore.Slot(str)
@@ -137,11 +157,11 @@ class UIState(QtCore.QObject):
 
     @QtCore.Property(InputIdentifier, notify=inputChanged)
     def currentInput(self) -> InputIdentifier:
-        return self._current_input.get(self._current_device, (InputIdentifier(), 0))[0]
+        return self._current_selection().identifier
 
     @QtCore.Property(int, notify=inputChanged)
     def currentInputIndex(self) -> int:
-        return self._current_input.get(self._current_device, (InputIdentifier(), 0))[1]
+        return self._current_selection().index
 
     @QtCore.Property(str, notify=modeChanged)
     def currentMode(self) -> str:
@@ -151,13 +171,14 @@ class UIState(QtCore.QObject):
     def currentTab(self) -> str:
         return self._current_tab
 
+    def _current_selection(self) -> InputSelection:
+        return self._selection_by_device.get(self._current_device, self._NO_SELECTION)
+
     def __str__(self) -> str:
-        cur_input = self._current_input.get(
-            self._current_device, (InputIdentifier(), 0)
-        )
+        selection = self._current_selection()
         return (
-            f"{self._current_device} {cur_input[0].input_id} "
-            + f"{cur_input[1]}  {self._current_tab}"
+            f"{self._current_device} {selection.identifier.input_id} "
+            + f"{selection.index}  {self._current_tab}"
         )
 
 

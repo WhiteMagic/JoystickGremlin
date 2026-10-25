@@ -20,14 +20,12 @@ ColumnLayout {
         spacing: Metrics.gapM
 
         LogicalDeviceSelector {
-            // The ordering is important, swapping it will result in the
-            // wrong item being displayed.
             validTypes: [root.action.actionBehavior]
             logicalInputType: root.action.actionBehavior
             logicalInputIdentifier: root.action.logicalInputIdentifier
 
-            onLogicalInputIdentifierChanged: {
-                root.action.logicalInputIdentifier = logicalInputIdentifier
+            onLogicalInputSelected: (identifier) => {
+                root.action.logicalInputIdentifier = identifier
             }
         }
 

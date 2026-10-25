@@ -167,6 +167,38 @@ class InputIdentifier(QtCore.QObject):
         )
 
 
+def reuse_or_replace_identifier(
+    current: InputIdentifier | None,
+    device_guid: uuid.UUID | None,
+    input_type: InputType | None,
+    input_id: int | ScanCode | None,
+    parent: QtCore.QObject,
+) -> InputIdentifier:
+    """Returns an identifier for the given input. Current one returned if they match.
+
+    A replaced identifier is scheduled for deletion.
+
+    Args:
+        current: identifier currently being used, if any
+        device_guid: guid of the input's device
+        input_type: type of the input
+        input_id: id of the input
+        parent: owner of a newly created identifier
+
+    Returns:
+        Identifier referring to the given input.
+    """
+    if current is not None:
+        if (
+            current.device_guid == device_guid
+            and current.input_type == input_type
+            and current.input_id == input_id
+        ):
+            return current
+        current.deleteLater()
+    return InputIdentifier(device_guid, input_type, input_id, parent=parent)
+
+
 @ta.QmlElement
 class DeviceListModel(QtCore.QAbstractListModel):
     """Model containing basic information about all connected devices."""
@@ -426,13 +458,10 @@ class Device(QtCore.QAbstractListModel):
             An InputIdentifier instance referring to the input item with
             the given index.
         """
-        identifier = InputIdentifier(parent=self)
-        identifier.device_guid = self._device.device_guid.uuid
         input_info = self._convert_index(index)
-        identifier.input_type = input_info[0]
-        identifier.input_id = input_info[1]
-
-        return identifier
+        return InputIdentifier(
+            self._device.device_guid.uuid, input_info[0], input_info[1], parent=self
+        )
 
     def _name(self, identifier: tuple[InputType, int]) -> str:
         if self._device_mapping is not None:
@@ -623,12 +652,9 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
             return InputIdentifier(parent=self)
 
         input = self._index_to_input(index)
-        identifier = InputIdentifier(parent=self)
-        identifier.device_guid = self._logical.device_guid
-        identifier.input_type = input.type
-        identifier.input_id = input.id
-
-        return identifier
+        return InputIdentifier(
+            self._logical.device_guid, input.type, input.id, parent=self
+        )
 
     @QtCore.Slot(int, result=str)
     def labelAt(self, index: int) -> str:
@@ -744,8 +770,12 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
     def _set_current_index(self, index: int) -> None:
         if index != self._current_index:
             input = self._logical.inputs_of_type(self._valid_types)[index]
-            self._current_identifier = InputIdentifier(
-                LogicalDevice.device_guid, input.type, input.id, parent=self
+            self._current_identifier = reuse_or_replace_identifier(
+                self._current_identifier,
+                LogicalDevice.device_guid,
+                input.type,
+                input.id,
+                self,
             )
             self._current_index = index
             self.selectionChanged.emit()
@@ -817,12 +847,12 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
     @QtCore.Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:
-        identifier = InputIdentifier(parent=self)
-        identifier.device_guid = dill.UUID_Keyboard
-        identifier.input_type = InputType.Keyboard
-        identifier.input_id = self._all_keyboard_inputs()[index].input_id
-
-        return identifier
+        return InputIdentifier(
+            dill.UUID_Keyboard,
+            InputType.Keyboard,
+            self._all_keyboard_inputs()[index].input_id,
+            parent=self,
+        )
 
     @QtCore.Slot(int)
     def deleteInput(self, index: int) -> None:
@@ -1186,12 +1216,14 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         if self._device is not None and guid == str(self._device.device_guid):
             return
 
+        self.beginResetModel()
         self._device = dill.DILL.get_device_information_by_guid(
             dill.GUID.from_str(guid)
         )
         self._device_uuid = uuid.UUID(guid)
         self._state = []
         self._initialize_state()
+        self.endResetModel()
         self.deviceChanged.emit()
 
     def _initialize_state(self) -> None:
