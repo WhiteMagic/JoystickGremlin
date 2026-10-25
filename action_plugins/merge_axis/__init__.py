@@ -39,7 +39,10 @@ from gremlin.ui.action_model import (
     SequenceIndex,
 )
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import LabelValueSelectionModel
+from gremlin.ui.profile import (
+    LabelValueSelectionModel,
+    reuse_or_replace_selection_model,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -203,6 +206,9 @@ class MergeAxisModel(ActionModel):
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
+        self._operation_list: LabelValueSelectionModel | None = None
+        self._merge_action_list: LabelValueSelectionModel | None = None
+
     def _qml_path_impl(self) -> str:
         return (
             "file:///"
@@ -222,7 +228,10 @@ class MergeAxisModel(ActionModel):
             List of valid operation names
         """
         operations = sorted(MergeOperation.to_display(e) for e in MergeOperation)
-        return LabelValueSelectionModel(operations, operations, parent=self)
+        self._operation_list = reuse_or_replace_selection_model(
+            self._operation_list, operations, operations, self
+        )
+        return self._operation_list
 
     @QtCore.Property(LabelValueSelectionModel, notify=modelChanged)
     def mergeActionList(self) -> LabelValueSelectionModel:
@@ -231,11 +240,13 @@ class MergeAxisModel(ActionModel):
             key=lambda x: x.label,
         )
 
-        return LabelValueSelectionModel(
+        self._merge_action_list = reuse_or_replace_selection_model(
+            self._merge_action_list,
             [ma.label for ma in merge_actions],
             [str(ma.id) for ma in merge_actions],
-            parent=self,
+            self,
         )
+        return self._merge_action_list
 
     def _get_label(self) -> str:
         return self._data.label

@@ -29,7 +29,10 @@ from gremlin.ui.action_model import (
     _emit_input_item_changed_later,
 )
 from gremlin.ui.device import device_and_input_names
-from gremlin.ui.profile import LabelValueSelectionModel
+from gremlin.ui.profile import (
+    LabelValueSelectionModel,
+    reuse_or_replace_selection_model,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -47,6 +50,8 @@ class ReferenceModel(ActionModel):
         parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
+
+        self._actions: LabelValueSelectionModel | None = None
 
     def _qml_path_impl(self) -> str:
         return (
@@ -141,12 +146,14 @@ class ReferenceModel(ActionModel):
         labels.extend(action.action_label for action in unbound_actions)
         actions.extend(unbound_actions)
 
-        return LabelValueSelectionModel(
+        self._actions = reuse_or_replace_selection_model(
+            self._actions,
             labels,
             [str(action.id) for action in actions],
+            self,
             bootstrap=[action.icon for action in actions],
-            parent=self,
         )
+        return self._actions
 
     @QtCore.Slot(str)
     def referenceAction(self, value: str) -> None:

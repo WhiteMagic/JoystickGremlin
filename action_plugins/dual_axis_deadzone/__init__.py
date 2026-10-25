@@ -38,7 +38,10 @@ from gremlin.ui.action_model import (
     SequenceIndex,
 )
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import LabelValueSelectionModel
+from gremlin.ui.profile import (
+    LabelValueSelectionModel,
+    reuse_or_replace_selection_model,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -145,11 +148,13 @@ class DualAxisDeadzoneModel(ActionModel):
             key=lambda x: x.label,
         )
 
-        return LabelValueSelectionModel(
+        self._deadzone_action_list = reuse_or_replace_selection_model(
+            self._deadzone_action_list,
             [da.label for da in deadzone_actions],
             [str(da.id) for da in deadzone_actions],
-            parent=self,
+            self,
         )
+        return self._deadzone_action_list
 
     def _get_axis(self, idx: int) -> InputIdentifier:
         return self._data.axis1 if idx == 1 else self._data.axis2
