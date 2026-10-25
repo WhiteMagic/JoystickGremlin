@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -66,15 +65,21 @@ class InputListenerModel(QtCore.QObject):
         self._event_types: list[InputType] = []
         # If True more than the first input will be returned.
         self._multiple_inputs = False
-        # Timer terminating the listening process in various scenarios.
-        self._abort_timer = threading.Timer(1.0, self._abort_listening)
+        # Timer ensuring that listening stops when required.
+        self._abort_timer = QtCore.QTimer(self)
+        self._abort_timer.setSingleShot(True)
+        self._abort_timer.setInterval(1000)
+        self._abort_timer.timeout.connect(self._abort_listening)
         # Received inputs while listening.
         self._inputs: list[Event] = []
         # Flag indicating whether the listener is active or not.
         self._is_enabled = False
+        # Flag indicating whether the event listener callbacks are connected.
+        self._is_listening = False
 
     def _connect_listeners(self) -> None:
         # Start listening to user inputs.
+        self._is_listening = True
         event_listener = event_handler.EventListener()
         # Keyboard events are always listened to in order to catch the ESC
         # key to abort input listening.
@@ -90,31 +95,33 @@ class InputListenerModel(QtCore.QObject):
             event_listener.mouse_event.connect(self._mouse_event_cb)
 
     def _disconnect_listeners(self) -> None:
-        event_listener = event_handler.EventListener()
-        event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if (
-            InputType.JoystickAxis in self._event_types
-            or InputType.JoystickButton in self._event_types
-            or InputType.JoystickHat in self._event_types
-        ):
-            try:
-                event_listener.joystick_event.disconnect(self._joy_event_cb)
-            except RuntimeError:
-                pass
-        if InputType.Mouse in self._event_types:
-            try:
-                event_listener.mouse_event.disconnect(self._mouse_event_cb)
-            except RuntimeError:
-                pass
+        # Reached from disabling, finished listening, and the abort timer.
+        if self._is_listening:
+            self._is_listening = False
+            self._abort_timer.stop()
+            event_listener = event_handler.EventListener()
+            event_listener.keyboard_event.disconnect(self._kb_event_cb)
+            if (
+                InputType.JoystickAxis in self._event_types
+                or InputType.JoystickButton in self._event_types
+                or InputType.JoystickHat in self._event_types
+            ):
+                try:
+                    event_listener.joystick_event.disconnect(self._joy_event_cb)
+                except RuntimeError:
+                    pass
+            if InputType.Mouse in self._event_types:
+                try:
+                    event_listener.mouse_event.disconnect(self._mouse_event_cb)
+                except RuntimeError:
+                    pass
 
-        # Stop mouse hook in case it is running
-        # FIXME: can this break things?
-        windows_event_hook.MouseHook().stop()
+            # Stop mouse hook in case it is running
+            # FIXME: can this break things?
+            windows_event_hook.MouseHook().stop()
 
     def _listening_done(self) -> None:
         """Stops listening and emits the recorded inputs."""
-        if self._abort_timer.is_alive():
-            self._abort_timer.cancel()
         self._disconnect_listeners()
         self.listeningTerminated.emit(list(set(self._inputs)))
 
@@ -193,8 +200,7 @@ class InputListenerModel(QtCore.QObject):
             "esc"
         )
         if is_esc:
-            if event.is_pressed and not self._abort_timer.is_alive():
-                self._abort_timer = threading.Timer(1.0, self._abort_listening)
+            if event.is_pressed and not self._abort_timer.isActive():
                 self._abort_timer.start()
 
             # Avoid processing the ESC key as a regular input if keyboard
@@ -256,6 +262,7 @@ class InputListenerModel(QtCore.QObject):
                 self._inputs = []
                 self._connect_listeners()
             else:
+                self._disconnect_listeners()
                 shared_state.set_suspend_input_highlighting_delayed()
             self.enabledChanged.emit(self._is_enabled)
 
