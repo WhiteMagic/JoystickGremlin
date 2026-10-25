@@ -321,6 +321,7 @@ class InputItemBindingModel(QtCore.QObject):
         # Disconnect stale models so they stop reacting to behaviorChanged
         for model in self._action_models.values():
             model.dispose()
+            model.deleteLater()
 
         # Reset storage
         self._action_models = {}
@@ -782,6 +783,7 @@ class InputItemModel(QtCore.QAbstractListModel):
             cached = self._binding_cache.pop(binding.input_item_binding, None)
             if cached is not None:
                 cached.dispose()
+                cached.deleteLater()
             self.bindingsChanged.emit()
             signal.inputItemChanged.emit(self._enumeration_index)
         except ValueError:
@@ -933,7 +935,7 @@ class ModeHierarchyModel(QtCore.QObject):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-        signal.profileChanged.connect(self.modesChanged.emit)
+        signal.profileChanged.connect(self.modesChanged)
 
     @property
     def current_modes(self) -> gremlin.profile.ModeHierarchy:

@@ -295,13 +295,17 @@ class MergeAxisModel(ActionModel):
         return self._data.axis_in1 if idx == 1 else self._data.axis_in2
 
     def _set_axis(self, idx: int, value: InputIdentifier) -> None:
+        # Store a copy, the UI replaces the instance it handed over.
+        identifier = InputIdentifier(
+            value.device_guid, value.input_type, value.input_id
+        )
         if idx == 1:
-            if value != self._data.axis_in1:
-                self._data.axis_in1 = value
+            if identifier != self._data.axis_in1:
+                self._data.axis_in1 = identifier
                 self.modelChanged.emit()
         else:
-            if value != self._data.axis_in2:
-                self._data.axis_in2 = value
+            if identifier != self._data.axis_in2:
+                self._data.axis_in2 = identifier
                 self.modelChanged.emit()
 
     def _get_operation(self) -> str:
