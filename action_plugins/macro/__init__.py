@@ -760,6 +760,13 @@ class MacroModel(ActionModel):
             "action", "macro", "record-timings"
         )
 
+    @override
+    def dispose(self) -> None:
+        """Stops an active recording before the model is discarded."""
+        if self._recorder.is_recording:
+            self._recorder.stop()
+        super().dispose()
+
     def _qml_path_impl(self) -> str:
         return (
             "file:///" + QtCore.QFile("core_plugins:macro/MacroAction.qml").fileName()

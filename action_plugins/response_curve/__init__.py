@@ -230,6 +230,7 @@ class ResponseCurveModel(ActionModel):
 
         self.widget_size = 400
         self._selected_point = 0
+        self._deadzone = Deadzone(self._data, self)
         # TODO: Find a better way, likely have the data class store symmetry
         #   mode information.
         # self._set_is_symmetric(True)
@@ -249,7 +250,7 @@ class ResponseCurveModel(ActionModel):
 
     @QtCore.Property(Deadzone, notify=deadzoneChanged)
     def deadzone(self) -> Deadzone:
-        return Deadzone(self._data, self)
+        return self._deadzone
 
     @QtCore.Property(QtCore.QPointF, notify=selectedPointChanged)
     def selectedPointCoord(self) -> QtCore.QPointF:

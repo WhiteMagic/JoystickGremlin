@@ -118,6 +118,8 @@ class DualAxisDeadzoneModel(ActionModel):
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
+        self._deadzone_action_list: LabelValueSelectionModel | None = None
+
     def _qml_path_impl(self) -> str:
         return (
             "file:///"
@@ -160,13 +162,17 @@ class DualAxisDeadzoneModel(ActionModel):
         return self._data.axis1 if idx == 1 else self._data.axis2
 
     def _set_axis(self, idx: int, value: InputIdentifier) -> None:
+        # Store a copy, the UI replaces the instance it handed over.
+        identifier = InputIdentifier(
+            value.device_guid, value.input_type, value.input_id
+        )
         if idx == 1:
-            if value != self._data.axis1:
-                self._data.axis1 = value
+            if identifier != self._data.axis1:
+                self._data.axis1 = identifier
                 self.modelChanged.emit()
         else:
-            if value != self._data.axis2:
-                self._data.axis2 = value
+            if identifier != self._data.axis2:
+                self._data.axis2 = identifier
                 self.modelChanged.emit()
 
     def _get_deadzone(self) -> str:
