@@ -1062,6 +1062,44 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
     )
 
 
+def reuse_or_replace_selection_model(
+    current: LabelValueSelectionModel | None,
+    labels: list[Any],
+    values: list[str],
+    parent: QtCore.QObject,
+    bootstrap: list[str] = [],
+) -> LabelValueSelectionModel:
+    """Returns a selection model with the given entries, reusing current if it matches.
+
+    Args:
+        current: model handed out previously, if any
+        labels: labels of the entries
+        values: values of the entries
+        parent: owner of a newly created model
+        bootstrap: bootstrap icons of the entries
+
+    Returns:
+        Selection model holding the given entries.
+    """
+    # Reuse an existing matching model if possible, and if not ensure it's deleted.
+    if current is not None:
+        if (
+            current._labels == labels
+            and current._values == values
+            and current._bootstrap == bootstrap
+        ):
+            return current
+        current.deleteLater()
+
+    # Keep the selection across a content change.
+    model = LabelValueSelectionModel(labels, values, bootstrap=bootstrap, parent=parent)
+    if current is not None and current._current_index < len(current._values):
+        selected = current._values[current._current_index]
+        if selected in values:
+            model._current_index = values.index(selected)
+    return model
+
+
 @ta.QmlElement
 class StartupModeModel(QtCore.QAbstractListModel):
     """Model representing the startup mode setting of the current profile."""
