@@ -107,6 +107,7 @@ Check:
 - [ ] `@Property` without matching setter when QML needs two-way binding
 - [ ] Signal defined as class variable but emitted before `__init__` of `QObject` base runs
 - [ ] `@Slot` return types not matching declared type annotation
+- [ ] Signal connected to a `QObject` method without `@QtCore.Slot`
 - [ ] `QAbstractListModel` subclass missing `roleNames()` override
 - [ ] `data()` returning Python types QML can't consume (e.g., raw `datetime` objects)
 - [ ] `beginInsertRows`/`endInsertRows` not wrapping row mutations

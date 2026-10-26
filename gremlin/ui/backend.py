@@ -88,6 +88,7 @@ class UIState(QtCore.QObject):
         event_handler.EventListener().device_change_event.connect(self._device_change)
         signal.profileChanged.connect(self._device_change)
 
+    @QtCore.Slot()
     def _device_change(self) -> None:
         # We only care about this in case we've selected a physical device
         if self._current_tab != "physical":
@@ -230,6 +231,7 @@ class Backend(QtCore.QObject):
 
         self.profileChanged.emit()
 
+    @QtCore.Slot(types.Event)
     def _highlight_input(self, event: types.Event) -> None:
         if (
             not self.config.value("global", "behavior", "input-highlighting")
@@ -249,6 +251,7 @@ class Backend(QtCore.QObject):
             if current_input.linear_index != new_input.linear_index:
                 signal.setInputIndex.emit(new_input.linear_index)
 
+    @QtCore.Slot()
     def _profile_change_handler(self) -> None:
         # Update shared state before any other parts update.
         shared_state.current_profile = self.profile
@@ -261,6 +264,7 @@ class Backend(QtCore.QObject):
         signal.profileChanged.emit()
         self.ui_state.reset_mode(mode_manager.ModeManager().current.name)
 
+    @QtCore.Slot()
     def _device_change(self) -> None:
         behavior = self.config.value("global", "behavior", "device-change-behavior")
         match behavior:
@@ -273,6 +277,7 @@ class Backend(QtCore.QObject):
                     self.activate_gremlin(False)
                     self.activate_gremlin(True)
 
+    @QtCore.Slot()
     def _emit_change(self) -> None:
         """Emits the signal required for property changes to propagate."""
         self.propertyChanged.emit()
@@ -326,6 +331,7 @@ class Backend(QtCore.QObject):
     def showReleaseNotesOnStartup(self) -> bool:
         return self._show_release_notes and read_release_notes().strip() != ""
 
+    @QtCore.Slot(str)
     def _active_process_changed_cb(self, path: str) -> None:
         """Handles changes to the active process.
 

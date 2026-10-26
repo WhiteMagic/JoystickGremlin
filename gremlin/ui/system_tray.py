@@ -114,6 +114,7 @@ class SystemTrayIcon(QtCore.QObject):
             return True
         return super().eventFilter(watched, event)
 
+    @QtCore.Slot()
     def release_resources(self) -> None:
         """Destroys the tray icon and its helper window."""
         # Each resource is released independently and the system may already have
@@ -238,6 +239,7 @@ class SystemTrayIcon(QtCore.QObject):
                 "Failed to add the system tray icon", exc_info=True
             )
 
+    @QtCore.Slot()
     def _gremlin_status_change_cb(self) -> None:
         """Updates the icon to match Gremlin's activation state."""
         with contextlib.suppress(win32gui.error):
@@ -246,6 +248,7 @@ class SystemTrayIcon(QtCore.QObject):
                 (self._hwnd, 0, win32gui.NIF_ICON, _WM_TRAY, self._current_icon()),
             )
 
+    @QtCore.Slot(QtGui.QWindow.Visibility)
     def _window_mode_changed_cb(self, mode: QtGui.QWindow.Visibility) -> None:
         """Hides the window into the tray when it is minimized.
 

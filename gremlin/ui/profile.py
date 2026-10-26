@@ -633,6 +633,7 @@ class InputItemBindingModel(QtCore.QObject):
             for entry in data
         ]
 
+    @QtCore.Slot(int)
     def _check_user_feedback(self, index: int) -> None:
         if getattr(self.parent(), "enumeration_index", None) != index:
             return
@@ -892,6 +893,7 @@ class ModeListModel(QtCore.QAbstractListModel):
         signal.profileChanged.connect(self._reset)
         signal.modesChanged.connect(self._reset)
 
+    @QtCore.Slot()
     def _reset(self) -> None:
         self.beginResetModel()
         self._lookup = {}
@@ -1124,6 +1126,7 @@ class StartupModeModel(QtCore.QAbstractListModel):
         signal.profileChanged.connect(self._reset)
         signal.modesChanged.connect(self._reset)
 
+    @QtCore.Slot()
     def _reset(self) -> None:
         self.beginResetModel()
         self._profile = cast(gremlin.profile.Profile, shared_state.current_profile)
@@ -1188,6 +1191,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
         self._vjoy_devices = device_initialization.vjoy_devices()
         signal.profileChanged.connect(self._reset)
 
+    @QtCore.Slot()
     def _reset(self) -> None:
         self.beginResetModel()
         self._profile = shared_state.current_profile
@@ -1253,6 +1257,7 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
         self._initial_values_models = self._create_initial_values_models()
         signal.profileChanged.connect(self._reset)
 
+    @QtCore.Slot()
     def _reset(self) -> None:
         self.beginResetModel()
         self._profile = shared_state.current_profile
@@ -1371,6 +1376,7 @@ class ProfileSettingsModel(QtCore.QObject):
         self._profile = shared_state.current_profile
         signal.profileChanged.connect(self._reset)
 
+    @QtCore.Slot()
     def _reset(self) -> None:
         self._profile = shared_state.current_profile
         self.settingsChanged.emit()
@@ -1407,6 +1413,7 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
         self.update_model()
         event_handler.EventListener().device_change_event.connect(self.update_model)
 
+    @QtCore.Slot()
     def update_model(self) -> None:
         """Updates the model if the connected devices change."""
         self.beginResetModel()

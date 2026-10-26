@@ -243,6 +243,7 @@ class ThemeManager(QtCore.QObject):
                 f"Failed to set title bar color scheme: {e}"
             )
 
+    @QtCore.Slot()
     def _config_changed_cb(self) -> None:
         """Callback handling configuration changes."""
         theme_name = self._get_current_theme()

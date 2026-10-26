@@ -105,6 +105,7 @@ class LogSource(QtCore.QObject):
         text, self._snapshot_sequence = self._handler.snapshot()
         return text
 
+    @QtCore.Slot(int, str, int)
     def _on_record_added(self, sequence: int, text: str, evicted_chars: int) -> None:
         # Queued signals can arrive for records already contained in the snapshot.
         if sequence > self._snapshot_sequence:

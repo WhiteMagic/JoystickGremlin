@@ -142,13 +142,15 @@ if TYPE_CHECKING:
 - **Functions/methods**: `snake_case` (e.g., `get_vjoy_device`, `from_xml`)
 - **Constants**: `SCREAMING_SNAKE_CASE` (e.g., `MAX_CACHE_SIZE`)
 - **Private members**: `_leading_underscore` (e.g., `_cache`)
-- **Qt properties/slots**: Follow Qt conventions (e.g., `imageReady`, `requestImage`)
+- **Qt properties/slots**: QML-facing ones follow Qt conventions (e.g., `imageReady`, `requestImage`), internal slots stay `_snake_case` (e.g., `_update_choices`)
 - **QML variables**: Follow Qt convention (e.g. `someVariable`)
 - **QML element identifiers**: Always start with `_` (e.g. `_label`, `_actionModel`)
 
 ### Qt Patterns
 
 - Use `@QtCore.Signal` and `@QtCore.Slot` decorators for Qt signals/slots
+- Every method of a `QObject` subclass that is connected to a signal gets `@QtCore.Slot(<types>)`
+- Properties exposed to Qt/QML always use `QtCore.Property`
 - Signals are defined as class attributes: `imageReady = QtCore.Signal(str, str)`
 - Subclass `QtCore.QObject` for QML-accessible classes if no more specialized class is applicable
 - Use `@QtQml.QmlElement` decorator for classes to register with QML
