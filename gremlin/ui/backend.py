@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import gc
 import logging
 import os
 import sys
@@ -535,6 +536,7 @@ class Backend(QtCore.QObject):
             self._record_profile_use(local_path)
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
+        gc.collect()
 
     @QtCore.Property(bool, notify=propertyChanged)
     def profileContainsUnsavedChanges(self) -> bool:

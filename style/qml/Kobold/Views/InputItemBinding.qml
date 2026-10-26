@@ -13,10 +13,6 @@ import Kobold.Composites
 import Kobold.Foundation
 import Kobold.Views
 
-// SPEC §8: sequences are independent trees, separated by space -- never a rule between them
-// (that's the ListView's job in qml/InputConfiguration.qml). Vertical separation from
-// neighboring trees is entirely the ghost "New Action Sequence" row's gapS margin now
-// (InputConfiguration.qml) -- this item reserves none of its own, or the two would stack.
 Item {
     id: _root
 
@@ -26,19 +22,12 @@ Item {
 
     implicitHeight: _content.height
 
-    // Reruns the Loader's one-shot setSource whenever inputBinding itself changes (not
-    // just on first creation) -- otherwise a delegate recycled for a different row
-    // (ListView reuseItems) keeps showing the previous row's action tree, since `visible`
-    // alone doesn't reliably toggle across the swap (e.g. both rows have children).
+    // Load on change or initial load.
     onInputBindingChanged: _actionTree._loadRootAction()
 
-    // An edit to the action tree rebuilds every ActionModel behind this sequence, so the
-    // subtree has to be reloaded against the new models: `rootAction` reaches RootAction.qml
-    // as a setSource initial property, not a binding, and ActionList's `_actions` is a
-    // one-shot slot call -- neither notices on its own. Without this the binding model would
-    // have to be thrown away and rebuilt wholesale to make an edit visible, which is what
-    // used to happen (signal.reloadCurrentInputItem -> backend.getInputItem), destroying the
-    // object graph from inside a slot belonging to it.
+    // An edit to the action tree rebuilds every ActionModel behind this
+    // sequence, so the subtree has to be reloaded against the new models to
+    // ensure edits are visible.
     Connections {
         target: _root.inputBinding
 
@@ -65,14 +54,9 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.leftMargin: Metrics.gapM
-        // Extra right-hand room, so content clears the ListView's overlay scrollbar (SPEC
-        // ScrollBar.qml, Metrics.gapM wide) instead of sitting flush under it -- the gap the
-        // left pane's input list gets for free by narrowing its own delegate width
-        // (DeviceInputList.qml). Content padding only; the delegate's own width
-        // (qml/InputConfiguration.qml) stays untouched.
+        // Extra right-hand room, so content clears the ListView's overlay
+        // scrollbar.
         anchors.rightMargin: Metrics.gapM * 2
-        // No top margin -- vertical separation from the previous tree is the ghost row's
-        // gapS margin above (InputConfiguration.qml), not this item's own padding.
         spacing: Metrics.gapS
 
         // +--------------------------------------------------------------------
@@ -88,8 +72,9 @@ Item {
             inputItemModel: _root.inputItemModel
         }
 
-        // Axis/hat "virtual button" activation UI (SPEC doesn't cover this row -- it isn't
-        // part of the binding-header grammar, hence its own component).
+        // Axis/hat "virtual button" activation UI (SPEC doesn't cover this
+        // row -- it isn't part of the binding-header grammar, hence its own
+        // component).
         ActivationBehavior {
             Layout.fillWidth: true
 
@@ -97,33 +82,28 @@ Item {
         }
 
         // +--------------------------------------------------------------------
-        // | Render the root action node -- loaded through the same qmlPath mechanism
-        // | every other action uses, rather than a hardcoded static type.
+        // | Render the root action node -- loaded through the same qmlPath
+        // | mechanism| every other action uses.
         // +--------------------------------------------------------------------
-        Loader {
+        ObjectLoader {
             id: _actionTree
 
             Layout.fillWidth: true
-            // An empty sequence loads a real (0-height) RootAction, but ColumnLayout still
-            // costs a spacing gap around a merely-0-height row -- hasChildren collapses the
-            // row itself, same as ActivationBehavior does for its own inapplicable case.
+            // An empty sequence loads a real (0-height) RootAction, but
+            // ColumnLayout still costs a spacing gap.
             visible: _root.inputBinding && _root.inputBinding.rootAction &&
                 _root.inputBinding.rootAction.hasChildren
 
-            // setSource()'s initial-properties argument, not source: + onLoaded --
-            // RootAction.qml's root declares `required property RootModel action`,
-            // which only counts as initialized if supplied at creation time. Called both
-            // on creation and from _root.onInputBindingChanged above.
+            // RootAction.qml declares `required property RootModel action`,
+            // which only counts as initialized if supplied at creation time.
             function _loadRootAction() {
                 if (_root.inputBinding && _root.inputBinding.rootAction) {
-                    setSource(
-                        _root.inputBinding.rootAction.qmlPath,
+                    load(
+                        Qt.createComponent(_root.inputBinding.rootAction.qmlPath),
                         { "action": _root.inputBinding.rootAction }
                     )
                 }
             }
-
-            Component.onCompleted: _loadRootAction()
         }
     }
 }

@@ -222,11 +222,14 @@ Item {
                     delegate: Component {
                         // Pick the correct control visualization to load and pass the
                         // repeater reference in.
-                        Loader {
+                        ObjectLoader {
+                            // The controls position and size themselves.
+                            resizeItem: false
+
                             Component.onCompleted: () => {
                                 let url = modelData.hasHandles ? "HandleControl.qml" : "PointControl.qml"
-                                setSource(
-                                    url,
+                                load(
+                                    Qt.createComponent(url),
                                     {
                                         "repeater": _repeater,
                                         "focusTarget": root
