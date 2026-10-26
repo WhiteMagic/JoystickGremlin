@@ -460,6 +460,9 @@ class VJoy:
         AxisCode.SL1: 8,
     }
 
+    # Check driver information only once per process.
+    _driver_verified: ClassVar[bool] = False
+
     def __init__(self, vjoy_id: int) -> None:
         """Creates a new object.
 
@@ -475,17 +478,19 @@ class VJoy:
         """
         self.vjoy_id = None
 
-        if not VJoyInterface.vJoyEnabled():
-            logging.getLogger("system").error("vJoy is not currently running")
-            raise VJoyError("vJoy is not currently running")
-        if VJoyInterface.GetvJoyVersion() < 0x218:
-            logging.getLogger("system").error(
-                "Running incompatible vJoy version, 2.1.8 or higher required"
-            )
-            raise VJoyError(
-                "Running incompatible vJoy version, 2.1.8 or higher required"
-            )
-        elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
+        if not VJoy._driver_verified:
+            if not VJoyInterface.vJoyEnabled():
+                logging.getLogger("system").error("vJoy is not currently running")
+                raise VJoyError("vJoy is not currently running")
+            if VJoyInterface.GetvJoyVersion() < 0x218:
+                logging.getLogger("system").error(
+                    "Running incompatible vJoy version, 2.1.8 or higher required"
+                )
+                raise VJoyError(
+                    "Running incompatible vJoy version, 2.1.8 or higher required"
+                )
+            VJoy._driver_verified = True
+        if VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             if VJoyInterface.GetOwnerPid(vjoy_id) == os.getpid():
                 raise VJoyConcurrencyError(
                     f"vJoy device {vjoy_id} is already acquired by this process"
