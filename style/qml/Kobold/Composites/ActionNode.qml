@@ -170,13 +170,16 @@ Item {
             visible: _header.expanded
             hasChildren: root.action.hasChildren
 
-            Loader {
+            ObjectLoader {
                 id: _body
 
                 Layout.fillWidth: true
 
                 Component.onCompleted: {
-                    setSource(root.action.qmlPath, { "action": root.action })
+                    load(
+                        Qt.createComponent(root.action.qmlPath),
+                        { "action": root.action }
+                    )
                 }
             }
         }

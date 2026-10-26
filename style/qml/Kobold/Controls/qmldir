@@ -19,3 +19,4 @@ ActivationToggle    ActivationToggle.qml
 TextInputDialog     TextInputDialog.qml
 InputBehavior       InputBehavior.qml
 HatView             HatView.qml
+ObjectLoader        ObjectLoader.qml
