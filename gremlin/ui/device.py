@@ -229,6 +229,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
         event_handler.EventListener().device_change_event.connect(self.update_model)
         signal.profileChanged.connect(self.update_model)
 
+    @QtCore.Slot()
     def update_model(self) -> None:
         """Updates the model if the connected devices change."""
         self._reload_devices()
@@ -375,6 +376,7 @@ class Device(QtCore.QAbstractListModel):
         self._mode = mode
         self._refresh_all_rows()
 
+    @QtCore.Slot()
     def _config_changed_cb(self) -> None:
         mode = Configuration().value(
             "global", "appearance", "action-sequence-visualization"
@@ -407,6 +409,7 @@ class Device(QtCore.QAbstractListModel):
         self.endResetModel()
         self.deviceChanged.emit()
 
+    @QtCore.Slot()
     def _profile_changed_cb(self) -> None:
         self.beginResetModel()
         self.endResetModel()
@@ -569,10 +572,12 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         """
         self.dataChanged.emit(self.createIndex(index, 0), self.createIndex(index, 0))
 
+    @QtCore.Slot()
     def _full_refresh(self) -> None:
         self.beginResetModel()
         self.endResetModel()
 
+    @QtCore.Slot()
     def _config_changed_cb(self) -> None:
         mode = Configuration().value(
             "global", "appearance", "action-sequence-visualization"
@@ -590,6 +595,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     def _get_guid(self) -> str:
         return str(self._logical.device_guid)
 
+    @QtCore.Slot()
     def _profile_changed_cb(self) -> None:
         self.beginResetModel()
         self.endResetModel()
@@ -780,6 +786,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
             self._current_index = index
             self.selectionChanged.emit()
 
+    @QtCore.Slot()
     def _refresh_model(self) -> None:
         # Reset the complete model as the number of entries can have changed.
         self.beginResetModel()
@@ -826,11 +833,13 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         signal.inputItemChanged.connect(self.refreshInput)
         signal.configChanged.connect(self._config_changed_cb)
 
+    @QtCore.Slot()
     def _profile_changed_cb(self) -> None:
         self._profile = shared_state.current_profile
         self.beginResetModel()
         self.endResetModel()
 
+    @QtCore.Slot()
     def _config_changed_cb(self) -> None:
         mode = Configuration().value(
             "global", "appearance", "action-sequence-visualization"
@@ -1015,6 +1024,7 @@ class VJoyDevices(QtCore.QObject):
             False,
         )
 
+    @QtCore.Slot()
     def _update_choices(self) -> None:
         """Updates the cached input item information."""
         # Input count lookup functions.
@@ -1200,6 +1210,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self._device_uuid = None
         self._state = []
 
+    @QtCore.Slot(Event)
     def _event_callback(self, event: Event) -> None:
         if event.device_guid != self._device_uuid:
             return

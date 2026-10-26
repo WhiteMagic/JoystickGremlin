@@ -125,6 +125,7 @@ class InputListenerModel(QtCore.QObject):
         self._disconnect_listeners()
         self.listeningTerminated.emit(list(set(self._inputs)))
 
+    @QtCore.Slot()
     def _abort_listening(self) -> None:
         """Stops all listening activities."""
         self._disconnect_listeners()
@@ -161,6 +162,7 @@ class InputListenerModel(QtCore.QObject):
         self._inputs = [event]
         self._listening_done()
 
+    @QtCore.Slot(Event)
     def _joy_event_cb(self, event: Event) -> None:
         """Processes a joystick event.
 
@@ -189,6 +191,7 @@ class InputListenerModel(QtCore.QObject):
                 if event.value != HatDirection.Center:
                     self._process_single_input_only(event)
 
+    @QtCore.Slot(Event)
     def _kb_event_cb(self, event: Event) -> None:
         """Processes a keyboard event.
 
@@ -221,6 +224,7 @@ class InputListenerModel(QtCore.QObject):
         else:
             self._process_button(event)
 
+    @QtCore.Slot(Event)
     def _mouse_event_cb(self, event: Event) -> None:
         """Processes a mouse event.
 
