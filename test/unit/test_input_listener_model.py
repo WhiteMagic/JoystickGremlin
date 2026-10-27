@@ -6,6 +6,8 @@ import sys
 
 sys.path.append(".")
 
+from unittest import mock
+
 from PySide6 import QtCore
 
 from gremlin import event_handler
@@ -18,7 +20,7 @@ def _keyboard_receivers() -> int:
     )
 
 
-def test_disable_disconnects_listeners(qapp: QtCore.QCoreApplication) -> None:
+def test_disable_disconnects_listeners() -> None:
     baseline = _keyboard_receivers()
     listener = InputListenerModel()
 
@@ -29,11 +31,11 @@ def test_disable_disconnects_listeners(qapp: QtCore.QCoreApplication) -> None:
     assert _keyboard_receivers() == baseline
 
 
-def test_disable_stops_abort_timer(qapp: QtCore.QCoreApplication) -> None:
+def test_disable_stops_abort_timer() -> None:
     listener = InputListenerModel()
+    listener._abort_timer = mock.create_autospec(QtCore.QTimer, instance=True)
     listener.enabled = True
-    listener._abort_timer.start()
 
     listener.enabled = False
 
-    assert not listener._abort_timer.isActive()
+    listener._abort_timer.stop.assert_called_once()

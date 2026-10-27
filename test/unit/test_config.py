@@ -24,17 +24,23 @@ def cfg() -> Iterator[gremlin.config.Configuration]:
     """Returns a Configuration object other than the singleton, with file path
     modified."""
     # Remove the singleton instance if it exists and create a temporary file
-    # to use as the config file. The old config file name is stored to be
-    # restored when the fixutre is torn down.
+    # to use as the config file. The old config file name and instance are
+    # stored to be restored when the fixutre is torn down.
     original_path = gremlin.config._config_file_path
-    SingletonMetaclass._instances.pop(gremlin.config.Configuration, None)
+    original_instance = SingletonMetaclass._instances.pop(
+        gremlin.config.Configuration, None
+    )
     with mock.patch.object(gremlin.config, "_config_file_path", tempfile.mkstemp()[1]):
         try:
             yield gremlin.config.Configuration()
         finally:
-            # Restore original config file path and delete singleton instance.
+            # A fresh instance lacks import-time registrations and gets purged.
             gremlin.config._config_file_path = original_path
             SingletonMetaclass._instances.pop(gremlin.config.Configuration, None)
+            if original_instance is not None:
+                SingletonMetaclass._instances[gremlin.config.Configuration] = (
+                    original_instance
+                )
 
 
 def test_simple(cfg: gremlin.config.Configuration) -> None:
