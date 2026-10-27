@@ -18,11 +18,13 @@ Item {
     property InputItemModel inputItemModel
     property int inputIndex
 
-    // Ensure the content is updated and refreshed as needed when UI changes happen.
-    Connections {
-        target: uiState
+    // If a burst of input changes arrives, such as input highlighting, only
+    // the most recent and thus visible update is executed, all others dropped.
+    Timer {
+        id: _debounceTimer
 
-        function onInputChanged() {
+        interval: 10
+        onTriggered: () => {
             _root.inputItemModel = backend.getInputItem(
                 uiState.currentInput,
                 uiState.currentInputIndex
@@ -30,10 +32,21 @@ Item {
         }
     }
 
+    // Trigger a UI update when the input changes.
+    Connections {
+        target: uiState
+
+        function onInputChanged() {
+            _debounceTimer.restart()
+        }
+    }
+
     Connections {
         target: signal
 
         function onReloadCurrentInputItem() {
+            // Sidestep the debounce timer when reloading an item.
+            _debounceTimer.stop()
             _root.inputItemModel = backend.getInputItem(
                 uiState.currentInput,
                 uiState.currentInputIndex
