@@ -76,8 +76,8 @@ Window {
     onWidthChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
     onHeightChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
 
-    function create_widget(type_name, guid, name) {
-        let component = Qt.createComponent("Kobold.Views", type_name)
+    function createWidget(typeName, guid, name) {
+        let component = Qt.createComponent("Kobold.Views", typeName)
         if (component.status == Component.Error) {
             console.log(component.errorString())
             return null
@@ -142,9 +142,9 @@ Window {
 
             // Variable holding references to the widgets visualizing device input
             // states.
-            property var widget_btn_hat
-            property var widget_axis_temp
-            property var widget_axis_cur
+            property var widgetBtnHat
+            property var widgetAxisTemp
+            property var widgetAxisCur
 
             // Device header.
             RowLayout {
@@ -175,15 +175,15 @@ Window {
 
                     onClicked: () => {
                         if(checked) {
-                            widget_axis_temp = create_widget(
+                            widgetAxisTemp = createWidget(
                                 "AxesStateSeries",
                                 guid,
                                 name
                             )
-                            checked = !!widget_axis_temp
-                        } else if(widget_axis_temp) {
-                            widget_axis_temp.destroy()
-                            widget_axis_temp = null
+                            checked = !!widgetAxisTemp
+                        } else if(widgetAxisTemp) {
+                            widgetAxisTemp.destroy()
+                            widgetAxisTemp = null
                         }
                     }
                 }
@@ -192,15 +192,15 @@ Window {
 
                     onClicked: () => {
                         if(checked) {
-                            widget_axis_cur = create_widget(
+                            widgetAxisCur = createWidget(
                                 "AxesStateCurrent",
                                 guid,
                                 name
                             )
-                            checked = !!widget_axis_cur
-                        } else if(widget_axis_cur) {
-                            widget_axis_cur.destroy()
-                            widget_axis_cur = null
+                            checked = !!widgetAxisCur
+                        } else if(widgetAxisCur) {
+                            widgetAxisCur.destroy()
+                            widgetAxisCur = null
                         }
                     }
                 }
@@ -209,15 +209,15 @@ Window {
 
                     onClicked: () => {
                         if(checked) {
-                            widget_btn_hat = create_widget(
+                            widgetBtnHat = createWidget(
                                 "ButtonState",
                                 guid,
                                 name
                             )
-                            checked = !!widget_btn_hat
-                        } else if(widget_btn_hat) {
-                            widget_btn_hat.destroy()
-                            widget_btn_hat = null
+                            checked = !!widgetBtnHat
+                        } else if(widgetBtnHat) {
+                            widgetBtnHat.destroy()
+                            widgetBtnHat = null
                         }
                     }
                 }

@@ -53,15 +53,15 @@ Item {
     }
 
     function updateControlPoint(cp_handle, evt, index) {
-        let new_x = RH.clamp(map2x(cp_handle.x, evt.x), -1.0, 1.0)
-        let new_y = RH.clamp(map2y(cp_handle.y, evt.y ), -1.0, 1.0)
+        let newX = RH.clamp(map2x(cp_handle.x, evt.x), -1.0, 1.0)
+        let newY = RH.clamp(map2y(cp_handle.y, evt.y ), -1.0, 1.0)
 
         // Ensure the points at either end cannot be moved away from the edge.
         if (index === 0) {
-            new_x = -1.0
+            newX = -1.0
         }
         if (index === action.controlPoints.length - 1) {
-            new_x = 1.0
+            newX = 1.0
         }
 
         // In symmetry mode moving the center point, if there is one is not allowed.
@@ -72,36 +72,36 @@ Item {
         }
 
         // Prevent moving control point past neighoring ones.
-        let new_u = RH.clamp(map2u(new_x), -handleOffset, _vis.size + handleOffset)
-        let new_v = RH.clamp(map2v(new_y), -handleOffset, _vis.size + handleOffset)
+        let newU = RH.clamp(map2u(newX), -handleOffset, _vis.size + handleOffset)
+        let newV = RH.clamp(map2v(newY), -handleOffset, _vis.size + handleOffset)
 
         let left = _repeater.itemAt(index - 1)
         let right = _repeater.itemAt(index + 1)
-        if (left && left.item.x > new_u) {
-            new_u = cp_handle.x
-            new_x = map2x(cp_handle.x, null)
+        if (left && left.item.x > newU) {
+            newU = cp_handle.x
+            newX = map2x(cp_handle.x, null)
         }
-        if (right && right.item.x < new_u) {
-            new_u = cp_handle.x
-            new_x = map2x(cp_handle.x, null)
+        if (right && right.item.x < newU) {
+            newU = cp_handle.x
+            newX = map2x(cp_handle.x, null)
         }
 
         // Move the actual marker.
-        cp_handle.x = new_u
-        cp_handle.y = new_v
+        cp_handle.x = newU
+        cp_handle.y = newV
 
         // Handle symmetry mode, no need to update model as the code does this behind
         // the scenes with the model update below.
         if (root.action.isSymmetric) {
             let mirror = _repeater.itemAt(_repeater.count - index - 1).item
-            mirror.x = map2u(-new_x, null)
-            mirror.y = map2v(-new_y, null)
+            mirror.x = map2u(-newX, null)
+            mirror.y = map2v(-newY, null)
 
         }
 
         // Return the computed new [x, y] coordinates in [-1, 1] to use on the model
         // side of things.
-        return [new_x, new_y]
+        return [newX, newY]
     }
 
     ColumnLayout {

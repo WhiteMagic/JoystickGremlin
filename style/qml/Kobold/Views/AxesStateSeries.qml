@@ -20,25 +20,25 @@ Item {
     property string title
     property var colors: themeManager.chartSeriesColors
 
-    readonly property DeviceAxisSeries _axis_series: ModelFactory.deviceAxisSeries(_root)
+    readonly property DeviceAxisSeries _axisSeries: ModelFactory.deviceAxisSeries(_root)
 
     implicitHeight: _content.implicitHeight
 
     // Assigned after the Connections exist, as the handler builds the series.
-    Component.onCompleted: () => { _axis_series.guid = deviceGuid }
+    Component.onCompleted: () => { _axisSeries.guid = deviceGuid }
 
     Connections {
-        target: _root._axis_series
+        target: _root._axisSeries
 
         function onDeviceChanged() {
             _chart.removeAllSeries()
 
-            for(var i=0; i<_root._axis_series.axisCount; i++) {
+            for(var i=0; i<_root._axisSeries.axisCount; i++) {
                 var series = _chart.createSeries(
                     ChartView.SeriesTypeLine,
-                    "Axis " + _root._axis_series.axisIdentifier(i),
-                    _x_axis,
-                    _y_axis
+                    "Axis " + _root._axisSeries.axisIdentifier(i),
+                    _xAxis,
+                    _yAxis
                 )
                series.color = _root.colors[i]
             }
@@ -51,7 +51,7 @@ Item {
         repeat: true
         onTriggered: () => {
             for(var i=0; i<_chart.count; i++) {
-                _root._axis_series.updateSeries(_chart.series(i), i)
+                _root._axisSeries.updateSeries(_chart.series(i), i)
             }
         }
     }
@@ -111,7 +111,7 @@ Item {
                 antialiasing: true
 
                 ValueAxis {
-                    id: _y_axis
+                    id: _yAxis
 
                     min: -1
                     max: 1
@@ -126,9 +126,9 @@ Item {
                 }
 
                 ValueAxis {
-                    id: _x_axis
+                    id: _xAxis
 
-                    min: -_root._axis_series.windowSize
+                    min: -_root._axisSeries.windowSize
                     max: 0
 
                     color: Theme.line
