@@ -21,27 +21,27 @@ Item {
     readonly property int buttonSize:   Metrics.dp(40)
     readonly property int buttonRadius: Metrics.even(10)
 
-    readonly property DeviceButtonState _button_state: ModelFactory.deviceButtonState(_root)
-    readonly property DeviceHatState _hat_state: ModelFactory.deviceHatState(_root)
+    readonly property DeviceButtonState _buttonState: ModelFactory.deviceButtonState(_root)
+    readonly property DeviceHatState _hatState: ModelFactory.deviceHatState(_root)
 
     implicitHeight: _content.implicitHeight
 
     Component.onCompleted: () => {
-        _button_state.guid = deviceGuid
-        _hat_state.guid = deviceGuid
+        _buttonState.guid = deviceGuid
+        _hatState.guid = deviceGuid
     }
 
     function computeButtonHeight() {
         let columns =  Math.floor(
-            Math.max(_button_grid.width, _button_grid.Layout.minimumWidth) /
-            _button_grid.cellWidth
+            Math.max(_buttonGrid.width, _buttonGrid.Layout.minimumWidth) /
+            _buttonGrid.cellWidth
         )
-        let rows = Math.ceil(_button_grid.count / columns)
-        return rows * _button_grid.cellHeight
+        let rows = Math.ceil(_buttonGrid.count / columns)
+        return rows * _buttonGrid.cellHeight
     }
 
     function computeHatHeight(cellHeight) {
-        return Math.ceil(_hat_grid.count / 2) * cellHeight
+        return Math.ceil(_hatGrid.count / 2) * cellHeight
     }
 
     ColumnLayout {
@@ -69,7 +69,7 @@ Item {
         RowLayout {
             // Button state display.
             GridView {
-                id: _button_grid
+                id: _buttonGrid
 
                 Layout.fillWidth: true
                 Layout.minimumWidth: Metrics.dp(400)
@@ -84,7 +84,7 @@ Item {
                 cellWidth: Metrics.dp(50)
                 cellHeight: Metrics.dp(50)
 
-                model: _root._button_state
+                model: _root._buttonState
                 delegate: Component {
                     Rectangle {
                         id: _button
@@ -114,7 +114,7 @@ Item {
 
             // Hat state display.
             GridView {
-                id: _hat_grid
+                id: _hatGrid
 
                 Layout.fillWidth: true
                 Layout.minimumWidth: Metrics.dp(200)
@@ -128,14 +128,14 @@ Item {
                 cellWidth: Metrics.dp(100)
                 cellHeight: Metrics.dp(100)
 
-                model: _root._hat_state
+                model: _root._hatState
                 delegate: Component {
                     HatView {
                         required property int identifier
                         required property point value
 
-                        height: _hat_grid.cellHeight - Metrics.gapL
-                        width: _hat_grid.cellWidth - Metrics.gapL
+                        height: _hatGrid.cellHeight - Metrics.gapL
+                        width: _hatGrid.cellWidth - Metrics.gapL
 
                         text: identifier
                         currentValue: value

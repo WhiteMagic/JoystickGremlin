@@ -23,13 +23,13 @@ Item {
     readonly property int axisBarHeight:   Metrics.dp(100)
     readonly property int axisBarSize:     Metrics.dp(20)
 
-    readonly property DeviceAxisState _axis_state: ModelFactory.deviceAxisState(_root)
+    readonly property DeviceAxisState _axisState: ModelFactory.deviceAxisState(_root)
 
     implicitHeight: _content.implicitHeight
 
-    Component.onCompleted: () => { _axis_state.guid = deviceGuid }
+    Component.onCompleted: () => { _axisState.guid = deviceGuid }
 
-    function format_percentage(value)
+    function formatPercentage(value)
     {
         return Math.round(value * 100)
     }
@@ -69,7 +69,7 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
             interactive: false
 
-            model: _root._axis_state
+            model: _root._axisState
             delegate: Component {
                 ColumnLayout {
                     required property int index
@@ -99,7 +99,7 @@ Item {
                     Label {
                         Layout.alignment: Qt.AlignHCenter
 
-                        text: format_percentage(value) + " %"
+                        text: formatPercentage(value) + " %"
                     }
 
                 }

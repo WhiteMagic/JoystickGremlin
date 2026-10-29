@@ -27,19 +27,19 @@ Rectangle {
 
     function updateHandle(handle, evt, side) {
         // Compute new data values.
-        let new_x = RH.clamp(map2x(_control.x + handle.x, evt.x), -1.0, 1.0)
-        let new_y = RH.clamp(map2y(_control.y + handle.y, evt.y), -1.0, 1.0)
+        let newX = RH.clamp(map2x(_control.x + handle.x, evt.x), -1.0, 1.0)
+        let newY = RH.clamp(map2y(_control.y + handle.y, evt.y), -1.0, 1.0)
 
         // Compute new visual values.
-        let new_u = ((new_x - modelData.center.x) / 2.0) * _vis.size
-        let new_v = -((new_y - modelData.center.y) / 2.0) * _vis.size
+        let newU = ((newX - modelData.center.x) / 2.0) * _vis.size
+        let newV = -((newY - modelData.center.y) / 2.0) * _vis.size
 
         // Handle symmetry mode, no need to update model as the code does this
         // behind the scenes with the model update below.
         if (action.isSymmetric) {
             let mirror = repeater.itemAt(repeater.count - index - 1).item
-            let dx = new_u - handle.x
-            let dy = new_v - handle.y
+            let dx = newU - handle.x
+            let dy = newV - handle.y
 
             if(side === "left") {
                 mirror.rightHandle.x -= dx
@@ -52,9 +52,9 @@ Rectangle {
         }
 
         // Move the actual marker then update data model.
-        handle.x = new_u
-        handle.y = new_v
-        action.setControlHandle(new_x, new_y, index, side, true)
+        handle.x = newU
+        handle.y = newV
+        action.setControlHandle(newX, newY, index, side, true)
     }
 
     x: map2u(modelData.center.x)
