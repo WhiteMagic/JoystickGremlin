@@ -22,12 +22,21 @@ ApplicationWindow {
     title: backend.windowTitle
     minimumWidth: Metrics.dp(1300)
     minimumHeight: Metrics.dp(700)
-    visible: true
+    visible: false
     color: Theme.bg
     id: _root
 
     Component.onCompleted: () => {
+        _geom = ModelFactory.windowGeometry(
+            _root, "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
+            minimumWidth, minimumHeight
+        )
+        x = _geom.x
+        y = _geom.y
+        width = _geom.width
+        height = _geom.height
         _restoringGeometry = false
+        visible = true
         if (backend.showReleaseNotesOnStartup) {
             Helpers.createComponent("DialogReleaseNotes.qml", _root)
         }
@@ -54,18 +63,10 @@ ApplicationWindow {
     readonly property int _headerControlSize: Metrics.dp(28)
     readonly property int _headerIconSize: Metrics.dp(18)
 
-    property var _geom: ModelFactory.windowGeometry(
-        _root, "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
-        minimumWidth, minimumHeight
-    )
+    property var _geom: null
 
     // Prevent startup overwriting persisted geometry information.
     property bool _restoringGeometry: true
-
-    x: _geom.x
-    y: _geom.y
-    width: _geom.width
-    height: _geom.height
 
     // Persists window geometry after a short delay to save once changes stop.
     Timer {

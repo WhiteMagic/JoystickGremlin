@@ -536,7 +536,8 @@ class Backend(QtCore.QObject):
             self._record_profile_use(local_path)
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
-        gc.collect()
+        # Need to defer the gc run to ensure the previous profile is cleaned up.
+        QtCore.QTimer.singleShot(0, gc.collect)
 
     @QtCore.Slot(str)
     def loadProfileAndActivate(self, fpath: str) -> None:

@@ -22,18 +22,10 @@ Window {
     readonly property DeviceListModel _deviceData:
         ModelFactory.deviceListModel(_inputViewer, "all")
 
-    property var _geom: ModelFactory.windowGeometry(
-        _inputViewer, "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
-        minimumWidth, minimumHeight
-    )
+    property var _geom: null
     // True until Component.onCompleted, suppresses saving geometry information before
     // restoring saved values.
     property bool _restoringGeometry: true
-
-    x: _geom.x
-    y: _geom.y
-    width: _geom.width
-    height: _geom.height
 
     color: Theme.bg
 
@@ -52,6 +44,14 @@ Window {
 
     Component.onCompleted: () => {
         backend.pauseInputHighlighting()
+        _geom = ModelFactory.windowGeometry(
+            _inputViewer, "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
+            minimumWidth, minimumHeight
+        )
+        x = _geom.x
+        y = _geom.y
+        width = _geom.width
+        height = _geom.height
         _restoringGeometry = false
     }
 

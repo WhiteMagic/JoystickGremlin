@@ -83,7 +83,7 @@ Item {
 
         // +--------------------------------------------------------------------
         // | Render the root action node -- loaded through the same qmlPath
-        // | mechanism| every other action uses.
+        // | mechanism every other action uses.
         // +--------------------------------------------------------------------
         ObjectLoader {
             id: _actionTree

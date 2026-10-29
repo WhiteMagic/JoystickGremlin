@@ -189,7 +189,10 @@ Item {
             Layout.rightMargin: Metrics.gapL
             icon.name: "delete"
 
-            onClicked: () => scriptListModel.removeScript(path, name)
+            onClicked: () => {
+                _config.model = []
+                scriptListModel.removeScript(path, name)
+            }
         }
     }
 }
