@@ -538,6 +538,17 @@ class Backend(QtCore.QObject):
         signal.reloadCurrentInputItem.emit()
         gc.collect()
 
+    @QtCore.Slot(str)
+    def loadProfileAndActivate(self, fpath: str) -> None:
+        """Loads a profile from the specified path and ensures it is active.
+
+        Args:
+            fpath: File path to the profile file to load
+        """
+        self.loadProfile(fpath)
+        self.activate_gremlin(False)
+        self.activate_gremlin(True)
+
     @QtCore.Property(bool, notify=propertyChanged)
     def profileContainsUnsavedChanges(self) -> bool:
         """Returns whether or not the current profile contains unsaved changes.

@@ -57,10 +57,14 @@ class LoadProfileFunctor(AbstractFunctor):
             f"Loading profile ... {self.data.profile_filename}"
         )
 
-        be = backend.Backend()
-        be.loadProfile(self.data.profile_filename)
-        be.activate_gremlin(False)
-        be.activate_gremlin(True)
+        # Directly invoke the backend's load function through a queued event to avoid
+        # deadlocking the FSM when executing inside another action.
+        QtCore.QMetaObject.invokeMethod(
+            backend.Backend(),
+            "loadProfileAndActivate",
+            QtCore.Qt.ConnectionType.QueuedConnection,
+            QtCore.Q_ARG(str, self.data.profile_filename),
+        )
 
 
 class LoadProfileModel(ActionModel):
