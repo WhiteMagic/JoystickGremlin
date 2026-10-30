@@ -456,7 +456,7 @@ class Backend(QtCore.QObject):
         Returns:
             Model instance representing the specified InputItem
         """
-        if identifier is None:
+        if identifier is None or not identifier.isValid:
             return
         try:
             item = self.profile.get_input_item(

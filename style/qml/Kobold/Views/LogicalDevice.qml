@@ -19,6 +19,15 @@ Rectangle {
 
     property alias device: _inputList.model
 
+    Connections {
+        target: backend
+
+        // Reset selection so re-selecting it highlights.
+        function onProfileChanged() {
+            _inputList.currentIndex = -1
+        }
+    }
+
     // Modal window to allow renaming of inputs.
     TextInputDialog {
         id: _textInput

@@ -14,6 +14,15 @@ import Kobold.Foundation
 Rectangle {
     color: Theme.bgAlt
 
+    Connections {
+        target: backend
+
+        // Reset selection so re-selecting it highlights.
+        function onProfileChanged() {
+            _inputList.currentIndex = -1
+        }
+    }
+
     ColumnLayout {
         id: _content
 

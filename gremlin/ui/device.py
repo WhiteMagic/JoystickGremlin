@@ -654,8 +654,9 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
             An InputIdentifier instance referring to the input item with
             the given index.
         """
+        # Keeps the device, so the selection stored for it is replaced.
         if index < 0:
-            return InputIdentifier(parent=self)
+            return InputIdentifier(self._logical.device_guid, parent=self)
 
         input = self._index_to_input(index)
         return InputIdentifier(
@@ -856,6 +857,10 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
     @QtCore.Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:
+        # Keeps the device, so the selection stored for it is replaced.
+        if index < 0:
+            return InputIdentifier(dill.UUID_Keyboard, parent=self)
+
         return InputIdentifier(
             dill.UUID_Keyboard,
             InputType.Keyboard,
