@@ -28,6 +28,8 @@ Item {
             active: root.comparator && root.comparator.typeName === "pressed"
 
             sourceComponent: ButtonStateSelector {
+                objectName: "pressedStateCombo"
+
                 isPressed: root.comparator.isPressed
 
                 onStateModified: (isPressed) => { root.comparator.isPressed = isPressed }
@@ -44,6 +46,7 @@ Item {
 
                 DoubleSpinBox {
                     id: _lower
+                    objectName: "lowerLimitSpinBox"
 
                     from: -1.0
                     to: _upper.value
@@ -58,6 +61,7 @@ Item {
 
                 DoubleSpinBox {
                     id: _upper
+                    objectName: "upperLimitSpinBox"
 
                     from: _lower.value
                     to: 1.0

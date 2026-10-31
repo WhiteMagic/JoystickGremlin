@@ -13,6 +13,7 @@ import Kobold.Foundation
 // Renders individual actions and provides support for drag & drop.
 Item {
     id: root
+    objectName: "actionList_" + root.containerName
 
     required property ActionModel containerOwner
     required property string containerName
@@ -90,6 +91,7 @@ Item {
                 // Visualizes the action's drop area.
                 DropIndicator {
                     id: _dropIndicator
+                    objectName: "dropIndicator_" + _entry.index
 
                     anchors.top: parent.top
                     anchors.left: parent.left
@@ -124,6 +126,7 @@ Item {
 
             DropIndicator {
                 id: _defaultIndicator
+                objectName: "dropIndicator_" + root._actions.length
 
                 anchors.top: parent.top
                 anchors.left: parent.left

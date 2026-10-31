@@ -33,6 +33,7 @@ ColumnLayout {
 
         ComboBox {
             id: _logicalOperatorSelector
+            objectName: "logicalOperatorCombo"
 
             model: root.action.logicalOperators
             textRole: "text"
@@ -52,6 +53,8 @@ ColumnLayout {
         Spacer {}
 
         AddActionMenuButton {
+            objectName: "addConditionButton"
+
             variant: "bordered"
             text: "Add condition"
             model: root.action.conditionOperators.map((entry) => entry.text)
@@ -109,12 +112,16 @@ ColumnLayout {
     }
 
     component DeleteConditionButton: ToolButton {
+        objectName: "deleteConditionButton"
+
         icon.name: "delete"
 
         onClicked: () => { root.action.removeCondition(index) }
     }
 
     component ConditionComponent: ColumnLayout {
+        objectName: "condition_" + index
+
         property alias conditionItem: _conditionLoader.sourceComponent
         property string conditionName: ""
 
@@ -188,6 +195,8 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
+                        objectName: "recordInputsButton"
+
                         eventTypes: ["axis", "button", "hat"]
                         multipleInputs: true
                         text: modelData.states.length > 0 ?
@@ -215,6 +224,8 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
+                        objectName: "recordInputsButton"
+
                         eventTypes: ["key"]
                         multipleInputs: true
                         text: modelData.states.length > 0 ?

@@ -122,6 +122,8 @@ Item {
             }
 
             ComboBox {
+                objectName: "curveTypeCombo"
+
                 Layout.preferredWidth: 200
 
                 model: ["Piecewise Linear", "Cubic Spline", "Cubic Bezier Spline"]
@@ -133,12 +135,16 @@ Item {
             }
 
             Button {
+                objectName: "invertCurveButton"
+
                 text: "Invert Curve"
 
                 onClicked: () => { root.action.invertCurve() }
             }
 
             CheckBox {
+                objectName: "symmetricCheckBox"
+
                 text: "Symmetric"
 
                 checked: root.action.isSymmetric
@@ -202,6 +208,8 @@ Item {
                     }
 
                     MouseArea {
+                        objectName: "curveArea"
+
                         anchors.fill: parent
 
                         onDoubleClicked: (evt) => {
@@ -254,6 +262,7 @@ Item {
 
                 DoubleSpinBox {
                     id: _coordX
+                    objectName: "xCoordinateSpinBox"
 
                     from: -1.0
                     to: 1.0
@@ -272,6 +281,7 @@ Item {
 
                 DoubleSpinBox {
                     id: _coordY
+                    objectName: "yCoordinateSpinBox"
 
                     from: -1.0
                     to: 1.0
@@ -296,6 +306,7 @@ Item {
             // Lower half axis.
             NumericRangeSlider {
                 id: _lowerDeadzone
+                objectName: "lowerDeadzoneSlider"
 
                 from: -1.0
                 to: 0.0
@@ -311,6 +322,7 @@ Item {
             // Upper half axis.
             NumericRangeSlider {
                 id: _upperDeadzone
+                objectName: "upperDeadzoneSlider"
 
                 from: 0.0
                 to: 1.0

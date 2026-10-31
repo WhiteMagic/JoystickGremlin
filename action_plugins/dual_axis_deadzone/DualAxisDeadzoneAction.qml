@@ -52,6 +52,8 @@ Item {
 
             ComboBox {
                 id: _deadzoneSelection
+                objectName: "instanceCombo"
+
                 Layout.fillWidth: true
                 model: root.deadzoneModel
                 textRole: "label"
@@ -74,11 +76,15 @@ Item {
             }
 
             Button {
+                objectName: "newInstanceButton"
+
                 text: "New instance"
                 onClicked: () => { root.action.newDeadzone() }
             }
 
             ToolButton {
+                objectName: "renameInstanceButton"
+
                 icon.name: "edit"
                 onClicked: () => {
                     _renameDialog.text = root.action.label
@@ -95,6 +101,8 @@ Item {
             }
 
             DoubleSpinBox {
+                objectName: "innerDeadzoneSpinBox"
+
                 from: 0.0
                 to: 1.0
                 stepSize: 0.05
@@ -109,6 +117,8 @@ Item {
             }
 
             DoubleSpinBox {
+                objectName: "outerDeadzoneSpinBox"
+
                 from: 0.0
                 to: 1.0
                 stepSize: 0.05
@@ -127,6 +137,8 @@ Item {
             }
 
             InputAssignButton {
+                objectName: "firstAxisButton"
+
                 valueLabel: root.action.axis1.isValid
                     ? root.action.axis1.label
                     : "Not assigned"
@@ -139,6 +151,8 @@ Item {
             }
 
             InputAssignButton {
+                objectName: "secondAxisButton"
+
                 valueLabel: root.action.axis2.isValid
                     ? root.action.axis2.label
                     : "Not assigned"

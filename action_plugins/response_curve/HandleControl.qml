@@ -11,6 +11,7 @@ import "render_helpers.js" as RH
 
 Rectangle {
     id: _control
+    objectName: "curvePoint_" + index
 
     readonly property int offset: 5
     property Repeater repeater
@@ -94,6 +95,7 @@ Rectangle {
         // Left control handle.
         Rectangle {
             id: _handleLeft
+            objectName: "leftHandle"
 
             visible: modelData.hasLeft
 
@@ -125,6 +127,7 @@ Rectangle {
         // Right control handle.
         Rectangle {
             id: _handleRight
+            objectName: "rightHandle"
 
             visible: modelData.hasRight
 

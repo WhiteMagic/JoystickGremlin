@@ -43,6 +43,8 @@ ColumnLayout {
             spacing: Metrics.gapM
 
             RadioButton {
+                objectName: "absoluteModeRadio"
+
                 text: "Absolute"
                 checked: root.action.axisMode === "absolute"
 
@@ -50,6 +52,7 @@ ColumnLayout {
             }
             RadioButton {
                 id: _relativeMode
+                objectName: "relativeModeRadio"
 
                 text: "Relative"
                 checked: root.action.axisMode === "relative"
@@ -63,6 +66,8 @@ ColumnLayout {
             }
 
             DoubleSpinBox {
+                objectName: "axisScalingSpinBox"
+
                 visible: _relativeMode.checked
                 from: 0
                 to: 100
@@ -76,6 +81,8 @@ ColumnLayout {
 
         // UI for a button input.
         CheckBox {
+            objectName: "invertActivationCheckBox"
+
             visible: root.action.vjoyInputType === "button"
             text: "Invert activation"
             checked: root.action.buttonInverted

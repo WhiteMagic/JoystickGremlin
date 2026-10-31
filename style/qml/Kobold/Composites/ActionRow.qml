@@ -70,6 +70,7 @@ Item {
 
             MouseArea {
                 id: _dragArea
+                objectName: "dragHandle"
 
                 anchors.fill: parent
                 cursorShape: Qt.OpenHandCursor
@@ -121,6 +122,8 @@ Item {
         }
 
         ActivationToggle {
+            objectName: "activationToggle"
+
             visible: root.showTriggerMode
 
             pressChecked: { root.activateOnPress }

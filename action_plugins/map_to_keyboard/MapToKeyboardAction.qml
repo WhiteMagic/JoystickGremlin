@@ -24,6 +24,8 @@ ColumnLayout {
         }
 
         InputCaptureButton {
+            objectName: "keyCombinationButton"
+
             Layout.leftMargin: Metrics.gapM
             Layout.rightMargin: Metrics.gapM
 

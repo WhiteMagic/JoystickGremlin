@@ -44,6 +44,7 @@ RowLayout {
 
     TextField {
         id: _firstInput
+        objectName: "firstValueField"
 
         Layout.preferredWidth: Metrics.controlHeight * 3
         horizontalAlignment: TextInput.AlignHCenter
@@ -113,6 +114,7 @@ RowLayout {
 
     TextField {
         id: _secondInput
+        objectName: "secondValueField"
 
         Layout.preferredWidth: Metrics.controlHeight * 3
         horizontalAlignment: TextInput.AlignHCenter

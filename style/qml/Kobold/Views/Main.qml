@@ -220,6 +220,8 @@ ApplicationWindow {
                             model: backend.recentProfiles
 
                             delegate: MenuItem {
+                                objectName: "recentProfileItem"
+
                                 text: modelData
                                 elide: Text.ElideLeft
                                 ToolTip.visible: hovered
@@ -350,6 +352,8 @@ ApplicationWindow {
                 }
             }
             ToolButton {
+                objectName: "saveProfileButton"
+
                 icon.name: "save_profile"
                 controlSize: _root._headerControlSize
                 iconSize: _root._headerIconSize
@@ -404,6 +408,8 @@ ApplicationWindow {
                 Layout.preferredWidth: Metrics.gapM
             }
             ToolButton {
+                objectName: "activateButton"
+
                 icon.name: "activate"
                 iconRole: backend.gremlinActive ? "accent" : "fg"
                 controlSize: _root._headerControlSize
@@ -426,6 +432,7 @@ ApplicationWindow {
 
             ComboBox {
                 id: _modeSelector
+                objectName: "modeSelectorCombo"
 
                 Layout.preferredWidth: Metrics.labelColumn
                 Layout.rightMargin: Metrics.gapM

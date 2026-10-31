@@ -35,6 +35,8 @@ RowLayout {
 
     ToolButton {
         id: _north
+        objectName: "hatDirectionButton_north"
+
         checkable: true
         checked: root.north
         icon.name: "arrow-n"
@@ -44,6 +46,8 @@ RowLayout {
     }
     ToolButton {
         id: _northEast
+        objectName: "hatDirectionButton_northEast"
+
         checkable: true
         checked: root.northEast
         icon.name: "arrow-ne"
@@ -53,6 +57,8 @@ RowLayout {
     }
     ToolButton {
         id: _east
+        objectName: "hatDirectionButton_east"
+
         checkable: true
         checked: root.east
         icon.name: "arrow-e"
@@ -62,6 +68,8 @@ RowLayout {
     }
     ToolButton {
         id: _southEast
+        objectName: "hatDirectionButton_southEast"
+
         checkable: true
         checked: root.southEast
         icon.name: "arrow-se"
@@ -71,6 +79,8 @@ RowLayout {
     }
     ToolButton {
         id: _south
+        objectName: "hatDirectionButton_south"
+
         checkable: true
         checked: root.south
         icon.name: "arrow-s"
@@ -80,6 +90,8 @@ RowLayout {
     }
     ToolButton {
         id: _southWest
+        objectName: "hatDirectionButton_southWest"
+
         checkable: true
         checked: root.southWest
         icon.name: "arrow-sw"
@@ -89,6 +101,8 @@ RowLayout {
     }
     ToolButton {
         id: _west
+        objectName: "hatDirectionButton_west"
+
         checkable: true
         checked: root.west
         icon.name: "arrow-w"
@@ -98,6 +112,8 @@ RowLayout {
     }
     ToolButton {
         id: _northWest
+        objectName: "hatDirectionButton_northWest"
+
         checkable: true
         checked: root.northWest
         icon.name: "arrow-nw"

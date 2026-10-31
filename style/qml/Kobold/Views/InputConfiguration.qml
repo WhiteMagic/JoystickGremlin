@@ -22,6 +22,7 @@ Item {
     // the most recent and thus visible update is executed, all others dropped.
     Timer {
         id: _debounceTimer
+        objectName: "inputDebounceTimer"
 
         interval: 10
         onTriggered: () => {
@@ -200,8 +201,9 @@ Item {
         // user to the first step.
         Button {
             id: _emptyStateButton
+            objectName: "newActionSequenceButton"
 
-            visible: _listView.count === 0
+            visible: _listView.count === 0 && _root.inputItemModel !== null
             Layout.fillWidth: true
             Layout.preferredHeight: Metrics.rowInput
             Layout.margins: Metrics.gapM

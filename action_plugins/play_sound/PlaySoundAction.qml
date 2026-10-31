@@ -25,6 +25,7 @@ ColumnLayout {
 
         TextField {
             id: _soundFilename
+            objectName: "soundFileField"
 
             Layout.fillWidth: true
 
@@ -46,6 +47,8 @@ ColumnLayout {
         }
 
         SpinBox {
+            objectName: "volumeSpinBox"
+
             value: root.action.soundVolume
             from: 0
             to: 100

@@ -12,6 +12,7 @@ import Kobold.Foundation
 // to the slot's group.
 Item {
     id: root
+    objectName: "slotHeader_" + root.label
 
     property string label: ""
     property var actionNames: []
@@ -39,6 +40,8 @@ Item {
         }
 
         AddActionMenuButton {
+            objectName: "slotAddActionButton"
+
             variant: "ghost"
             model: root.actionNames
             onActionRequested: (name) => root.actionRequested(name)

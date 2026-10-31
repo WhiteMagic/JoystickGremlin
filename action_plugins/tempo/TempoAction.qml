@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "thresholdSpinBox"
+
             from: 0
             to: 100
             stepSize: 0.05
@@ -42,12 +44,16 @@ ColumnLayout {
         }
 
         RadioButton {
+            objectName: "pressRadio"
+
             text: "Press"
             checked: root.action.activateOn === "press"
 
             onToggled: { root.action.activateOn = "press" }
         }
         RadioButton {
+            objectName: "releaseRadio"
+
             text: "Release"
             checked: root.action.activateOn === "release"
 

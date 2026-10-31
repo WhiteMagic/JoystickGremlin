@@ -56,6 +56,7 @@ Item {
 
         ComboBox {
             id: _deviceCombo
+            objectName: "vjoyDeviceCombo"
 
             model: root._vjoy.vjoyDevices
 
@@ -64,6 +65,7 @@ Item {
 
         ComboBox {
             id: _inputCombo
+            objectName: "vjoyInputCombo"
 
             model: root._vjoy.inputChoices
 

@@ -26,6 +26,7 @@ ColumnLayout {
 
         TextField {
             id: _profileFilename
+            objectName: "profileFileField"
 
             Layout.fillWidth: true
 

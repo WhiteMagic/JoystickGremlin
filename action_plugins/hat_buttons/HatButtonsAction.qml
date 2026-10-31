@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         RadioButton {
+            objectName: "fourWayRadio"
+
             text: "4 way"
             checked: root.action.buttonCount === 4
 
@@ -34,6 +36,8 @@ ColumnLayout {
             }
         }
         RadioButton {
+            objectName: "eightWayRadio"
+
             text: "8 way"
             checked: root.action.buttonCount === 8
 

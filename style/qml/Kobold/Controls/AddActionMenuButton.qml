@@ -94,7 +94,10 @@ ToolButton {
             model: control.model
 
             MenuItem {
+                objectName: control.objectName + "_" + modelData
+
                 required property string modelData
+
                 text: modelData
                 onTriggered: { control.actionRequested(modelData) }
             }

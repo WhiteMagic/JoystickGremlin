@@ -19,6 +19,8 @@ ColumnLayout {
     spacing: Metrics.gapS
 
     TextField {
+        objectName: "speechTextField"
+
         Layout.fillWidth: true
 
         placeholderText: "Enter text to speak"
@@ -32,6 +34,8 @@ ColumnLayout {
         spacing: Metrics.gapM
 
         ComboBox {
+            objectName: "queueModeCombo"
+
             readonly property var _labels: ["Interrupt", "Queue front", "Queue back"]
             readonly property var _values: ["interrupt", "queue-front", "queue-back"]
 
@@ -48,6 +52,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "volumeSpinBox"
+
             from: 0.0
             to: 1.0
             stepSize: 0.05
@@ -64,6 +70,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "rateSpinBox"
+
             from: -1.0
             to: 1.0
             stepSize: 0.1
@@ -80,6 +88,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "pitchSpinBox"
+
             from: -1.0
             to: 1.0
             stepSize: 0.1

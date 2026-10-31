@@ -49,6 +49,8 @@ Window {
     }
 
     ColumnLayout {
+        objectName: "calibrationContent"
+
         anchors.fill: parent
         anchors.leftMargin: Metrics.gapM
 
@@ -63,6 +65,7 @@ Window {
 
             ComboBox {
                 id: _deviceSelection
+                objectName: "deviceCombo"
 
                 model: _calibrationDialog._deviceData
                 textRole: "name"
@@ -97,6 +100,7 @@ Window {
 
 
     component CalibrationItem : ColumnLayout {
+        objectName: "calibrationAxis_" + index
 
         // Specify all properties we need from the model.
         required property int index
@@ -132,6 +136,8 @@ Window {
             }
 
             TextField {
+                objectName: "rawValueField"
+
                 Layout.preferredWidth: _calibrationDialog.valueFieldWidth
 
                 text: rawValue
@@ -142,6 +148,8 @@ Window {
                 horizontalAlignment: Text.AlignRight
             }
             CheckBox {
+                objectName: "withCenterCheckBox"
+
                 text: checked ? "Yes" : "No"
                 checked: model.withCenter
                 onToggled: {
@@ -185,6 +193,7 @@ Window {
                 RowLayout {
                     CalibrationSpinBox {
                         id: _sbLow
+                        objectName: "lowSpinBox"
 
                         value: low
                         from: -32768
@@ -197,6 +206,7 @@ Window {
 
                     CalibrationSpinBox {
                         id: _sbCLow
+                        objectName: "centerLowSpinBox"
 
                         visible: model.withCenter
                         value: centerLow
@@ -208,6 +218,7 @@ Window {
 
                     CalibrationSpinBox {
                         id: _sbCHigh
+                        objectName: "centerHighSpinBox"
 
                         visible: model.withCenter
                         value: centerHigh
@@ -221,6 +232,7 @@ Window {
 
                     CalibrationSpinBox {
                         id: _sbHigh
+                        objectName: "highSpinBox"
 
                         value: high
                         from: _sbCHigh.value
@@ -239,6 +251,8 @@ Window {
 
                 RowLayout {
                     Button {
+                        objectName: "resetButton"
+
                         Layout.fillWidth: true
 
                         text: "Reset"
@@ -246,6 +260,8 @@ Window {
                         onClicked: () => { _axisView.model.reset(index) }
                     }
                     Button {
+                        objectName: "saveButton"
+
                         Layout.fillWidth: true
 
                         icon.name: "save_profile"
@@ -266,6 +282,7 @@ Window {
 
                 Button {
                     id: _btnCenterCalibration
+                    objectName: "calibrateCenterButton"
 
                     Layout.fillWidth: true
 
@@ -285,6 +302,7 @@ Window {
 
                 Button {
                     id: _btnExtremaCalibration
+                    objectName: "calibrateExtremaButton"
 
                     Layout.fillWidth: true
 

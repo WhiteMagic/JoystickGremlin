@@ -39,6 +39,7 @@ Window {
 
     ColumnLayout {
         id: _content
+        objectName: "manageModesContent"
 
         anchors.fill: parent
         anchors.topMargin: Metrics.gapM
@@ -56,6 +57,8 @@ Window {
         }
 
         Button {
+            objectName: "addModeButton"
+
             Layout.alignment: Qt.AlignHCenter
 
             text: "Add Mode"
@@ -81,6 +84,8 @@ Window {
         id: _delegate
 
         RowLayout {
+            objectName: "modeRow_" + name
+
             required property string name
             required property string parentName
 
@@ -97,6 +102,8 @@ Window {
             }
 
             ToolButton {
+                objectName: "renameModeButton"
+
                 icon.name: "edit"
 
                 Layout.leftMargin: Metrics.gapM
@@ -118,6 +125,7 @@ Window {
 
             ComboBox {
                 id: _parentMode
+                objectName: "parentModeCombo"
 
                 Layout.preferredWidth: Metrics.labelColumn
                 Layout.leftMargin: Metrics.gapM
@@ -138,6 +146,8 @@ Window {
             }
 
             ToolButton {
+                objectName: "deleteModeButton"
+
                 icon.name: "delete"
 
                 Layout.rightMargin: Metrics.gapM

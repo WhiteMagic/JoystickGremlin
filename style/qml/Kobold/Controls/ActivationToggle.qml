@@ -19,12 +19,16 @@ RowLayout {
     spacing: Metrics.gapS
 
     CheckBox {
+        objectName: "activationPress"
+
         text: "Press"
         checked: root.pressChecked
         onToggled: { root.pressCheckedEdited(checked) }
     }
 
     CheckBox {
+        objectName: "activationRelease"
+
         text: "Release"
         checked: root.releaseChecked
         onToggled: { root.releaseCheckedEdited(checked) }

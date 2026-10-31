@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "splitValueSpinBox"
+
             from: -1.0
             to: 1.0
             stepSize: 0.05
