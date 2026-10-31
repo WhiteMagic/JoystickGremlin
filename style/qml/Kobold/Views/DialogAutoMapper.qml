@@ -156,9 +156,6 @@ Window {
                         _overwriteNonEmpty.checked,
                         _repeatDevices.checked
                     )
-
-                    selectedPhysicalDevices = ({})
-                    selectedVJoyDevices = ({})
                 }
             }
 

@@ -246,6 +246,7 @@ class MergeAxisModel(ActionModel):
             [str(ma.id) for ma in merge_actions],
             self,
         )
+        self._merge_action_list.currentValue = str(self._data.id)
         return self._merge_action_list
 
     def _get_label(self) -> str:

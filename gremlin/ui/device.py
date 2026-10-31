@@ -82,7 +82,7 @@ def device_and_input_names(
     elif device_guid == dill.UUID_Keyboard:
         device_name = "Keyboard"
     else:
-        device_name = dill.DILL.get_device_name(dill.GUID.from_uuid(device_guid))
+        device_name = device_initialization.device_for_uuid(device_guid).name
         mapping = DeviceDatabase().get_mapping_by_uuid(device_guid)
         if mapping is not None:
             input_name = mapping.input_name((input_type, input_id))
