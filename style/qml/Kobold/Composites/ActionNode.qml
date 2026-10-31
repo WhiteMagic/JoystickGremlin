@@ -11,6 +11,7 @@ import Kobold.Foundation
 
 Item {
     id: root
+    objectName: "actionNode_" + root.action.name
 
     required property ActionModel action
 

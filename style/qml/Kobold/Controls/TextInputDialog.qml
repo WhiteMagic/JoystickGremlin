@@ -39,6 +39,7 @@ Window {
 
         TextField {
             id: _input
+            objectName: "textInputField"
 
             Layout.leftMargin: Metrics.gapS
             Layout.fillWidth: true
@@ -65,6 +66,7 @@ Window {
 
         AppIcon {
             id: _errorIcon
+            objectName: "textInputErrorIcon"
 
             visible: false
             name: "error"

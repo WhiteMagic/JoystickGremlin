@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "delaySpinBox"
+
             from: 0
             to: 100
             stepSize: 0.05

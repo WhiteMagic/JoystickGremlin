@@ -10,6 +10,7 @@ import "render_helpers.js" as RH
 
 Rectangle {
     id: _control
+    objectName: "curvePoint_" + index
 
     readonly property int offset: 5
     property Repeater repeater

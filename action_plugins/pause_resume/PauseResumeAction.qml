@@ -20,18 +20,24 @@ ColumnLayout {
         spacing: Metrics.gapM
 
         RadioButton {
+            objectName: "pauseRadio"
+
             text: "Pause"
             checked: root.action.operation === "Pause"
 
             onToggled: { root.action.operation = "Pause" }
         }
         RadioButton {
+            objectName: "resumeRadio"
+
             text: "Resume"
             checked: root.action.operation === "Resume"
 
             onToggled: { root.action.operation = "Resume" }
         }
         RadioButton {
+            objectName: "toggleRadio"
+
             text: "Toggle"
             checked: root.action.operation === "Toggle"
 

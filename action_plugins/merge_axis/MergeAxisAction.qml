@@ -57,6 +57,7 @@ Item {
 
             ComboBox {
                 id: _actionSelection
+                objectName: "instanceCombo"
 
                 model: root.actionModel
                 textRole: "label"
@@ -78,10 +79,14 @@ Item {
             }
 
             Button {
+                objectName: "newInstanceButton"
+
                 text: "New instance"
                 onClicked: () => { root.action.newMergeAxis() }
             }
             ToolButton {
+                objectName: "renameInstanceButton"
+
                 icon.name: "edit"
                 onClicked: () => {
                     _renameDialog.text = root.action.label
@@ -98,6 +103,7 @@ Item {
 
             ComboBox {
                 id: _operationSelection
+                objectName: "mergeOperationCombo"
 
                 model: root.operationModel
                 textRole: "label"
@@ -127,6 +133,8 @@ Item {
             }
 
             InputAssignButton {
+                objectName: "firstAxisButton"
+
                 valueLabel: root.action.firstAxis.isValid
                     ? root.action.firstAxis.label
                     : "Click to assign current axis."
@@ -139,6 +147,8 @@ Item {
             }
 
             InputAssignButton {
+                objectName: "secondAxisButton"
+
                 valueLabel: root.action.secondAxis.isValid
                     ? root.action.secondAxis.label
                     : "Click to assign current axis."

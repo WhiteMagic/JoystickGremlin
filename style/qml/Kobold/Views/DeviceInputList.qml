@@ -54,6 +54,8 @@ Rectangle {
         model: device
 
         delegate: InputButton {
+            objectName: "physicalInput"
+
             width: _inputList.width - Metrics.gapM * 2
             height: Metrics.rowInput
 

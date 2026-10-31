@@ -33,6 +33,7 @@ Window {
 
     ColumnLayout {
         id: _content
+        objectName: "swapDevicesContent"
 
         anchors.fill: parent
         anchors.margins: Metrics.gapL
@@ -47,6 +48,7 @@ Window {
 
             ComboBox {
                 id: _profileDeviceSelection
+                objectName: "profileDeviceCombo"
 
                 Layout.fillWidth: true
 
@@ -67,6 +69,7 @@ Window {
 
             ComboBox {
                 id: _physicalDeviceSelection
+                objectName: "physicalDeviceCombo"
 
                 Layout.fillWidth: true
 
@@ -125,6 +128,7 @@ Window {
 
             Label {
                 id: _statusMessage
+                objectName: "statusLabel"
 
                 Layout.fillWidth: true
                 Layout.rightMargin: Metrics.gapM
@@ -134,6 +138,8 @@ Window {
             }
 
             Button {
+                objectName: "swapBindingsButton"
+
                 text: "Swap Bindings"
                 onClicked: () => {
                     _statusMessage.text = _root._tools.swapDevices(

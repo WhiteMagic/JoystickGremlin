@@ -50,6 +50,7 @@ Item {
 
     ComboBox {
         id: _selection
+        objectName: "logicalDeviceCombo"
 
         anchors.left: parent.left
         anchors.right: parent.right

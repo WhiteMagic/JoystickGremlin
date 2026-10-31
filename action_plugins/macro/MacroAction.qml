@@ -45,6 +45,7 @@ ColumnLayout {
 
         ComboBox {
             id: _repeatMode
+            objectName: "repeatModeCombo"
 
             textRole: "text"
             valueRole: "value"
@@ -64,6 +65,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "repeatDelaySpinBox"
+
             visible: ["count", "toggle", "hold"].includes(_repeatMode.currentValue)
 
             from: 0
@@ -76,6 +79,8 @@ ColumnLayout {
         }
 
         SpinBox {
+            objectName: "repeatCountSpinBox"
+
             visible: _repeatMode.currentValue === "count"
 
             editable: true
@@ -89,12 +94,16 @@ ColumnLayout {
         Spacer {}
 
         CheckBox {
+            objectName: "exclusiveCheckBox"
+
             text: "Exclusive"
             checked: root.action.isExclusive
 
             onToggled: { root.action.isExclusive = checked }
         }
         CheckBox {
+            objectName: "preemptiveCheckBox"
+
             visible: root.action.isExclusive
             text: "Pre-emptive"
             checked: root.action.isPreemptive
@@ -136,6 +145,8 @@ ColumnLayout {
             onToggled: { root.action.recordJoystickAxis = checked }
         }
         CheckBox {
+            objectName: "recordButtonCheckBox"
+
             text: "Button"
             checked: root.action.recordJoystickButton
             enabled: !root.action.isRecording
@@ -150,6 +161,8 @@ ColumnLayout {
             onToggled: { root.action.recordJoystickHat = checked }
         }
         CheckBox {
+            objectName: "recordTimingsCheckBox"
+
             text: "Timings"
             checked: root.action.recordTimings
             enabled: !root.action.isRecording
@@ -158,12 +171,16 @@ ColumnLayout {
         }
 
         Button {
+            objectName: "startRecordingButton"
+
             visible: !root.action.isRecording
             text: "Start recording"
 
             onClicked: { root.action.startRecording() }
         }
         Button {
+            objectName: "stopRecordingButton"
+
             visible: root.action.isRecording
             text: "Stop recording"
 
@@ -173,6 +190,8 @@ ColumnLayout {
         Spacer {}
 
         AddActionMenuButton {
+            objectName: "addStepButton"
+
             variant: "bordered"
             text: "Add action"
             model: root.actionTypes.map((entry) => entry.text)
@@ -234,6 +253,8 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
+                        objectName: "recordInputButton"
+
                         eventTypes: ["axis", "button", "hat"]
                         multipleInputs: false
                         text: modelData.label ? modelData.label : "Record input"
@@ -244,6 +265,8 @@ ColumnLayout {
                     Spacer {}
 
                     ButtonStateSelector {
+                        objectName: "pressedStateCombo"
+
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
@@ -269,6 +292,8 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
+                        objectName: "recordInputButton"
+
                         eventTypes: ["key"]
                         multipleInputs: false
                         text: modelData.key ? modelData.key : "Record input"
@@ -279,6 +304,8 @@ ColumnLayout {
                     Spacer {}
 
                     ButtonStateSelector {
+                        objectName: "pressedStateCombo"
+
                         isPressed: modelData.isPressed
                         onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
@@ -307,6 +334,8 @@ ColumnLayout {
                     Spacer {}
 
                     ButtonStateSelector {
+                        objectName: "pressedStateCombo"
+
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
@@ -336,6 +365,8 @@ ColumnLayout {
                     spacing: Metrics.gapM
 
                     InputCaptureButton {
+                        objectName: "recordInputButton"
+
                         eventTypes: ["mouse"]
                         multipleInputs: false
                         text: modelData.button ? modelData.button : "Record input"
@@ -346,6 +377,8 @@ ColumnLayout {
                     Spacer {}
 
                     ButtonStateSelector {
+                        objectName: "pressedStateCombo"
+
                         isPressed: modelData.isPressed
                         onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
@@ -368,6 +401,8 @@ ColumnLayout {
                         text: "X axis"
                     }
                     SpinBox {
+                        objectName: "dxSpinBox"
+
                         editable: true
                         from: -10000
                         to: 10000
@@ -381,6 +416,8 @@ ColumnLayout {
                         text: "Y axis"
                     }
                     SpinBox {
+                        objectName: "dySpinBox"
+
                         editable: true
                         from: -10000
                         to: 10000
@@ -405,6 +442,8 @@ ColumnLayout {
                     Spacer {}
 
                     DoubleSpinBox {
+                        objectName: "durationSpinBox"
+
                         from: 0
                         to: 10
                         stepSize: 0.1
@@ -448,6 +487,8 @@ ColumnLayout {
                     Spacer {}
 
                     ButtonStateSelector {
+                        objectName: "pressedStateCombo"
+
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
@@ -475,6 +516,8 @@ ColumnLayout {
     // enclosing DelegateChoice, exactly as `MacroStepRow` below relies on the
     // ambient `index`/`modelData` supplied by the list view delegate.
     component AxisValueSpin: DoubleSpinBox {
+        objectName: "axisValueSpinBox"
+
         from: -1.0
         to: 1.0
         stepSize: 0.05
@@ -488,12 +531,16 @@ ColumnLayout {
         spacing: Metrics.gapM
 
         RadioButton {
+            objectName: "absoluteModeRadio"
+
             text: "Absolute"
             checked: modelData.axisMode === "absolute"
 
             onToggled: { modelData.axisMode = "absolute" }
         }
         RadioButton {
+            objectName: "relativeModeRadio"
+
             text: "Relative"
             checked: modelData.axisMode === "relative"
 
@@ -502,6 +549,8 @@ ColumnLayout {
     }
 
     component HatDirectionCombo: ComboBox {
+        objectName: "hatDirectionCombo"
+
         textRole: "text"
         valueRole: "value"
 
@@ -527,6 +576,7 @@ ColumnLayout {
     // Renders the contents of a single action including control elements.
     component MacroActionRow: Item {
         id: _actionRow
+        objectName: "macroStep_" + index
 
         property string stepLabel: ""
         property alias detailItem: _detailLoader.sourceComponent
@@ -612,6 +662,8 @@ ColumnLayout {
             }
 
             ToolButton {
+                objectName: "deleteStepButton"
+
                 icon.name: "delete"
 
                 onClicked: { root.action.removeMacroAction(index) }

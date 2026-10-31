@@ -30,6 +30,7 @@ ColumnLayout {
 
         RadioButton {
             id: _modeButton
+            objectName: "buttonModeRadio"
 
             text: "Button"
             visible: root.action.actionBehavior === "button"
@@ -39,6 +40,7 @@ ColumnLayout {
         }
         RadioButton {
             id: _modeMotion
+            objectName: "motionModeRadio"
 
             text: "Motion"
             checked: root.action.mode === "Motion"
@@ -57,6 +59,8 @@ ColumnLayout {
         }
 
         InputCaptureButton {
+            objectName: "mouseButtonCaptureButton"
+
             Layout.fillWidth: true
 
             eventTypes: ["mouse"]
@@ -81,6 +85,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _minSpeedButton
+                objectName: "minSpeedSpinBox"
 
                 from: root.limitLow
                 to: _maxSpeedButton.value
@@ -95,6 +100,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _maxSpeedButton
+                objectName: "maxSpeedSpinBox"
 
                 from: _minSpeedButton.value
                 to: root.limitHigh
@@ -112,6 +118,8 @@ ColumnLayout {
             }
 
             DoubleSpinBox {
+                objectName: "timeToMaxSpeedSpinBox"
+
                 from: 0
                 to: 60
                 stepSize: 1.0
@@ -126,6 +134,8 @@ ColumnLayout {
             }
 
             SpinBox {
+                objectName: "directionSpinBox"
+
                 from: 0
                 to: 360
                 stepSize: 15
@@ -149,12 +159,16 @@ ColumnLayout {
             }
 
             RadioButton {
+                objectName: "xAxisRadio"
+
                 text: "X axis"
                 checked: root.action.direction === 90
 
                 onToggled: { root.action.direction = 90 }
             }
             RadioButton {
+                objectName: "yAxisRadio"
+
                 text: "Y axis"
                 checked: root.action.direction === 0
 
@@ -171,6 +185,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _minSpeedAxis
+                objectName: "minSpeedSpinBox"
 
                 from: root.limitLow
                 to: _maxSpeedAxis.value
@@ -185,6 +200,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _maxSpeedAxis
+                objectName: "maxSpeedSpinBox"
 
                 from: _minSpeedAxis.value
                 to: root.limitHigh
@@ -209,6 +225,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _minSpeedHat
+                objectName: "minSpeedSpinBox"
 
                 from: root.limitLow
                 to: _maxSpeedHat.value
@@ -223,6 +240,7 @@ ColumnLayout {
 
             SpinBox {
                 id: _maxSpeedHat
+                objectName: "maxSpeedSpinBox"
 
                 from: _minSpeedHat.value
                 to: root.limitHigh
@@ -240,6 +258,8 @@ ColumnLayout {
             }
 
             DoubleSpinBox {
+                objectName: "timeToMaxSpeedSpinBox"
+
                 from: 0
                 to: 30
                 stepSize: 1.0

@@ -95,6 +95,7 @@ Window {
 
     RowLayout {
         id: _root
+        objectName: "inputViewerContent"
 
         anchors.fill: parent
 
@@ -135,6 +136,7 @@ Window {
 
         ColumnLayout {
             id: _delegateContent
+            objectName: "inputViewerDevice"
 
             required property int index
             required property string name

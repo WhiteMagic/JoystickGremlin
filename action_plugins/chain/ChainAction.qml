@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "timeoutSpinBox"
+
             from: 0
             to: 3600
             stepSize: 5
@@ -38,6 +40,8 @@ ColumnLayout {
         Spacer {}
 
         Button {
+            objectName: "addSequenceButton"
+
             text: "Add chain sequence"
 
             onClicked: { root.action.addSequence() }
@@ -71,6 +75,8 @@ ColumnLayout {
                 }
 
                 ToolButton {
+                    objectName: "removeSequenceButton_" + _sequence.index
+
                     icon.name: "delete"
 
                     onClicked: { root.action.removeSequence(_sequence.index) }

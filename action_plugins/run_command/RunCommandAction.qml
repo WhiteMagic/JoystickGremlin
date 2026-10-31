@@ -32,6 +32,7 @@ ColumnLayout {
 
         TextField {
             id: _executable
+            objectName: "executableField"
 
             Layout.fillWidth: true
 
@@ -62,6 +63,8 @@ ColumnLayout {
         }
 
         TextField {
+            objectName: "argumentsField"
+
             Layout.fillWidth: true
 
             text: root.action.arguments

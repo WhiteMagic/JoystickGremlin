@@ -33,6 +33,8 @@ Window {
     property var selectedVJoyDevices: ({})
 
     ColumnLayout {
+        objectName: "autoMapperContent"
+
         anchors.fill: parent
         anchors.margins: Metrics.gapL
 
@@ -58,6 +60,8 @@ Window {
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
+                        objectName: "physicalDeviceCheckBox"
+
                         width: ListView.view.width - Metrics.gapM
 
                         text: model.name
@@ -90,6 +94,8 @@ Window {
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
+                        objectName: "vjoyDeviceCheckBox"
+
                         width: ListView.view.width - Metrics.gapM
 
                         text: model.name
@@ -110,6 +116,7 @@ Window {
 
             ComboBox {
                 id: _modeSelector
+                objectName: "modeCombo"
 
                 model: ModelFactory.modeListModel(_modeSelector)
 
@@ -120,12 +127,14 @@ Window {
 
             CheckBox {
                 id: _overwriteNonEmpty
+                objectName: "overwriteCheckBox"
 
                 text: "Overwrite non-empty physical inputs"
             }
 
             CheckBox {
                 id: _repeatDevices
+                objectName: "repeatCheckBox"
 
                 text: "Repeat vJoy devices"
             }
@@ -135,6 +144,8 @@ Window {
             Layout.topMargin: Metrics.gapM
 
             Button {
+                objectName: "createMappingsButton"
+
                 text: "Create 1:1 mappings"
 
                 onClicked: () => {
@@ -153,6 +164,7 @@ Window {
 
             Label {
                 id: _statusMessage
+                objectName: "statusLabel"
 
                 Layout.fillWidth: true
                 Layout.leftMargin: Metrics.gapM

@@ -23,6 +23,7 @@ ColumnLayout {
 
         ComboBox {
             id: _changeType
+            objectName: "changeTypeCombo"
 
             Layout.alignment: Qt.AlignTop
 
@@ -46,6 +47,7 @@ ColumnLayout {
 
             ComboBox {
                 id: _switchCombo
+                objectName: "switchModeCombo"
 
                 Layout.preferredWidth: 200
 
@@ -118,6 +120,7 @@ ColumnLayout {
 
                         ComboBox {
                             id: _cycleCombo
+                            objectName: "cycleModeCombo_" + _cycleRow.index
 
                             Layout.preferredWidth: 200
 
@@ -135,6 +138,8 @@ ColumnLayout {
                         }
 
                         ToolButton {
+                            objectName: "deleteCycleModeButton_" + _cycleRow.index
+
                             icon.name: "delete"
 
                             onClicked: { root.action.deleteTargetMode(_cycleRow.index) }
@@ -143,6 +148,8 @@ ColumnLayout {
                 }
 
                 Button {
+                    objectName: "addCycleModeButton"
+
                     text: "Add mode"
 
                     onClicked: { root.action.addTargetMode() }
@@ -161,6 +168,7 @@ ColumnLayout {
 
             ComboBox {
                 id: _temporaryCombo
+                objectName: "temporaryModeCombo"
 
                 Layout.preferredWidth: 200
 

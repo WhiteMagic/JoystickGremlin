@@ -24,6 +24,8 @@ ColumnLayout {
         }
 
         TextField {
+            objectName: "descriptionField"
+
             Layout.fillWidth: true
 
             placeholderText: "Enter description"

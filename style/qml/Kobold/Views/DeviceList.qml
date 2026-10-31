@@ -40,6 +40,7 @@ Item {
 
             TabButton {
                 id: _button
+                objectName: "physicalDeviceTab"
 
                 text: name
                 width: Metrics.paddedTabButtonWidth(_metric.width)
@@ -83,6 +84,7 @@ Item {
 
         TabButton {
             id: _logicalButton
+            objectName: "logicalDeviceTab"
 
             text: "Logical Device"
             width: Metrics.paddedTabButtonWidth(_metricIO.width)

@@ -26,6 +26,8 @@ ColumnLayout {
         }
 
         DoubleSpinBox {
+            objectName: "thresholdSpinBox"
+
             from: 0.0001
             to: 2.0
             stepSize: 0.05

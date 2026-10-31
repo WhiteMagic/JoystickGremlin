@@ -95,6 +95,8 @@ Item {
         }
 
         AddActionMenuButton {
+            objectName: "addActionButton"
+
             variant: "bordered"
             model: root.inputBinding && root.inputBinding.rootAction ?
                 root.inputBinding.rootAction.compatibleActions : []

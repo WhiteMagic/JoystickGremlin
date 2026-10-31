@@ -64,6 +64,7 @@ Rectangle {
 
             delegate: InputButton {
                 id: _row
+                objectName: "logicalInput"
 
                 width: _inputList.width - Metrics.gapM * 2
                 height: Metrics.rowInput
@@ -114,6 +115,8 @@ Rectangle {
             Layout.margins: Metrics.gapL
 
             AddActionMenuButton {
+                objectName: "logicalAddInputButton"
+
                 Layout.fillWidth: true
 
                 text: "Add input"
