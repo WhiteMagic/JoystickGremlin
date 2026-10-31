@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import copy
 import ctypes
 import ctypes.wintypes as ctwt
@@ -531,6 +532,14 @@ class DILL:
             DILL._dill_initialized = True
 
     @staticmethod
+    def shutdown() -> None:
+        """Stops DILL's event thread, after which no callbacks are made."""
+        # The legacy library has no shutdown.
+        if DILL._dill_initialized and hasattr(DILL._dll, "shutdown"):
+            DILL._dll.shutdown()
+            DILL._dill_initialized = False
+
+    @staticmethod
     def set_input_event_callback(callback: Callable[[InputEvent], None]) -> None:
         """Sets the callback function to use for input events.
 
@@ -665,3 +674,7 @@ class DILL:
                 dll_fn.argtypes = params["arguments"]
             if "returns" in params:
                 dll_fn.restype = params["returns"]
+
+
+# Ensure DILL's shutdown function is called when Gremlin exits.
+atexit.register(DILL.shutdown)
