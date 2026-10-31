@@ -156,6 +156,7 @@ class DualAxisDeadzoneModel(ActionModel):
             [str(da.id) for da in deadzone_actions],
             self,
         )
+        self._deadzone_action_list.currentValue = str(self._data.id)
         return self._deadzone_action_list
 
     def _get_axis(self, idx: int) -> InputIdentifier:
