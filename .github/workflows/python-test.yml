@@ -1,7 +1,6 @@
 name: CI Tests
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "**" ]
   pull_request_target:
@@ -13,6 +12,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       (github.event_name == 'pull_request_target' &&
+       github.event.pull_request.head.repo.full_name != github.repository &&
        (github.event.pull_request.user.login == github.repository_owner ||
         github.event.pull_request.author_association == 'OWNER' ||
         github.event.pull_request.author_association == 'MEMBER' ||
@@ -48,3 +48,6 @@ jobs:
 
       - name: Run action_interaction tests
         run: poetry run pytest test/action_interaction
+
+      - name: Run application tests
+        run: poetry run pytest test/application
