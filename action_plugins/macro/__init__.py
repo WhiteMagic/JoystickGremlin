@@ -112,7 +112,7 @@ class JoystickActionModel(AbstractActionModel):
             self._action.device_guid = dill.UUID_Invalid
             self._action.input_type = InputType.JoystickButton
             self._action.input_id = 1
-            self._action.value = False
+            self._action.value = True
         else:
             # Extract information about first input
             self._action.device_guid = data[0].device_guid
@@ -121,7 +121,7 @@ class JoystickActionModel(AbstractActionModel):
             if data[0].event_type == InputType.JoystickAxis:
                 self._action.value = 0.0
             elif data[0].event_type == InputType.JoystickButton:
-                self._action.value = False
+                self._action.value = True
             elif data[0].event_type == InputType.JoystickHat:
                 self._action.value = HatDirection.Center
         self.changed.emit()
@@ -245,7 +245,7 @@ class LogicalDeviceActionModel(AbstractActionModel):
                 if identifier.input_type == InputType.JoystickAxis:
                     self._action.value = 0.0
                 elif identifier.input_type == InputType.JoystickButton:
-                    self._action.value = False
+                    self._action.value = True
                 elif identifier.input_type == InputType.JoystickHat:
                     self._action.value = HatDirection.Center
             self.changed.emit()
@@ -439,7 +439,7 @@ class VJoyActionModel(AbstractActionModel):
             if input_type == InputType.JoystickAxis:
                 self._action.value = 0.0
             elif input_type == InputType.JoystickButton:
-                self._action.value = False
+                self._action.value = True
             elif input_type == InputType.JoystickHat:
                 self._action.value = HatDirection.Center
             self.changed.emit()

@@ -621,7 +621,11 @@ class LogicalDeviceAction(AbstractAction):
         if len(LogicalDevice().inputs_of_type()) == 0:
             LogicalDevice().create(InputType.JoystickButton)
         first_input = LogicalDevice().inputs_of_type()[0]
-        return LogicalDeviceAction(first_input.type, first_input.id, first_input._value)
+        return LogicalDeviceAction(
+            first_input.type,
+            first_input.id,
+            True if first_input.type == InputType.JoystickButton else first_input._value
+        )
 
     def __call__(self) -> None:
         ld = LogicalDevice()[

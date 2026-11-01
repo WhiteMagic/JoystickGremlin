@@ -79,10 +79,9 @@ def _set_value(ui: UiDriver, row: QtQuick.QQuickItem, input_type_name: str) -> o
             return pytest.approx(0.5)
         case "Button":
             combo = ui.find_item("pressedStateCombo", row)
-            # The default state differs between step types.
-            state = "Release" if combo.property("currentText") == "Press" else "Press"
-            ui.select(combo, state)
-            return state
+            assert combo.property("currentText") == "Press"
+            ui.select(combo, "Release")
+            return "Release"
         case "Hat":
             ui.select(ui.find_item("hatDirectionCombo", row), "South West")
             return "South West"
@@ -184,6 +183,18 @@ def test_logical_device(
         assert ui.find_item("relativeModeRadio", row).property("checked")
 
 
+def test_logical_device_change_to_button_starts_at_press(ui: UiDriver) -> None:
+    label = add_logical_input(ui, "Button")
+    add_logical_input(ui, "Axis")
+    select_logical_input(ui, label)
+    action = add_action(ui, ACTION)
+    # The step starts on the axis, as axes sort before buttons.
+    row = _add_step(ui, action, "Logical device")
+    ui.select(ui.find_item("logicalDeviceCombo", row), label)
+
+    assert _shown_value(ui, row, "Button") == "Press"
+
+
 @pytest.mark.parametrize("input_type_name", INPUT_TYPE_NAMES)
 def test_vjoy(ui: UiDriver, empty_profile: pathlib.Path, input_type_name: str) -> None:
     label, action = _add_macro(ui)
@@ -202,6 +213,15 @@ def test_vjoy(ui: UiDriver, empty_profile: pathlib.Path, input_type_name: str) -
     assert _shown_value(ui, row, input_type_name) == value
     if input_type_name == "Axis":
         assert ui.find_item("relativeModeRadio", row).property("checked")
+
+
+def test_vjoy_change_to_button_starts_at_press(ui: UiDriver) -> None:
+    _, action = _add_macro(ui)
+    row = _add_step(ui, action, "vJoy")
+    select_vjoy_input(ui, row, *INPUTS["Axis"])
+    select_vjoy_input(ui, row, *INPUTS["Button"])
+
+    assert _shown_value(ui, row, "Button") == "Press"
 
 
 def test_keyboard(
