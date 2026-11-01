@@ -16,7 +16,7 @@ from PySide6 import QtCore
 
 import dill
 import gremlin.profile
-import gremlin.ui.backend
+import joystick_gremlin
 from gremlin import (
     audio_player,
     code_runner,
@@ -454,11 +454,13 @@ class JoystickGremlinBot:
 
 
 @pytest.fixture
-def jgbot(qtbot: pytestqt.qtbot.QtBot) -> Generator[JoystickGremlinBot]:
+def jgbot(
+    qtbot: pytestqt.qtbot.QtBot, qapp: joystick_gremlin.JoystickGremlinApp
+) -> Generator[JoystickGremlinBot]:
     bot = JoystickGremlinBot(qtbot)
     cfg = config.Configuration()
     cfg.set("global", "behavior", "refresh-axis-on-activation", False)
-    gremlin.ui.backend.Backend().minimize()
+    qapp.minimize()
     yield bot
     bot.stop()
 

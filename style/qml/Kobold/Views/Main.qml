@@ -551,6 +551,16 @@ ApplicationWindow {
         }
     }
     Connections {
+        target: _modeSelector.model
+
+        function onModelReset() {
+            // The combo's count only updates after this signal's handlers ran.
+            Qt.callLater(() => {
+                _modeSelector.currentIndex = _modeSelector.find(uiState.currentMode)
+            })
+        }
+    }
+    Connections {
         target: backend
 
         function onProfileChanged() {

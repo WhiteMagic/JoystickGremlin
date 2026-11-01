@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import (
+    TYPE_CHECKING,
     Any,
     ClassVar,
 )
@@ -31,17 +32,22 @@ def natural_key(text: str) -> tuple[tuple[str | int, ...], str]:
     )
 
 
-class SingletonDecorator[T]:
-    """Decorator turning a class into a singleton."""
+if TYPE_CHECKING:
+    # Type checkers must see the decorated name as the class itself
+    def SingletonDecorator[T](klass: type[T]) -> type[T]: ...
+else:
 
-    def __init__(self, klass: type[T]) -> None:
-        self.klass = klass
-        self.instance: T | None = None
+    class SingletonDecorator[T]:
+        """Decorator turning a class into a singleton."""
 
-    def __call__(self, *args: Any, **kwargs: dict) -> T:  # noqa: ANN401
-        if self.instance is None:
-            self.instance = self.klass(*args, **kwargs)
-        return self.instance
+        def __init__(self, klass: type[T]) -> None:
+            self.klass = klass
+            self.instance: T | None = None
+
+        def __call__(self, *args: Any, **kwargs: dict) -> T:  # noqa: ANN401
+            if self.instance is None:
+                self.instance = self.klass(*args, **kwargs)
+            return self.instance
 
 
 class SingletonMetaclass(type):

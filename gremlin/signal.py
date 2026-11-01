@@ -28,6 +28,8 @@ class Signal(QtCore.QObject):
 
     modesChanged = QtCore.Signal()
 
+    modeRenamed = QtCore.Signal(str, str)
+
     profileChanged = QtCore.Signal()
 
     logicalDeviceModified = QtCore.Signal()

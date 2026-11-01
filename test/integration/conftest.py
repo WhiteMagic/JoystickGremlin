@@ -164,13 +164,15 @@ def vjoy_ids_or_skip() -> list[int]:
 
 # Do not use directly, see app_tester fixture instead.
 @pytest.fixture(scope="module", autouse=True)
-def _activate_gremlin(edited_profile_path: str) -> Iterator[None]:
+def _activate_gremlin(
+    edited_profile_path: str, qapp: joystick_gremlin.JoystickGremlinApp
+) -> Iterator[None]:
     """Activates Gremlin."""
     assert gremlin.event_handler.EventListener()._running
     backend = gremlin.ui.backend.Backend()
     backend.loadProfile(edited_profile_path)
     backend.activate_gremlin(True)
-    backend.minimize()
+    qapp.minimize()
     yield
     backend.activate_gremlin(False)
 

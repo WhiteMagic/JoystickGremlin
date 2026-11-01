@@ -14,6 +14,8 @@ import types
 from pathlib import Path
 from typing import Any
 
+import shiboken6
+
 # Import QtMultimedia so pyinstaller doesn't miss it.
 from PySide6 import (
     QtCore,
@@ -297,7 +299,12 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         if args.enable:
             self.backend.activate_gremlin(True)
         if args.start_minimized:
-            self.backend.minimize()
+            self.minimize()
+
+    def minimize(self) -> None:
+        """Minimizes the application to the taskbar."""
+        root_window = self.engine.rootObjects()[0]
+        root_window.setVisibility(QtGui.QWindow.Visibility.Minimized)
 
     def initialize_qt(self) -> None:
         QtCore.QLoggingCategory.setFilterRules("qt.qml.binding.removal.info=true")
@@ -352,7 +359,7 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         )
 
         # Create and register singleton instances.
-        self.backend = gremlin.ui.backend.Backend(self.engine)
+        self.backend = gremlin.ui.backend.Backend()
         self.backend.newProfile()
         self.theme_manager = gremlin.ui.theme_manager.ThemeManager()
 
@@ -366,6 +373,9 @@ def main() -> int:
     # Create Joystick Gremlin instance and run it.
     app = JoystickGremlinApp(sys.argv)
     app.exec()
+
+    # Terminate Qt before Gremlin exits.
+    shiboken6.delete(app.engine)
     logging.getLogger("system").info("Terminating Gremlin")
 
     return 0
