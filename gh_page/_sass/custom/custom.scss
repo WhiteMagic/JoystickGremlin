@@ -1,0 +1,7 @@
+// Screenshots blur when scaled down, so they may extend past the text column up to the
+// right gutter. Diagrams stay within the column.
+.main-content img:not([src*="concepts"]):not([src*="modes_tree"]) {
+  @include mq(lg) {
+    max-width: calc(50vw + #{($content-width - $nav-width) * 0.5 - 2 * $gutter-spacing});
+  }
+}

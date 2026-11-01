@@ -12,7 +12,9 @@ This will happen quite often as Joystick Gremlin cannot hide the physical device
 
 ## How to verify that Joystick Gremlin produces the desired output?
 
-The simplest way, which doesn't require any additional tools, is to use the Windows game controller program, which can be launched by running <kbd>joy.cpl</kbd>. To see the output simply open the dialog for the desired vJoy device. One drawback of this tool is that it requires focus to show anything which can be a bit cumbersome at times. Gremlin also has its own input visualizer *Tools -> Input Viewer*.
+The simplest way is to use Gremlin's builtin *Tools -> Input Viewer* and verify you see what you expect.
+
+Another option is to use Windows' game controller program, which can be launched by running <kbd>joy.cpl</kbd>. One drawback of this tool is that it requires focus to show anything which can be a bit cumbersome at times.
 
 ## Macros don't work in-game
 
@@ -28,10 +30,9 @@ This means that you should not expect to see a macro that holds down a key to re
 
 ## My Xbox controller doesn't work
 
-A common issue with Xbox controller is that their DirectInput driver, which is how they are seen by Gremlin, is not working nicely. A common symptom is that inputs appear as if they only do something when Gremlin is focused.
+Starting with Release 16 Gremlin detects XInput devices, such as Xbox controllers, and reads them through XInput rather than DirectInput, so no workaround is needed. This does not apply when the *Use legacy dill* option is enabled.
 
-One possible workaround is to use a tool called [Xidi](https://github.com/samuelgr/Xidi){:target="_blank"} which effectively provides a better DirectInput behavior for Xbox controllers. You need to download the release and unpack it, then place the `dinput8.dll` file in the same folder as the Joystick Gremlin executable.
-
+Releases before 16, and the legacy input library, see these controllers through their DirectInput driver, which is not working nicely. A common symptom is that inputs appear as if they only do something when Gremlin is focused. One possible workaround in that case is to use a tool called [Xidi](https://github.com/samuelgr/Xidi){:target="_blank"} which effectively provides a better DirectInput behavior for Xbox controllers. You need to download the release and unpack it, then place the `dinput8.dll` file in the same folder as the Joystick Gremlin executable.
 
 {: .warning }
 Version [Xidi 4.2.0](https://github.com/samuelgr/Xidi/releases/tag/v4.2.0){:target="_blank"} is known to work so you should stick with that.

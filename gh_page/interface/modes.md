@@ -45,8 +45,8 @@ Once you select a mode in the toolbar all actions configured in the main part of
 
 ## Currently Active Mode
 
-When Gremlin is running the currently active mode is shown in the statusbar at the bottom left of the UI.
+When Gremlin is running the currently active mode is shown next to *Executing* in the statusbar at the bottom left of the UI, while *Editing* shows the mode selected in the toolbar.
 
 {: .text-center }
 ![Gremlin Statusbar]({{ site.baseurl }}/assets/images/ui/statusbar.png)<br>
-*The statusbar shows information about Gremlin's state when actively running.*
+*The statusbar shows whether Gremlin is running as well as the modes being executed and edited.*

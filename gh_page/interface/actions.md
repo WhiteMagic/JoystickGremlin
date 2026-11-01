@@ -19,6 +19,16 @@ Actions are what allow Gremlin to perform all its functions. They can be arbitra
 </details>
 
 
+## Axis Delta
+
+![Axis Delta action]({{ site.baseurl }}/assets/images/actions/axis_delta.png)
+{: .text-center }
+
+The action executes either *Positive change* or *Negative change* subactions whenever the accumulated change exceeds the defined *Change threshold*. Once the threshold is exceeded the change amount if accumulated again until the next threshold is met.
+
+The action is only available for axis inputs. The actions it holds behave as if a button was pressed and immediately released.
+
+
 ## Chain
 
 ![Chain action]({{ site.baseurl }}/assets/images/actions/chain.png)
@@ -63,7 +73,26 @@ The condition action consists of three parts.
 - The set of actions to execute if the condition evaluation is true.
 - The set of actions to execute if the condition evaluation is false.
 
-Depending on the outcome of the evaluation of the conditions when the action is activated either the true or false actions are executed.
+Depending on the outcome of the evaluation of the conditions when the action is activated either the true or false actions are executed. The *When* selection decides whether *All* or *Any* of the conditions have to be met. *Add condition* adds a condition of one of the following types:
+
+<dl>
+    <dt>Current Input</dt>
+    <dd>The state of the input the action is associated with.</dd>
+
+    <dt>Joystick</dt>
+    <dd>The state of one or more recorded joystick inputs.</dd>
+
+    <dt>Keyboard</dt>
+    <dd>The state of one or more recorded keyboard keys.</dd>
+
+    <dt>Logical Device</dt>
+    <dd>The state of a logical device input.</dd>
+
+    <dt>vJoy</dt>
+    <dd>The state of a vJoy device input.</dd>
+</dl>
+
+What can be checked depends on the type of the input. A button or key is checked for being pressed or released, an axis for its value being within a range, and a hat for pointing in one of the selected directions.
 
 
 ## Description
@@ -122,9 +151,11 @@ Loads and activates the specified profile.
 
 The macro dialog allows the creation of macros capable of emitting keyboard, mouse, joystick, logical device, and vJoy events with timing information between individual events.
 
-The individual entries of a macro can be reordered via drag&drop while their configuration is done with the data entry fields associated with them. The macro also provides two additional configuration options, *Repeat Mode* and *Exclusive*.  The *Exclusive* option ensures that no other macro is running when this macro is executing. The repeat mode allows configuring how, if at all, a macro is executed more than once. The following choices exist:
+The individual entries of a macro can be reordered via drag&drop while their configuration is done with the data entry fields associated with them. Entries are added one at a time with *Add action* or by recording them. For the latter select the types of inputs to record with the *Record inputs* check boxes, optionally including the *Timings* between them, and press *Start recording* to add every matching input as an entry until *Stop recording* is pressed.
+
+The macro also provides additional configuration options, *Repeat Mode*, *Exclusive*, and *Pre-emptive*. The *Exclusive* option ensures that no other macro is running when this macro is executing. Once enabled the *Pre-emptive* option becomes available, which makes the macro interrupt any running macro and resume it after the pre-empting macro completes. The repeat mode allows configuring how, if at all, a macro is executed more than once. The following choices exist:
 <dl>
-    <dt>None</dt>
+    <dt>Single</dt>
     <dd>The macro is executed exactly once.</dd>
 
     <dt>Count</dt>
@@ -181,7 +212,7 @@ Allows controlling mouse events using axis, buttons, and hats. Buttons can trigg
 ![Map to vJoy action]({{ site.baseurl }}/assets/images/actions/map_to_vjoy_axis.png)
 {: .text-center }
 
-Maps an input to a logical device input. Buttons can control the activation behavior via the different switches, while an axis can decide if the change is applied as an absolute value or a relative change. The relative axis option also allows specifying a scaling factor to increase or decrease the amount applied.
+Maps an input to a vJoy device input. Buttons can control the activation behavior via the different switches, while an axis can decide if the change is applied as an absolute value or a relative change. The relative axis option also allows specifying a scaling factor to increase or decrease the amount applied.
 
 
 ## Merge Axis
@@ -226,7 +257,7 @@ The manner in which the axes values are combined is governed by the *Merge opera
 ![Pause & Resume action]({{ site.baseurl }}/assets/images/actions/pause_and_resume.png)
 {: .text-center }
 
-This action allows to pause and resume the execution of actions in response to physical input events by Gremlin. When the execution is paused only *Pause & Resume* actions are executed.
+This action allows to pause and resume the execution of actions in response to physical input events by Gremlin. When the execution is paused only *Pause & Resume* actions are executed. The action either pauses the execution with *Pause*, resumes it with *Resume*, or switches between the two states with *Toggle*.
 
 
 ## Play Sound
@@ -274,6 +305,8 @@ Currently there are three types of response curve types available which are sele
     <dd>A more complex spline with control points and "handles" that can modify the shape of the overall curve. Importantly this allows to control how the curve approaches the end points of the curve.</dd>
 </dl>
 
+The *Invert Curve* button flips the current curve along the vertical axis. Enabling *Symmetric* keeps the curve symmetric around its center, moving a control point also moves its counterpart on the other side.
+
 {: .note }
 A response curve mapping action always needs to be paired with a *Map to vJoy* action, as otherwise the transformation will not have any visible effect.
 
@@ -284,12 +317,21 @@ Remember that actions are executed in sequence, thus the response curve action h
 In order for response curves to work properly the game has to be configured to use a linear 1:1 curve, as otherwise the two curve settings will interfere with each other producing undesirable results.
 
 
+## Run Command
+
+![Run Command action]({{ site.baseurl }}/assets/images/actions/run_command.png)
+{: .text-center }
+
+Starts an external program when the action is triggered. *Executable* specifies the program to run, either entered manually in or picked with *Select file*. The *Arguments* field holds the command line arguments to pass to the executable. Gremlin starts the program and carries on without waiting for it to finish.
+
+
 ## Smart Toggle
 
 ![Smart Toggle action]({{ site.baseurl }}/assets/images/actions/smart_toggle.png)
 {: .text-center }
 
-The smart toggle container allows for a single group of actions that have on and off states, i.e. *Map to vJoy*, *Map to Keyboard*, and *Map to Logical Device*, to have two different behaviors. If the input is held down the action will perform as a typical *Map to X* action would, i.e. staying active as long as the input is pressed. However, when a short button press is detected, specified by the *Toggle delay*, then the first press toggles the down state, i.e. holding the action down, and the second short press releases the action again.
+The smart toggle action allows for a single group of actions that have on and off states, i.e. *Map to vJoy*, *Map to Keyboard*, and *Map to Logical Device*, to have two different behaviors. If the input is held down the action will perform as a typical *Map to X* action would, i.e. staying active as long as the input is pressed. However, when a short button press is detected, specified by the *Toggle delay*, then the first press toggles the down state, i.e. holding the action down, and the second short press releases the action again.
+
 
 ## Split Axis
 
@@ -304,4 +346,25 @@ This action allows splitting a single axis into two parts. The value at which th
 ![Tempo action]({{ site.baseurl }}/assets/images/actions/tempo.png)
 {: .text-center }
 
-This container holds two groups of actions that get executed under different conditions. The first one is run when the input is pressed for a duration shorter than the specified delay. The second group is run when the input is pressed for longer than the specified delay.  Whether the first group is executed with the input being pressed or only when it is released can be controlled by the activation setting.
+This action holds two groups of actions that get executed under different conditions. The first one is run when the input is pressed for a duration shorter than the specified delay. The second group is run when the input is pressed for longer than the specified delay.  Whether the first group is executed with the input being pressed or only when it is released can be controlled by the activation setting.
+
+
+## Text to Speech
+
+![Text to Speech action]({{ site.baseurl }}/assets/images/actions/text_to_speech.png)
+{: .text-center }
+
+Reads the specified text aloud using the speech synthesis of Windows. *Volume* ranges from 0 to 1 while *Rate* and *Pitch* range from -1 to 1, with 0 being the normal speed and pitch. The voice used is selected in the [options]({{ site.baseurl }}/interface/options). The text can contain `$current_mode`, which is replaced by the name of the current mode when the text is spoken.
+
+The drop down decides what happens if something is already being spoken:
+
+<dl>
+    <dt>Interrupt</dt>
+    <dd>Stops what is currently being spoken to speak this text right away.</dd>
+
+    <dt>Queue front</dt>
+    <dd>Speaks this text next, ahead of any text that is already waiting.</dd>
+
+    <dt>Queue back</dt>
+    <dd>Speaks this text after all text that is already waiting.</dd>
+</dl>
