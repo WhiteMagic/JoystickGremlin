@@ -2,6 +2,10 @@
 
 This file provides guidance for AI agents working on the JoystickGremlin codebase.
 
+## General Instructions
+
+- Don't stop at the first obvious solution, find the simplest solution that solves the general problem.
+
 
 ## Project Overview
 
@@ -253,6 +257,8 @@ class SpecialActionData(AbstractActionData):
 - Tests in `test/action_interaction` have access to a `jgbot` fixture (`test/action_interaction/conftest.py:JoystickGremlinBot) which is similar to the Qt pytest fixture
 - Use pytest fixtures from `test/conftest.py` and `test/unit/conftest.py`
 - Use `pytest.raises()` for exception testing
+- Before writing a new test, run `/gremlin-test-review gate` with the behavior to test, the intended level, and optionally the draft test. Follow its verdict.
+- After writing or changing tests, run `/gremlin-test-review --auto <changed test files>`.
 
 Example:
 ```python
@@ -277,6 +283,7 @@ import gremlin.ui.type_aliases as ta
 - Use docstrings for classes and complex functions
 - Keep docstrings concise; describe purpose and parameters
 - Do not add unnecessary inline comments
+- Comments never justify, they explain non-obvious aspects
 
 ### Common Patterns
 
