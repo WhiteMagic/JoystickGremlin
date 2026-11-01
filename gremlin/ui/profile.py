@@ -310,10 +310,7 @@ class InputItemBindingModel(QtCore.QObject):
 
     def dispose(self) -> None:
         """Disconnects from global signals and disposes all action models."""
-        try:
-            signal.inputItemChanged.disconnect(self._check_user_feedback)
-        except RuntimeError:
-            pass
+        signal.inputItemChanged.disconnect(self._check_user_feedback)
         for model in self._action_models.values():
             model.dispose()
 

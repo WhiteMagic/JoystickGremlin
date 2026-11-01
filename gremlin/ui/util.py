@@ -106,15 +106,9 @@ class InputListenerModel(QtCore.QObject):
                 or InputType.JoystickButton in self._event_types
                 or InputType.JoystickHat in self._event_types
             ):
-                try:
-                    event_listener.joystick_event.disconnect(self._joy_event_cb)
-                except RuntimeError:
-                    pass
+                event_listener.joystick_event.disconnect(self._joy_event_cb)
             if InputType.Mouse in self._event_types:
-                try:
-                    event_listener.mouse_event.disconnect(self._mouse_event_cb)
-                except RuntimeError:
-                    pass
+                event_listener.mouse_event.disconnect(self._mouse_event_cb)
 
             # Stop mouse hook in case it is running
             # FIXME: can this break things?
@@ -366,15 +360,21 @@ class MacroRecorder:
             )
             return
 
-        # Attempt to disconnect all event handlers, failure is silently ignored.
         el = event_handler.EventListener()
-        for event_signal in (el.keyboard_event, el.mouse_event, el.joystick_event):
-            try:
-                event_signal.disconnect(self._queue_event_recording)
-            except RuntimeError:
-                pass
+        if InputType.Keyboard in self._valid_event_types:
+            el.keyboard_event.disconnect(self._queue_event_recording)
         if InputType.Mouse in self._valid_event_types:
+            el.mouse_event.disconnect(self._queue_event_recording)
             windows_event_hook.MouseHook().stop()
+        if any(
+            input_type in self._valid_event_types
+            for input_type in (
+                InputType.JoystickButton,
+                InputType.JoystickAxis,
+                InputType.JoystickHat,
+            )
+        ):
+            el.joystick_event.disconnect(self._queue_event_recording)
         shared_state.set_suspend_input_highlighting(False)
         self._is_recording = False
 
