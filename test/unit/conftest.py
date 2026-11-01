@@ -37,7 +37,7 @@ def get_fake_device_guid(is_virtual: bool) -> dill.GUID:
     return dill.GUID(get_fake_device_raw_guid(is_virtual))
 
 
-def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
+def make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
     """Creates a repeatable, faked DeviceSummary."""
     # Data below was generated from a vJoy device.
     guid = get_fake_device_raw_guid(is_virtual)
@@ -70,8 +70,8 @@ def register_config_options() -> None:
 def joystick_init() -> None:
     dill.DILL.init()
     di_stub_devices = {
-        0: _make_fake_device(is_virtual=False),
-        1: _make_fake_device(is_virtual=True),
+        0: make_fake_device(is_virtual=False),
+        1: make_fake_device(is_virtual=True),
     }
     devices_by_uuid = {dev.device_guid.uuid: dev for dev in di_stub_devices.values()}
     with (
