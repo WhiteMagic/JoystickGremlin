@@ -18,4 +18,4 @@ The main features are:
 - Internal logical device for advanced actions.
 - Python scripting support.
 
-Joystick Gremlin provides a graphical user interface, described in [Interface]({{ site.baseurl }}/interface), which allows commonly performed tasks, such as input remapping, axis response curve setups, and macro recording to be performed easily. Functionality that is not accessible via the UI can be implemented with [User Scripts]({{ site.baseurl }}/interface/user_scripts).
+Joystick Gremlin provides a graphical user interface, described in [Interface]({{ site.baseurl }}/interface), which allows commonly performed tasks, such as input remapping, axis response curve setups, and macro recording to be performed easily. Functionality that is not accessible via the UI can be implemented with [User Scripts]({{ site.baseurl }}/interface/scripts).

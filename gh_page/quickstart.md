@@ -75,7 +75,7 @@ A response curve always needs to be combined with a mapping to an output device 
 
 ## Condition
 
-Sometimes it can be helpful to control the condition under which an action or container is executed. The execution can thus be conditioned on the state of other input devices such as joysticks or keyboard, as well as the state of the input associated with the action or container. This can be used to implement a shift state which normally executes one action but if a certain button is pressed a different action is executed.
+Sometimes it can be helpful to control the condition under which actions are executed. The execution can thus be conditioned on the state of other input devices such as joysticks or keyboard, as well as the state of the input associated with the action. This can be used to implement a shift state which normally executes one action but if a certain button is pressed a different action is executed.
 
 ### Links
 - [Condition]({{ site.baseurl }}/interface/actions#condition)
