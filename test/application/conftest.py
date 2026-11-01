@@ -21,6 +21,7 @@ import gremlin.macro
 import gremlin.sendinput
 import gremlin.ui.backend
 import gremlin.util
+from action_plugins.map_to_vjoy import MapToVjoyData
 from gremlin import windows_event_hook
 from gremlin.audio_player import AudioPlayer
 from gremlin.tts import TTSManager
@@ -56,8 +57,18 @@ def stub_update_check() -> Generator[None]:
 
 
 @pytest.fixture(scope="session")
+def stub_vjoy_plugin_check() -> Generator[None]:
+    """Registers Map to vJoy at startup, before fake_devices adds its vJoy device."""
+    with mock.patch.object(MapToVjoyData, "can_create", return_value=True):
+        yield
+
+
+@pytest.fixture(scope="session")
 def qapp_args(
-    pytestconfig: pytest.Config, stub_input_hooks: None, stub_update_check: None
+    pytestconfig: pytest.Config,
+    stub_input_hooks: None,
+    stub_update_check: None,
+    stub_vjoy_plugin_check: None,
 ) -> list[str]:
     """Configures the qapp fixture to run in offscreen mode."""
     return [pytestconfig.getini("qt_qapp_name"), "-platform", "offscreen"]
