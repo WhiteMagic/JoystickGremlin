@@ -9,6 +9,8 @@ import tempfile
 from unittest.mock import Mock
 
 import pytest
+import shiboken6
+from PySide6 import QtCore
 
 import gremlin.util
 
@@ -33,12 +35,16 @@ def _terminate_event_listener_and_monitor(
     # EventListener/Backend set up their DILL callback and process-monitor
     # thread once per session with nothing to restart them; must not
     # terminate them mid-session, only here. Skip ones this session never
-    # created; Backend cannot be constructed without an engine.
+    # created.
     def _finalize() -> None:
         if gremlin.event_handler.EventListener.instance is not None:
             gremlin.event_handler.EventListener.instance.terminate()
         if gremlin.ui.backend.Backend.instance is not None:
             gremlin.ui.backend.Backend.instance.process_monitor.stop()
+            app = QtCore.QCoreApplication.instance()
+            if isinstance(app, joystick_gremlin.JoystickGremlinApp):
+                # Ensure proper cleanup of Qt bindings.
+                shiboken6.delete(app.engine)
 
     request.addfinalizer(_finalize)
 

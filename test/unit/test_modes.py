@@ -25,6 +25,7 @@ from gremlin.profile import (
     Profile,
 )
 
+_PROFILE_MODE_HIERARCHY = "profile_mode_hierarchy.xml"
 _PROFILE_REALISTIC = "profile_realistic.xml"
 
 
@@ -71,6 +72,63 @@ class TestModeHierarchy:
 
         mh.add_mode("Second")
         assert set(mh.mode_names()) == {"Default", "Second", "Third"}
+
+    def test_delete_moves_all_children_to_grandparent(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        p = Profile()
+        for name in ["Top", "Middle", "First", "Second"]:
+            p.modes.add_mode(name)
+        p.modes.set_parent("Middle", "Top")
+        p.modes.set_parent("First", "Middle")
+        p.modes.set_parent("Second", "Middle")
+
+        p.modes.delete_mode("Middle")
+
+        profile_path = tmp_path / "profile.xml"
+        p.to_xml(profile_path)
+        reloaded = Profile()
+        reloaded.from_xml(profile_path)
+
+        assert set(reloaded.modes.mode_names()) == {
+            "Default",
+            "Top",
+            "First",
+            "Second",
+        }
+        assert reloaded.modes.find_mode("First").parent.value == "Top"
+        assert reloaded.modes.find_mode("Second").parent.value == "Top"
+
+    def test_parents_survive_round_trip(
+        self, xml_dir: pathlib.Path, tmp_path: pathlib.Path
+    ) -> None:
+        p = Profile()
+        p.from_xml(str(xml_dir / _PROFILE_MODE_HIERARCHY))
+
+        profile_path = tmp_path / "profile.xml"
+        p.to_xml(profile_path)
+        reloaded = Profile()
+        reloaded.from_xml(profile_path)
+
+        assert {
+            node.value: node.parent.value for node in reloaded.modes.mode_list()
+        } == {
+            "Default": "",
+            "Child": "Default",
+            "Separate": "",
+            "Three": "",
+            "Levels": "Three",
+            "Deep": "Levels",
+        }
+
+    def test_valid_parents_excludes_self_and_descendants(self) -> None:
+        p = Profile()
+        for name in ["Top", "Middle", "Leaf", "Other"]:
+            p.modes.add_mode(name)
+        p.modes.set_parent("Middle", "Top")
+        p.modes.set_parent("Leaf", "Middle")
+
+        assert p.modes.valid_parents("Middle") == ["Default", "Other", "Top"]
 
     def test_rename(self) -> None:
         p = Profile()

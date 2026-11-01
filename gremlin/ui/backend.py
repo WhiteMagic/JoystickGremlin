@@ -10,11 +10,7 @@ import sys
 import uuid
 from pathlib import Path
 
-from PySide6 import (
-    QtCore,
-    QtGui,
-    QtQml,
-)
+from PySide6 import QtCore
 
 import dill
 import gremlin.ui.type_aliases as ta
@@ -88,6 +84,19 @@ class UIState(QtCore.QObject):
 
         event_handler.EventListener().device_change_event.connect(self._device_change)
         signal.profileChanged.connect(self._device_change)
+        signal.modeRenamed.connect(self._mode_renamed)
+        signal.modesChanged.connect(self._modes_changed)
+
+    @QtCore.Slot(str, str)
+    def _mode_renamed(self, old_name: str, new_name: str) -> None:
+        if old_name == self._current_mode:
+            self.setCurrentMode(new_name)
+
+    @QtCore.Slot()
+    def _modes_changed(self) -> None:
+        modes = shared_state.current_profile.modes
+        if not modes.mode_exists(self._current_mode):
+            self.setCurrentMode(modes.first_mode)
 
     @QtCore.Slot()
     def _device_change(self) -> None:
@@ -197,12 +206,9 @@ class Backend(QtCore.QObject):
     uiChanged = QtCore.Signal()
     quitRequested = QtCore.Signal()
 
-    def __init__(
-        self, engine: QtQml.QQmlApplicationEngine, parent: ta.OQO = None
-    ) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-        self.engine = engine
         self.config = config.Configuration()
         self._show_release_notes = self._update_last_run_version()
         self.profile = profile.Profile()
@@ -411,11 +417,6 @@ class Backend(QtCore.QObject):
             if self.config.value("global", "behavior", "input-highlighting"):
                 shared_state.set_suspend_input_highlighting(False)
         self.activityChanged.emit()
-
-    def minimize(self) -> None:
-        """Minimizes the application to the taskbar."""
-        root_window = self.engine.rootObjects()[0]
-        root_window.setVisibility(QtGui.QWindow.Visibility.Minimized)
 
     @QtCore.Slot(InputIdentifier, result=int)
     def getActionCount(self, identifier: InputIdentifier) -> int:

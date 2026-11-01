@@ -46,6 +46,8 @@ Window {
         anchors.bottomMargin: Metrics.gapM
 
         ScrollList  {
+            id: _modeListView
+
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -147,6 +149,8 @@ Window {
 
             ToolButton {
                 objectName: "deleteModeButton"
+
+                enabled: _modeListView.count > 1
 
                 icon.name: "delete"
 

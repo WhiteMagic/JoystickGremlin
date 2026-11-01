@@ -10,6 +10,7 @@ from collections.abc import (
 import pytest
 
 import dill
+import joystick_gremlin
 from action_plugins import map_to_logical_device
 from gremlin import (
     logical_device,
@@ -96,7 +97,9 @@ def get_logical_input_identifier(
 
 # Do not use directly, see app_tester fixture instead.
 @pytest.fixture(scope="module", autouse=True)
-def _activate_gremlin(profile_setup: None) -> Iterator[None]:
+def _activate_gremlin(
+    profile_setup: None, qapp: joystick_gremlin.JoystickGremlinApp
+) -> Iterator[None]:
     """Activates Gremlin using the profile created by profile_setup.
 
     profile_setup is a fixture that should be created by individual tests,
@@ -106,6 +109,6 @@ def _activate_gremlin(profile_setup: None) -> Iterator[None]:
     del profile_setup
     backend_ = backend.Backend()
     backend_.activate_gremlin(True)
-    backend_.minimize()
+    qapp.minimize()
     yield
     backend_.activate_gremlin(False)

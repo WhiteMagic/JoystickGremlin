@@ -1116,7 +1116,7 @@ class ModeHierarchy:
         node = self.find_mode(mode_name)
         parent_node = node.parent
         node.detach()
-        for child in node.children:
+        for child in node.children[:]:
             child.set_parent(parent_node)
 
         # Find all InputItem actions using the mode being deleted and remove
