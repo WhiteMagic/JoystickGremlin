@@ -113,10 +113,11 @@ class ModeManager(QtCore.QObject):
         last_modes[str(profile.fpath)] = last_mode.name
         config.set("global", "internal", "last-mode-per-profile", last_modes)
 
-    def _update_mode(self, previous_mode: str) -> None:
+    def _update_mode(self, previous_mode: str, refresh_axes: bool = True) -> None:
         self._store_last_mode()
         self.modeChanged.emit(self.current.name, previous_mode)
-        RefreshPhysicalInputs.refresh_axes()
+        if refresh_axes:
+            RefreshPhysicalInputs.refresh_axes()
 
     def cycle(self, sequence: ModeSequence) -> None:
         self.switch_to(Mode(sequence.next(), self.current.name))
@@ -141,7 +142,7 @@ class ModeManager(QtCore.QObject):
         previous_mode = self._mode_stack.pop().name
         self._update_mode(previous_mode)
 
-    def switch_to(self, mode: Mode) -> None:
+    def switch_to(self, mode: Mode, refresh_axes: bool = True) -> None:
         # Detect cycle in the mode stack and resolve it
         previous_mode = self.current.name
         if self._exists(mode):
@@ -176,7 +177,7 @@ class ModeManager(QtCore.QObject):
                             b.previous = a.name
 
         self._mode_stack.append(mode)
-        self._update_mode(previous_mode)
+        self._update_mode(previous_mode, refresh_axes)
 
     def temporary(self, mode: Mode) -> None:
         mode.is_temporary = True

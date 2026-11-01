@@ -441,15 +441,22 @@ class CodeRunner:
             macro.MacroManager().start()
             audio_player.AudioPlayer().start()
             tts.TTSManager().start()
+            sendinput.MouseMotionManager().start()
+
+            self._running = True
+            self.event_handler.resume()
 
             mode_manager.ModeManager().switch_to(
-                mode_manager.Mode(resolve_start_mode(self._profile), "Default")
+                mode_manager.Mode(resolve_start_mode(self._profile), "Default"),
+                refresh_axes=False,
             )
-            self.event_handler.resume()
-            self._running = True
 
-            sendinput.MouseMotionManager().start()
-            self._refresh_axes()
+            # Physical values from the axis refresh have to override initial ones.
+            self._apply_vjoy_initial_values()
+            if Configuration().value(
+                "global", "behavior", "refresh-axis-on-activation"
+            ):
+                RefreshPhysicalInputs.refresh_axes()
         except ImportError as e:
             signal.display_error(
                 "Unable to launch due to a missing user plugin.", str(e)
@@ -492,7 +499,7 @@ class CodeRunner:
         """Resets all states to their default values."""
         user_script.callback_registry.clear()
 
-    def _refresh_axes(self) -> None:
+    def _apply_vjoy_initial_values(self) -> None:
         # Store state of all vJoy axes before we do anything.
         vjoy_state = {}
         for vjoy_dev in device_initialization.vjoy_devices():
@@ -511,19 +518,18 @@ class CodeRunner:
                     f"Unable to retrieve state for vJoy {vjoy_dev.vjoy_id} ({err})."
                 )
 
-            # Refresh physical input states.
-            if Configuration().value(
-                "global", "behavior", "refresh-axis-on-activation"
-            ):
-                RefreshPhysicalInputs.refresh_axes()
-
-            # Set vJoy axis default values unless the axis changed its value due
-            # to an axis refresh.
-            for vid, data in self._profile.settings.vjoy_initial_values.items():
+        # Axes that are already non-zero keep their value.
+        for vid, data in self._profile.settings.vjoy_initial_values.items():
+            try:
                 vjoy_proxy = VJoyProxy()[vid]
-                for aid, value in data.items():
-                    if value != 0.0 and vjoy_state[vid][aid] == 0.0:
-                        vjoy_proxy.axis(linear_index=aid).value = value
+            except error.VJoyError as err:
+                logging.getLogger("system").warning(
+                    f"Unable to set initial values for vJoy {vid} ({err})."
+                )
+                continue
+            for aid, value in data.items():
+                if value != 0.0 and vjoy_state.get(vid, {}).get(aid) == 0.0:
+                    vjoy_proxy.axis(axis_id=aid).value = value
 
     def _setup_user_scripts(self) -> None:
         """Handles loading and configuring of user scripts."""

@@ -97,7 +97,7 @@ class VjoyInput(NamedTuple):
 
     vjoy_id: int
     input_type: InputType
-    # Be consistent for axes: preferable use "linear_index".
+    # For axes this is the axis index, not the linear index.
     input_id: int
 
 
