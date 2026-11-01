@@ -51,3 +51,12 @@ def test_load_different_library_after_load(unloaded_dill: None) -> None:
     DILL.load()
     with pytest.raises(DILLError):
         DILL.load(use_legacy=True)
+
+
+def test_shutdown_legacy_is_noop(
+    unloaded_dill: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    DILL.load(use_legacy=True)
+    monkeypatch.setattr(DILL, "_dill_initialized", True)
+    DILL.shutdown()
+    assert DILL._dill_initialized
