@@ -624,7 +624,9 @@ class LogicalDeviceAction(AbstractAction):
         return LogicalDeviceAction(
             first_input.type,
             first_input.id,
-            True if first_input.type == InputType.JoystickButton else first_input._value
+            True
+            if first_input.type == InputType.JoystickButton
+            else first_input._value,
         )
 
     def __call__(self) -> None:

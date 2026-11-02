@@ -260,12 +260,13 @@ def _register_profile() -> None:
     cfg.register(
         "profile",
         "automation",
-        "remain-active-on-focus-loss",
-        PropertyType.Bool,
-        False,
-        "Keep the profile active when the monitored executable loses focus and "
-        "the newly focused executable does not have a profile assigned to it.",
-        {},
+        "focus-loss-behavior",
+        PropertyType.Selection,
+        "Deactivate",
+        "What should Gremlin do when an application with a configured autoload "
+        "profile loses focus. Options can be to deactivate the profile, keep "
+        "running, or switch to the default profile.",
+        {"valid_options": ["Deactivate", "Remain active", "Load default"]},
         True,
     )
     cfg.register(

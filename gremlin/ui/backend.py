@@ -342,9 +342,9 @@ class Backend(QtCore.QObject):
     def _active_process_changed_cb(self, path: str) -> None:
         """Handles changes to the active process.
 
-        If the profile auto-loading option is disabled nothing is done.
-        Otherwise the profile associated with the newly active process is
-        loaded and then activated. Should
+        If the profile auto-loading option is disabled nothing is done. Otherwise the
+        profile associated with the newly active process is loaded and then activated.
+        If no matching process is found the configured focus loss behavior is used.
         """
         if not self.config.value("profile", "automation", "enable-auto-loading"):
             return
@@ -352,17 +352,45 @@ class Backend(QtCore.QObject):
         profile_path = config.get_profile_with_regex(path)
         # Found a valid profile to load.
         if profile_path:
-            if self.profile.fpath != profile_path:
-                self.activate_gremlin(False)
-                self.loadProfile(profile_path)
-            if not self.gremlinActive:
-                self.activate_gremlin(True)
+            self._auto_load_profile(profile_path)
         # No valid profile specified for the new execuable.
         else:
-            if not self.config.value(
-                "profile", "automation", "remain-active-on-focus-loss"
-            ):
-                self.activate_gremlin(False)
+            match self.config.value("profile", "automation", "focus-loss-behavior"):
+                case "Deactivate":
+                    self.activate_gremlin(False)
+                case "Remain active":
+                    pass
+                case "Load default":
+                    self._load_default_profile()
+
+    def _load_default_profile(self) -> None:
+        """Loads the default profile unless that would disrupt editing a profile."""
+        default_path = config.get_default_profile()
+        # Attempt to load the default profile if Gremlin is not the active process.
+        if default_path and self.process_monitor.current_pid != os.getpid():
+            if not os.path.isfile(default_path):
+                logging.getLogger("system").warning(
+                    f"Default profile '{default_path}' does not exist."
+                )
+            elif not self.profile.has_unsaved_changes():
+                self._auto_load_profile(default_path)
+
+    def _auto_load_profile(self, profile_path: str) -> None:
+        """Ensures the given profile is loaded and active.
+
+        These loads do not end up in the recent profiles list, as they were not loaded
+        manually.
+
+        Args:
+            profile_path: file path of the profile to load
+        """
+        local_path = to_local_path(profile_path)
+        if self.profile.fpath is None or Path(self.profile.fpath) != local_path:
+            self.activate_gremlin(False)
+            self._load_profile(str(local_path))
+            self._notify_profile_loaded()
+        if not self.gremlinActive:
+            self.activate_gremlin(True)
 
     @QtCore.Property(str, notify=propertyChanged)
     def gremlinVersion(self) -> str:
@@ -535,6 +563,10 @@ class Backend(QtCore.QObject):
         local_path = to_local_path(fpath)
         if self._load_profile(str(local_path)):
             self._record_profile_use(local_path)
+        self._notify_profile_loaded()
+
+    def _notify_profile_loaded(self) -> None:
+        """Updates the system after a load attempt replaced the current profile."""
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
         # Need to defer the gc run to ensure the previous profile is cleaned up.

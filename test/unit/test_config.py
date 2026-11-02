@@ -18,6 +18,15 @@ import gremlin.types
 from gremlin.common import SingletonMetaclass
 from gremlin.types import PropertyType
 
+# Regular expressions are tried sorted by executable, the order listed here.
+AUTO_LOADING_ENTRIES = [
+    ["unassigned.xml", "", True, False],
+    ["typo.xml", "*Squadrons.exe", True, False],
+    ["desktop.xml", "C:/Games/Elite/EliteDangerous64.exe", True, True],
+    ["dcs.xml", r"DCS World.*/bin/DCS\.exe$", True, False],
+    ["star_citizen.xml", r"StarCitizen/\w+/Bin64/StarCitizen\.exe$", True, False],
+]
+
 
 @pytest.fixture
 def cfg() -> Iterator[gremlin.config.Configuration]:
@@ -43,28 +52,19 @@ def cfg() -> Iterator[gremlin.config.Configuration]:
                 )
 
 
-def test_simple(cfg: gremlin.config.Configuration) -> None:
-    cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
-    cfg.register("test", "case", "2", PropertyType.Bool, False, "", {})
+def _register_auto_loading_entries(
+    cfg: gremlin.config.Configuration, entries: list[list[str | bool]]
+) -> None:
+    """Stores entries of the form [profile, executable, enabled, is_default]."""
     cfg.register(
-        "test",
-        "case",
-        "3",
-        PropertyType.HatDirection,
-        gremlin.types.HatDirection.NorthEast,
+        "profile",
+        "automation",
+        "entries-auto-loading",
+        PropertyType.List,
+        entries,
         "",
         {},
     )
-    assert cfg.value("test", "case", "1") == 42
-    assert not cfg.value("test", "case", "2")
-    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
-
-    cfg.set("test", "case", "1", 37)
-    cfg.set("test", "case", "2", True)
-    cfg.set("test", "case", "3", gremlin.types.HatDirection.SouthWest)
-    assert cfg.value("test", "case", "1") == 37
-    assert cfg.value("test", "case", "2")
-    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.SouthWest
 
 
 def test_load_save(cfg: gremlin.config.Configuration) -> None:
@@ -140,3 +140,46 @@ def test_exceptions(cfg: gremlin.config.Configuration) -> None:
 
     with pytest.raises(gremlin.error.GremlinError):
         cfg.value("does", "not", "exist")
+
+
+@pytest.mark.parametrize(
+    ("executable", "expected"),
+    [
+        ("C:/Games/DCS World OpenBeta/bin/DCS.exe", "dcs.xml"),
+        ("D:/RSI/StarCitizen/PTU/Bin64/StarCitizen.exe", "star_citizen.xml"),
+        ("C:/Games/Elite/EliteDangerous64.exe", None),
+        ("C:/Windows/explorer.exe", None),
+    ],
+    ids=[
+        "after-invalid-regex",
+        "after-non-matching-regex",
+        "executable-of-default-entry",
+        "no-matching-entry",
+    ],
+)
+def test_profile_lookup_by_executable(
+    cfg: gremlin.config.Configuration, executable: str, expected: str | None
+) -> None:
+    _register_auto_loading_entries(cfg, AUTO_LOADING_ENTRIES)
+
+    assert gremlin.config.get_profile_with_regex(executable) == expected
+
+
+@pytest.mark.parametrize(
+    ("entry", "expected"),
+    [
+        (["default.xml", "", True, True], "default.xml"),
+        (["default.xml", "", False, True], None),
+        (["", "", True, True], None),
+        (["other.xml", "", True, False], None),
+    ],
+    ids=["enabled", "disabled", "no-profile", "not-default"],
+)
+def test_default_profile_lookup(
+    cfg: gremlin.config.Configuration,
+    entry: list[str | bool],
+    expected: str | None,
+) -> None:
+    _register_auto_loading_entries(cfg, [entry])
+
+    assert gremlin.config.get_default_profile() == expected

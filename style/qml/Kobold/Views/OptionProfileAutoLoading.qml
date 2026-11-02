@@ -128,10 +128,13 @@ Item {
                 profile: model.profile
                 executable: model.executable
                 isEnabled: model.isEnabled
+                isDefault: model.isDefault
             }
         }
 
         Button {
+            objectName: "newAutoLoadEntryButton"
+
             Layout.alignment: Qt.AlignCenter
 
             text: "New Entry"
@@ -141,9 +144,12 @@ Item {
     }
 
     component AutoLoadEntry : Item {
+        objectName: "autoLoadEntry"
+
         property alias profile: _profile.text
         property alias executable: _executable.text
         property alias isEnabled: _isEnabled.checked
+        property alias isDefault: _isDefault.checked
 
         implicitHeight: _item.implicitHeight
 
@@ -164,7 +170,10 @@ Item {
                 }
 
                 Button {
+                    objectName: "browseExecutableButton"
+
                     text: "Browse Executable"
+                    enabled: !_isDefault.checked
                     onClicked: () => {
                         _executableFileDialog.associatedField = _executable
                         _executableFileDialog.open()
@@ -172,7 +181,10 @@ Item {
                 }
 
                 Button {
+                    objectName: "selectExecutableButton"
+
                     text: "Select Executable"
+                    enabled: !_isDefault.checked
 
                     onClicked: () => {
                         _executableSelectorDialog.associatedField = _executable
@@ -183,7 +195,17 @@ Item {
                 Spacer {}
 
                 CheckBox {
+                    id: _isDefault
+                    objectName: "autoLoadDefaultCheckBox"
+
+                    text: "Default"
+
+                    onToggled: () => { model.isDefault = checked }
+                }
+
+                CheckBox {
                     id: _isEnabled
+                    objectName: "autoLoadEnabledCheckBox"
 
                     text: checked ? "On" : "Off"
 
@@ -200,6 +222,7 @@ Item {
 
             TextField {
                 id: _profile
+                objectName: "autoLoadProfileField"
 
                 Layout.fillWidth: true
 
@@ -210,8 +233,11 @@ Item {
             // Executable path field with button to enable editing to support usage of
             // regular expressions.
             RowLayout {
+                enabled: !_isDefault.checked
+
                 TextField {
                     id: _executable
+                    objectName: "autoLoadExecutableField"
 
                     Layout.fillWidth: true
 

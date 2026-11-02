@@ -30,6 +30,7 @@ from test.application.ui_interaction import (
     add_description,
     add_logical_input,
     add_logical_input_with_action,
+    click_and_validate,
     find_action,
     find_action_list,
     find_child_action,
@@ -121,9 +122,9 @@ def _set_comparator(
             ui.select(ui.find_item("pressedStateCombo", row), comparator.pressed_state)
         case "Hat":
             for direction in sorted(comparator.hat_directions):
-                button = ui.find_item(f"hatDirectionButton_{direction}", row)
-                ui.click(button)
-                ui.wait_until(lambda button=button: button.property("checked"))
+                click_and_validate(
+                    ui, ui.find_item(f"hatDirectionButton_{direction}", row)
+                )
 
 
 def _assert_comparator(

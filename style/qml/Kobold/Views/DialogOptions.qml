@@ -31,6 +31,7 @@ Window {
 
     RowLayout {
         id: _root
+        objectName: "optionsContent"
 
         anchors.fill: parent
 

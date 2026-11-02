@@ -19,7 +19,7 @@ The options are grouped into three sections which contain the following aspects:
     <dt>Action</dt>
     <dd>Contains all settings relating to the behavior of specific actions.</dd>
     <dt>Profile</dt>
-    <dd>Contains all settings revolving around profile auto loading.</dd>
+    <dd>Contains all settings revolving around profile auto loading. An auto loading entry marked as <em>Default</em> needs no executable. It is used when the <em>Focus loss behavior</em> option is set to <em>Load default</em> and the focused executable has no entry of its own.</dd>
 </dl>
 
 The following global options are worth pointing out.

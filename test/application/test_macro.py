@@ -31,6 +31,7 @@ from test.application.ui_interaction import (
     add_action,
     add_logical_input,
     add_logical_input_with_action,
+    click_and_validate,
     gremlin_active,
     record_inputs,
     record_stick_input,
@@ -98,9 +99,7 @@ def _shown_value(ui: UiDriver, row: QtQuick.QQuickItem, input_type_name: str) ->
 
 
 def _set_relative(ui: UiDriver, row: QtQuick.QQuickItem) -> None:
-    radio = ui.find_item("relativeModeRadio", row)
-    ui.click(radio)
-    ui.wait_until(lambda: radio.property("checked"))
+    click_and_validate(ui, ui.find_item("relativeModeRadio", row))
 
 
 def _record_key(
@@ -124,9 +123,7 @@ def test_repeat_mode(ui: UiDriver, empty_profile: pathlib.Path, mode: str) -> No
         set_spin_box_value(ui, ui.find_item("repeatCountSpinBox", action), 5)
     # Pre-emptive only shows for exclusive macros.
     for name in ["exclusiveCheckBox", "preemptiveCheckBox"]:
-        check_box = ui.find_item(name, action)
-        ui.click(check_box)
-        ui.wait_until(lambda check_box=check_box: check_box.property("checked"))
+        click_and_validate(ui, ui.find_item(name, action))
 
     action = reload_action(ui, empty_profile, label, ACTION)
     assert ui.find_item("repeatModeCombo", action).property("currentText") == mode

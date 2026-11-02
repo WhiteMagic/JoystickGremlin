@@ -35,6 +35,7 @@ from test.application.ui_driver import UiDriver
 from test.application.ui_interaction import (
     add_description,
     add_mode,
+    click_and_validate,
     find_action,
     find_description,
     open_dialog,
@@ -97,11 +98,6 @@ def _descriptions(device: dill.DeviceSummary) -> dict[tuple[InputType, int], lis
     }
 
 
-def _set_checked(ui: UiDriver, check_box: QtQuick.QQuickItem, checked: bool) -> None:
-    ui.click(check_box)
-    ui.wait_until(lambda: check_box.property("checked") == checked)
-
-
 def test_input_viewer_lists_devices(ui: UiDriver) -> None:
     with open_dialog(ui, "Input Viewer", "inputViewerContent") as dialog:
         ui.wait_for_value(
@@ -135,7 +131,7 @@ def _select_device(
         f"selecting device '{device_name}'",
         dialog,
     )
-    _set_checked(ui, check_box, True)
+    click_and_validate(ui, check_box)
 
 
 def _create_mappings(ui: UiDriver, dialog: QtQuick.QQuickItem) -> None:
@@ -165,7 +161,7 @@ def test_auto_mapper_overwrite(ui: UiDriver, empty_profile: pathlib.Path) -> Non
         assert _mapped_inputs(STICK) == _inputs(STICK) - {described_input}
 
         # The selection must outlast a run.
-        _set_checked(ui, ui.find_item("overwriteCheckBox", dialog), True)
+        click_and_validate(ui, ui.find_item("overwriteCheckBox", dialog))
         _create_mappings(ui, dialog)
         assert _mapped_inputs(STICK) == _inputs(STICK)
 
@@ -176,7 +172,7 @@ def test_auto_mapper_overwrite(ui: UiDriver, empty_profile: pathlib.Path) -> Non
 
 def test_auto_mapper_repeat(ui: UiDriver, empty_profile: pathlib.Path) -> None:
     with _auto_mapper(ui, [STICK, THROTTLE]) as dialog:
-        _set_checked(ui, ui.find_item("repeatCheckBox", dialog), True)
+        click_and_validate(ui, ui.find_item("repeatCheckBox", dialog))
         _create_mappings(ui, dialog)
 
     # The stick takes both vJoy hats, so only repeating them maps the throttle's.
@@ -266,9 +262,9 @@ def _record_calibration(
     ui: UiDriver, button: QtQuick.QQuickItem, inject: Callable[[], None]
 ) -> None:
     """Records the axis values inject produces with a calibrate button."""
-    _set_checked(ui, button, True)
+    click_and_validate(ui, button)
     inject()
-    _set_checked(ui, button, False)
+    click_and_validate(ui, button, False)
 
 
 def test_calibration_live_input(
@@ -314,7 +310,7 @@ def test_calibration_manual_values(
 ) -> None:
     with _calibrate_throttle(ui) as dialog:
         row = _axis_row(ui, dialog, 1)
-        _set_checked(ui, ui.find_item("withCenterCheckBox", row), False)
+        click_and_validate(ui, ui.find_item("withCenterCheckBox", row), False)
         set_spin_box_value(ui, ui.find_item("lowSpinBox", row), -30000)
         set_spin_box_value(ui, ui.find_item("highSpinBox", row), 30000)
         ui.click(ui.find_item("saveButton", row))
