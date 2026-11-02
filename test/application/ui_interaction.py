@@ -385,6 +385,14 @@ def set_spin_box_value(
     ui.wait_for_value(lambda: spin_box.property("value"), pytest.approx(value))
 
 
+def click_and_validate(
+    ui: UiDriver, item: QtQuick.QQuickItem, checked: bool = True
+) -> None:
+    """Clicks the checkable item and waits for it to reach the given state."""
+    ui.click(item)
+    ui.wait_until(lambda: item.property("checked") == checked)
+
+
 def set_description(ui: UiDriver, action: QtQuick.QQuickItem, text: str) -> None:
     field = ui.find_item("descriptionField", action)
     ui.type_text(field, text)

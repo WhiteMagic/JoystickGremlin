@@ -88,6 +88,15 @@ class ProcessMonitor(QtCore.QObject):
         """
         return self._current_path
 
+    @property
+    def current_pid(self) -> int:
+        """Returns the id of the currently active process.
+
+        Returns:
+            The id of the currently active process
+        """
+        return self._current_pid
+
 
 def list_current_processes() -> list[str]:
     """Returns a list of executable paths to currently active processes.

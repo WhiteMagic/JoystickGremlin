@@ -91,7 +91,6 @@ def activation_calls(
     runner.stop()
 
 
-
 def test_initial_value_uses_axis_index_on_device_with_axis_gaps(
     monkeypatch: pytest.MonkeyPatch, runner: code_runner.CodeRunner
 ) -> None:

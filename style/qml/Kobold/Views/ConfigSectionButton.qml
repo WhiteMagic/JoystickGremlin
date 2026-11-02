@@ -11,6 +11,7 @@ import "helpers.js" as Helpers
 
 Button {
     id: _text
+    objectName: `configSection_${name}`
 
     required property int index
     required property string name

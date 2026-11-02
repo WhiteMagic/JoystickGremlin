@@ -340,6 +340,7 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"profile"),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"executable"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"isEnabled"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"isDefault"),
     }
     qml_type: ClassVar[str] = "OptionProfileAutoLoading"
 
@@ -355,7 +356,7 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
         """Creates a new empty auto-load entry."""
         self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
         data = self._config.value(*self._cfg_key)
-        data.append(["", "", False])
+        data.append(["", "", False, False])
         self._config.set(*self._cfg_key, data)
         self.endInsertRows()
 
@@ -381,6 +382,8 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
                 return data[1]
             case "isEnabled":
                 return data[2]
+            case "isDefault":
+                return data[3]
             case _:
                 raise GremlinError(f"Unknown role name {role}")
 
@@ -403,6 +406,23 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
             case "isEnabled":
                 data[index.row()][2] = value
                 self._config.set(*self._cfg_key, data)
+                return True
+            case "isDefault":
+                # Only a single entry can be the default one, thus setting one means
+                # all others will be set to False. This should always be one entry only.
+                default_entry_rows = [
+                    row
+                    for row, entry in enumerate(data)
+                    if value and entry[3] and row != index.row()
+                ]
+                for row in default_entry_rows:
+                    data[row][3] = False
+                data[index.row()][3] = value
+
+                # Write all rows back to the configuration.
+                self._config.set(*self._cfg_key, data)
+                for row in default_entry_rows:
+                    self.dataChanged.emit(self.index(row), self.index(row), [role])
                 return True
             case _:
                 return False
@@ -664,7 +684,8 @@ MetaConfigOption().register(
     "Automatically load profiles based on the currently active executable. "
     "Each entry an executable and the profile to load with it. The executable "
     "can be changed manually if needed. This also allows specifying the path "
-    "to an executable as a regular expression.",
+    "to an executable as a regular expression. An entry marked as default has no "
+    "executable and is used by the Load default focus loss behavior.",
     ProfileAutoLoadingModel,
 )
 

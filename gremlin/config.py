@@ -12,6 +12,7 @@ from typing import Any
 
 from gremlin import (
     common,
+    config_migration,
     error,
     util,
 )
@@ -73,6 +74,9 @@ class Configuration(metaclass=common.SingletonMetaclass):
                     pass
         if not load_successful:
             self._data = {}
+
+        # Migrate settings before any processing happens.
+        config_migration.migrate_config(json_data)
 
         # Convert data based on property types
         self._data = {}
@@ -509,7 +513,19 @@ def get_profile(exec_path: str) -> str | None:
         Path to the profile if one exists, None otherwise.
     """
     for entry in Configuration().value("profile", "automation", "entries-auto-loading"):
-        if entry[1] == exec_path and entry[2]:
+        if entry[1] == exec_path and entry[2] and not entry[3]:
+            return entry[0]
+    return None
+
+
+def get_default_profile() -> str | None:
+    """Returns the profile path to the default profile if one exists.
+
+    Returns:
+        Path to the default profile if one exists, None otherwise.
+    """
+    for entry in Configuration().value("profile", "automation", "entries-auto-loading"):
+        if entry[0] and entry[2] and entry[3]:
             return entry[0]
     return None
 
@@ -544,19 +560,24 @@ def get_profile_with_regex(exec_path: str) -> str | None:
         profile_path = entry[0]
         entry_path = entry[1]
 
-        # Ignore disabled entries and ones that have a path corresponding to
-        # a valid file in the system.
-        if not entry[2] or os.path.exists(entry_path):
+        # Ignore entries that are disabled or are missing a path as well as the
+        # default profile.
+        if not entry[2] or entry[3] or not entry_path or os.path.exists(entry_path):
             continue
 
         # Treat the entry's executable path as a regular expression and attempt
         # to match it to the provided executable path
-        if re.search(entry_path, exec_path) is not None:
-            logging.getLogger("system").info(
-                f"Found regex match in {entry_path} for {exec_path}, "
-                f"returning {profile_path}"
+        try:
+            if re.search(entry_path, exec_path) is not None:
+                logging.getLogger("system").info(
+                    f"Found regex match in {entry_path} for {exec_path}, "
+                    f"returning {profile_path}"
+                )
+                return profile_path
+        except re.error as e:
+            logging.getLogger("system").warning(
+                f"Invalid regular expression {entry_path}: {e}"
             )
-            return profile_path
 
-        # No match was found, returning None.
-        return None
+    # No match was found, returning None.
+    return None
