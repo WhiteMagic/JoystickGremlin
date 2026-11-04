@@ -39,7 +39,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>Axis Button 0.25-0.75: out_button</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -99,7 +99,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_button</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -119,7 +119,7 @@
         <input>
             <input-type>hat</input-type>
             <input-id>1</input-id>
-            <label>Input Hat 1</label>
+            <label>Hat Button N,S: out_button</label>
         </input>
         <input>
             <input-type>hat</input-type>

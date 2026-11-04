@@ -61,7 +61,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Chain timeout 0.2 1: out_1 2: out_2 3: out_3</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -81,17 +81,17 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_1</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>12</input-id>
-            <label>Output Button 2</label>
+            <label>out_2</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>Output Button 3</label>
+            <label>out_3</label>
         </input>
         <input>
             <input-type>button</input-type>

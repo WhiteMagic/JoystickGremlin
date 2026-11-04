@@ -6,7 +6,6 @@ from pathlib import Path
 
 from gremlin.input_cache import Keyboard
 
-from . import input_definitions as inout
 from .conftest import JoystickGremlinBot
 
 # def test_bm_key_press_rountrip(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
@@ -35,10 +34,10 @@ def test_single_key(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     Keyboard()._keyboard_state = {}
 
     assert not Keyboard().is_pressed("k")
-    jgbot.press_button(inout.IN_BUTTON_1)
+    jgbot.press_button("Map to K")
     jgbot.wait(0.01)
     assert Keyboard().is_pressed("k")
-    jgbot.release_button(inout.IN_BUTTON_1)
+    jgbot.release_button("Map to K")
     jgbot.wait(0.01)
     assert not Keyboard().is_pressed("k")
 
@@ -49,12 +48,12 @@ def test_key_combination(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     assert not Keyboard().is_pressed("right shift2")
     assert not Keyboard().is_pressed("m")
 
-    jgbot.press_button(inout.IN_BUTTON_2)
+    jgbot.press_button("Map to RShift + M")
     jgbot.wait(0.01)
     assert Keyboard().is_pressed("right shift2")
     assert Keyboard().is_pressed("m")
 
-    jgbot.release_button(inout.IN_BUTTON_2)
+    jgbot.release_button("Map to RShift + M")
     jgbot.wait(0.01)
     assert not Keyboard().is_pressed("right shift2")
     assert not Keyboard().is_pressed("m")
@@ -65,16 +64,16 @@ def test_sequential(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     Keyboard()._keyboard_state = {}
 
     assert not Keyboard().is_pressed("o")
-    jgbot.tap_button(inout.IN_BUTTON_3)
+    jgbot.tap_button("Chain 1: Press O 2: Release O")
     jgbot.wait(0.01)
     print(Keyboard()._keyboard_state)
     assert Keyboard().is_pressed("o")
-    jgbot.tap_button(inout.IN_BUTTON_3)
+    jgbot.tap_button("Chain 1: Press O 2: Release O")
     jgbot.wait(0.01)
     assert not Keyboard().is_pressed("o")
-    jgbot.tap_button(inout.IN_BUTTON_3)
+    jgbot.tap_button("Chain 1: Press O 2: Release O")
     jgbot.wait(0.01)
     assert Keyboard().is_pressed("o")
-    jgbot.tap_button(inout.IN_BUTTON_3)
+    jgbot.tap_button("Chain 1: Press O 2: Release O")
     jgbot.wait(0.01)
     assert not Keyboard().is_pressed("o")

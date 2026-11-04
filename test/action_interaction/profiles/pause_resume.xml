@@ -80,17 +80,17 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Pause</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>Input Button 2</label>
+            <label>Resume</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>3</input-id>
-            <label>Input Button 3</label>
+            <label>Toggle pause</label>
         </input>
         <input>
             <input-type>button</input-type>

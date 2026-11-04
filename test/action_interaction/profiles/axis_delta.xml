@@ -20,7 +20,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>Delta 0.3: out_positive, out_negative</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -80,12 +80,12 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_positive</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>12</input-id>
-            <label>Output Button 2</label>
+            <label>out_negative</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -139,7 +139,7 @@
         </input>
     </logical-device>
     <library>
-        <!-- map positive trigger → OUT_BUTTON_1 -->
+        <!-- map positive trigger → out_positive -->
         <action id="ffffffff-0000-4000-8000-000000000002" type="map-to-logical-device">
             <property type="int">
                 <name>logical-input-id</name>
@@ -163,7 +163,7 @@
             </property>
         </action>
 
-        <!-- map negative trigger → OUT_BUTTON_2 -->
+        <!-- map negative trigger → out_negative -->
         <action id="ffffffff-0000-4000-8000-000000000003" type="map-to-logical-device">
             <property type="int">
                 <name>logical-input-id</name>
@@ -209,7 +209,7 @@
             </property>
         </action>
 
-        <!-- root for IN_AXIS_1 -->
+        <!-- root for the delta input axis -->
         <action id="ffffffff-0000-4000-8000-000000000001" type="root">
             <actions>
                 <action-id>ffffffff-0000-4000-8000-000000000004</action-id>

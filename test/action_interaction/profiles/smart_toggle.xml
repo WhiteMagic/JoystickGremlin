@@ -60,7 +60,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Smart Toggle 0.2: out_button</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -80,7 +80,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_button</label>
         </input>
         <input>
             <input-type>button</input-type>

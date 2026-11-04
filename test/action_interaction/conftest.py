@@ -25,6 +25,7 @@ from gremlin import (
     mode_manager,
     tts,
 )
+from gremlin.error import GremlinError
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
     Event,
@@ -34,8 +35,6 @@ from gremlin.types import (
 from gremlin.util import clamp
 from vjoy import vjoy
 
-LDIdentifier = LogicalDevice.Input.Identifier
-
 
 class EventSpec:
     """Encapsulates information about an expected event and supports
@@ -43,19 +42,16 @@ class EventSpec:
 
     def __init__(
         self,
-        event_type: InputType,
-        input_id: int,
+        label: str,
         expected_value: float | bool | HatDirection,
     ) -> None:
         """Creates a new EventSpec instance.
 
         Args:
-            event_type: The type of the event.
-            input_id: The identifier of the input generating the event.
+            label: The label of the input generating the event.
             expected_value: The expected value of the event.
         """
-        self.event_type = event_type
-        self.input_id = input_id
+        self.label = label
         self.expected_value = expected_value
 
     def __repr__(self) -> str:
@@ -64,7 +60,7 @@ class EventSpec:
         Returns:
             A string representation of the EventSpec instance.
         """
-        return f"EventSpec({self.event_type}, {self.input_id}, {self.expected_value})"
+        return f"EventSpec('{self.label}', {self.expected_value})"
 
     def _repr_compare(self, other: Event) -> list[str]:
         """Returns information used when the comparison fails.
@@ -87,11 +83,11 @@ class EventSpec:
         Returns:
             True if the Event instance matches the EventSpec, False otherwise.
         """
-        if self.event_type != event.event_type:
+        # Resolved here as specs can be built before the profile is loaded.
+        input = LogicalDevice()[self.label]
+        if input.type != event.event_type or input.id != event.identifier:
             return False
-        if self.input_id != event.identifier:
-            return False
-        match self.event_type:
+        match input.type:
             case InputType.JoystickAxis:
                 return self.expected_value == pytest.approx(event.value)
             case InputType.JoystickButton:
@@ -256,77 +252,77 @@ class JoystickGremlinBot:
         """
         return self._mode_manager.current.name
 
-    def axis(self, input_id: int) -> float:
+    def axis(self, label: str) -> float:
         """Retrieves the current value of the specified axis.
 
         Args:
-            input_id: The identifier of the axis input.
+            label: The label of the axis input.
 
         Returns:
             The current value of the specified axis.
         """
         input = cast(
             LogicalDevice.Axis,
-            self._logical_device[LDIdentifier(InputType.JoystickAxis, input_id)],
+            self._input(InputType.JoystickAxis, label),
         )
         return input.value
 
-    def button(self, input_id: int) -> bool:
+    def button(self, label: str) -> bool:
         """Retrieves the current state of the specified button.
 
         Args:
-            input_id: The identifier of the button input.
+            label: The label of the button input.
 
         Returns:
             The current state of the specified button.
         """
         input = cast(
             LogicalDevice.Button,
-            self._logical_device[LDIdentifier(InputType.JoystickButton, input_id)],
+            self._input(InputType.JoystickButton, label),
         )
         return input.is_pressed
 
-    def hat(self, input_id: int) -> HatDirection:
+    def hat(self, label: str) -> HatDirection:
         """Retrieves the current direction of the specified hat.
 
         Args:
-            input_id: The identifier of the hat input.
+            label: The label of the hat input.
 
         Returns:
             The current direction of the specified hat.
         """
         input = cast(
             LogicalDevice.Hat,
-            self._logical_device[LDIdentifier(InputType.JoystickHat, input_id)],
+            self._input(InputType.JoystickHat, label),
         )
         return input.direction
 
-    def send_button(self, button_id: int, pressed: bool) -> None:
+    def send_button(self, label: str, pressed: bool) -> None:
         """Sends a button press or release event.
 
         Args:
-            button_id: The identifier of the button input.
+            label: The label of the button input.
             pressed: True to press the button, False to release it.
         """
-        self._emit_event(InputType.JoystickButton, button_id, pressed)
+        self._emit_event(InputType.JoystickButton, label, pressed)
 
-    def press_button(self, button_id: int) -> None:
+    def press_button(self, label: str) -> None:
         """Sends a button press event.
 
         Args:
-            button_id: The identifier of the button input.
+            label: The label of the button input.
         """
-        self.send_button(button_id, True)
+        self.send_button(label, True)
 
-    def release_button(self, button_id: int) -> None:
+    def release_button(self, label: str) -> None:
         """Sends a button release event.
 
         Args:
-            button_id: The identifier of the button input.
+            label: The label of the button input.
         """
-        self.send_button(button_id, False)
+        self.send_button(label, False)
 
-    def hold_button(self, button_id: int, duration: float) -> None:
+    def hold_button(self, label: str, duration: float) -> None:
         """Holds a button pressed for the specified duration.
 
         This returns immediately after pressing the button. The release event
@@ -334,87 +330,103 @@ class JoystickGremlinBot:
         interactions with Gremlin can happen.
 
         Args:
-            button_id: The identifier of the button input.
+            label: The label of the button input.
             duration: The duration in seconds to hold the button pressed.
         """
-        self.press_button(button_id)
-        threading.Timer(duration, lambda: self.release_button(button_id)).start()
+        self.press_button(label)
+        threading.Timer(duration, lambda: self.release_button(label)).start()
 
-    def tap_button(self, button_id: int) -> None:
+    def tap_button(self, label: str) -> None:
         """Taps a button (press and release) quickly.
 
         This is a blocking call that returns only after the button has been
         released. This is for convenience purposes.
 
         Args:
-            button_id: The identifier of the button input.
+            label: The label of the button input.
         """
-        self.send_button(button_id, True)
+        self.send_button(label, True)
         self._qtbot.wait(50)
-        self.send_button(button_id, False)
+        self.send_button(label, False)
 
-    def set_axis_absolute(self, axis_id: int, value: float) -> None:
+    def set_axis_absolute(self, label: str, value: float) -> None:
         """Sets the specified axis to the given absolute value.
 
         Args:
-            axis_id: The identifier of the axis input.
+            label: The label of the axis input.
             value: The absolute value to set the axis to.
         """
-        self._emit_event(InputType.JoystickAxis, axis_id, value)
+        self._emit_event(InputType.JoystickAxis, label, value)
 
-    def set_axis_relative(self, axis_id: int, delta: float) -> None:
+    def set_axis_relative(self, label: str, delta: float) -> None:
         """Changes the specified axis by the given delta value.
 
         Changes the current value of the specified axis by the given amount.
         Note that the axis value cannot go outside the range [-1.0, 1.0].
 
         Args:
-            axis_id: The identifier of the axis input.
+            label: The label of the axis input.
             delta: The delta value to change the axis by.
         """
         input = cast(
             LogicalDevice.Axis,
-            self._logical_device[LDIdentifier(InputType.JoystickAxis, axis_id)],
+            self._input(InputType.JoystickAxis, label),
         )
         new_value = clamp(input.value + delta, -1.0, 1.0)
-        self._emit_event(InputType.JoystickAxis, axis_id, new_value)
+        self._emit_event(InputType.JoystickAxis, label, new_value)
 
-    def set_hat_direction(self, hat_id: int, direction: HatDirection) -> None:
+    def set_hat_direction(self, label: str, direction: HatDirection) -> None:
         """Sets the specified hat to the given direction.
 
         Args:
-            hat_id: The identifier of the hat input.
+            label: The label of the hat input.
             direction: The direction to set the hat to.
         """
-        self._emit_event(InputType.JoystickHat, hat_id, direction)
+        self._emit_event(InputType.JoystickHat, label, direction)
 
-    def tap_hat_direction(self, hat_id: int, direction: HatDirection) -> None:
+    def tap_hat_direction(self, label: str, direction: HatDirection) -> None:
         """Taps the specified hat in the given direction quickly.
 
         This is a blocking call that returns only after the hat has been
         returned to the center position. This is for convenience purposes.
 
         Args:
-            hat_id: The identifier of the hat input.
+            label: The label of the hat input.
             direction: The direction to tap the hat to.
         """
-        self.set_hat_direction(hat_id, direction)
+        self.set_hat_direction(label, direction)
         self._qtbot.wait(50)
-        self.set_hat_direction(hat_id, HatDirection.Center)
+        self.set_hat_direction(label, HatDirection.Center)
+
+    def _input(self, input_type: InputType, label: str) -> LogicalDevice.Input:
+        """Returns the logical device input with the given label.
+
+        Args:
+            input_type: The type the input is expected to have.
+            label: The label of the input.
+
+        Returns:
+            The matching logical device input.
+        """
+        input = self._logical_device[label]
+        if input.type != input_type:
+            raise GremlinError(f"Input '{label}' is not of type {input_type}")
+        return input
 
     def _emit_event(
-        self, input_type: InputType, input_id: int, value: float | HatDirection
+        self, input_type: InputType, label: str, value: float | HatDirection
     ) -> None:
         """Creates an Event instance based on the given information and then
         emits it.
 
         Args:
             input_type: The type of the input generating the event.
-            input_id: The identifier of the input generating the event.
+            label: The label of the input generating the event.
             value: The value associated with the event.
         """
         # Update the state of the logical device.
-        self._logical_device[LDIdentifier(input_type, input_id)].update(value)
+        input = self._input(input_type, label)
+        input.update(value)
 
         # Prepare event parameters to keep type checkers happy.
         is_pressed = None
@@ -430,7 +442,7 @@ class JoystickGremlinBot:
         # Create event to emit.
         evt = Event(
             input_type,
-            input_id,
+            input.id,
             LogicalDevice.device_guid,
             self._mode_manager.current.name,
             value=evt_value,
