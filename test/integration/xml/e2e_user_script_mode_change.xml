@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>97b77b40-07d8-11f0-8028-444553540000</device-id>
+            <input-type>axis</input-type>
+            <mode>Default</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>d3a1f6c2-5b7e-4c19-8a44-0e6f2b9c7d11</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <logical-device/>
+    <library>
+        <action id="d3a1f6c2-5b7e-4c19-8a44-0e6f2b9c7d11" type="root">
+            <actions>
+                <action-id>7c2e9b40-1f3d-4a68-b5c7-92d84e0a6f35</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="7c2e9b40-1f3d-4a68-b5c7-92d84e0a6f35" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>3</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>relative</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+    </library>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <modes>
+        <mode>Default</mode>
+        <mode>Other</mode>
+    </modes>
+    <scripts>
+        <script id="5e8d2c71-94ab-4f06-a3d1-6b7c0e12f849">
+            <property type="path">
+                <name>path</name>
+                <value>example.py</value>
+            </property>
+            <property type="string">
+                <name>name</name>
+                <value>Instance 1</value>
+            </property>
+            <variable type="float">
+                <property type="string">
+                    <name>name</name>
+                    <value>A float variable</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.5</value>
+                </property>
+            </variable>
+            <variable type="mode">
+                <property type="string">
+                    <name>name</name>
+                    <value>A mode variable</value>
+                </property>
+                <property type="string">
+                    <name>value</name>
+                    <value>Default</value>
+                </property>
+            </variable>
+            <variable type="vjoy">
+                <property type="string">
+                    <name>name</name>
+                    <value>A virtual axis input variable</value>
+                </property>
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="physical-input">
+                <property type="string">
+                    <name>name</name>
+                    <value>A physical axis input variable</value>
+                </property>
+                <property type="uuid">
+                    <name>device-guid</name>
+                    <value>97b77b40-07d8-11f0-8028-444553540000</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>1</value>
+                </property>
+            </variable>
+        </script>
+    </scripts>
+</profile>
