@@ -50,7 +50,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>Map to out_axis</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -70,7 +70,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>11</input-id>
-            <label>Output Axis 1</label>
+            <label>out_axis</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -90,7 +90,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Map to out_button</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -110,7 +110,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_button</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -130,7 +130,7 @@
         <input>
             <input-type>hat</input-type>
             <input-id>1</input-id>
-            <label>Input Hat 1</label>
+            <label>Map to out_hat</label>
         </input>
         <input>
             <input-type>hat</input-type>
@@ -150,7 +150,7 @@
         <input>
             <input-type>hat</input-type>
             <input-id>11</input-id>
-            <label>Output Hat 1</label>
+            <label>out_hat</label>
         </input>
         <input>
             <input-type>hat</input-type>

@@ -30,12 +30,12 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>Merge 1st input: out_merged</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>2</input-id>
-            <label>Input Axis 2</label>
+            <label>Merge 2nd input: out_merged</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -50,7 +50,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>11</input-id>
-            <label>Output Axis 1</label>
+            <label>out_merged</label>
         </input>
         <input>
             <input-type>axis</input-type>

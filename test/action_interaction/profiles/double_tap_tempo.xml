@@ -60,7 +60,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Double Tap 0.1 exclusive - single: Tempo 0.1 [out_single_short, out_single_long], double: Tempo 0.1 [out_double_short, out_double_long]</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -80,22 +80,22 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_single_short</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>12</input-id>
-            <label>Output Button 2</label>
+            <label>out_single_long</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>Output Button 3</label>
+            <label>out_double_short</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>14</input-id>
-            <label>Output Button 4</label>
+            <label>out_double_long</label>
         </input>
         <input>
             <input-type>hat</input-type>

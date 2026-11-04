@@ -90,47 +90,47 @@
         <input>
             <input-type>axis</input-type>
             <input-id>11</input-id>
-            <label>Output Axis 1</label>
+            <label>out_axis_1</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>12</input-id>
-            <label>Output Axis 2</label>
+            <label>out_axis_2</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>13</input-id>
-            <label>Output Axis 3</label>
+            <label>out_axis_3</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>14</input-id>
-            <label>Output Axis 4</label>
+            <label>out_axis_4</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Macro set [out_hat_1, out_hat_2, out_button_3, out_axis_2, out_axis_3, out_axis_1, out_axis_4]</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>Input Button 2</label>
+            <label>Macro repeat 3 [out_button_1, out_hat_1]</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>3</input-id>
-            <label>Input Button 3</label>
+            <label>Macro on release [out_button_1]</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>4</input-id>
-            <label>Input Button 4</label>
+            <label>Macro hold [out_axis_2]</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_button_1</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -140,22 +140,22 @@
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>Output Button 3</label>
+            <label>out_button_3</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>14</input-id>
-            <label>Output Button 4</label>
+            <label>out_button_4</label>
         </input>
         <input>
             <input-type>hat</input-type>
             <input-id>1</input-id>
-            <label>Input Hat 1</label>
+            <label>Hat Buttons - N: Macro [out_axis_1], E: Macro repeat 2 [out_axis_1], S: Macro toggle [out_axis_1], W: Macro hold [out_axis_1]</label>
         </input>
         <input>
             <input-type>hat</input-type>
             <input-id>2</input-id>
-            <label>Input Hat 2</label>
+            <label>Hat Buttons - N: Macro preemptive exclusive [out_button_3], E: Macro exclusive [out_button_4]</label>
         </input>
         <input>
             <input-type>hat</input-type>
@@ -170,12 +170,12 @@
         <input>
             <input-type>hat</input-type>
             <input-id>11</input-id>
-            <label>Output Hat 1</label>
+            <label>out_hat_1</label>
         </input>
         <input>
             <input-type>hat</input-type>
             <input-id>12</input-id>
-            <label>Output Hat 2</label>
+            <label>out_hat_2</label>
         </input>
         <input>
             <input-type>hat</input-type>

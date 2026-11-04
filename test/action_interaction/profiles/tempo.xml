@@ -41,6 +41,26 @@
                 <behavior>button</behavior>
             </action-configuration>
         </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>Default</mode>
+            <input-id>4</input-id>
+            <action-configuration>
+                <root-action>f2a00000-0000-4000-8000-000000000001</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>Second</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>f2a00000-0000-4000-8000-000000000002</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
     </inputs>
     <settings>
         <startup-mode>Default</startup-mode>
@@ -90,37 +110,37 @@
         <input>
             <input-type>button</input-type>
             <input-id>1</input-id>
-            <label>Input Button 1</label>
+            <label>Default: [Tempo 0.2 on release - short: out_short, long: out_long], Second: Map to out_second</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>Input Button 2</label>
+            <label>Default: Tempo 0.2 on press - short: out_short, long: out_long</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>3</input-id>
-            <label>Input Button 3</label>
+            <label>Default: [Tempo 0.2 on release - long: Switch to Second], Second: [Tempo 0.2 on release - long: Switch to Default]</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>4</input-id>
-            <label>Input Button 4</label>
+            <label>Default: Switch to Second</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_short</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>12</input-id>
-            <label>Output Button 2</label>
+            <label>out_long</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>Output Button 3</label>
+            <label>out_second</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -497,6 +517,74 @@
             <property type="activation-mode">
                 <name>activation-mode</name>
                 <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f2a00000-0000-4000-8000-000000000001" type="root">
+            <actions>
+                <action-id>f2b00000-0000-4000-8000-000000000001</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f2b00000-0000-4000-8000-000000000001" type="change-mode">
+            <property type="string">
+                <name>change-type</name>
+                <value>Switch</value>
+            </property>
+            <target-mode>
+                <property type="string">
+                    <name>name</name>
+                    <value>Second</value>
+                </property>
+            </target-mode>
+            <property type="string">
+                <name>action-label</name>
+                <value>Change Mode</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>press</value>
+            </property>
+        </action>
+        <action id="f2a00000-0000-4000-8000-000000000002" type="root">
+            <actions>
+                <action-id>f2b00000-0000-4000-8000-000000000002</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f2b00000-0000-4000-8000-000000000002" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>13</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
             </property>
         </action>
     </library>

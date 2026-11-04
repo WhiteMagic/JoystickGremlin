@@ -8,7 +8,6 @@ from pathlib import Path
 import gremlin.profile
 from action_plugins import merge_axis
 
-from . import input_definitions as inout
 from .conftest import JoystickGremlinBot
 
 
@@ -25,194 +24,194 @@ def test_average(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.Average)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.25
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == -0.25
 
 
 def test_maximum(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.Maximum)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == -0.5
 
 
 def test_minimum(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.Minimum)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
 
 def test_sum(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.Sum)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -0.25)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.75)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.25
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -0.25)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.75)
+    assert jgbot.axis("out_merged") == -0.25
 
 
 def test_bidirectional(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.Bidirectional)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.25
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.25
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -0.25)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.75)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.25
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -0.25)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.75)
+    assert jgbot.axis("out_merged") == -0.25
 
 
 def test_maximum_deflection(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.MaximumDeflection)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
     # Equal magnitudes resolve to the 2nd axis
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -0.25)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.75)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.375
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -0.25)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.75)
+    assert jgbot.axis("out_merged") == -0.375
 
 
 def test_closest_to_center(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "merge_axis.xml")
     set_merge_mode(jgbot._profile, merge_axis.MergeOperation.ClosestToCenter)
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 0.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
     # Equal magnitudes resolve to the 2nd axis
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, -1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", -1.0)
+    assert jgbot.axis("out_merged") == 0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 1.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == -0.5
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 1.0)
+    assert jgbot.axis("out_merged") == -0.5
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 1.0)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.0)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.0
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", 1.0)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.0)
+    assert jgbot.axis("out_merged") == 0.0
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, -0.25)
-    jgbot.set_axis_absolute(inout.IN_AXIS_2, 0.75)
-    assert jgbot.axis(inout.OUT_AXIS_1) == 0.125
+    jgbot.set_axis_absolute("Merge 1st input: out_merged", -0.25)
+    jgbot.set_axis_absolute("Merge 2nd input: out_merged", 0.75)
+    assert jgbot.axis("out_merged") == 0.125

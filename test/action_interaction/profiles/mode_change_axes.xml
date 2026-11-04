@@ -41,6 +41,26 @@
                 <behavior>axis</behavior>
             </action-configuration>
         </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>axis</input-type>
+            <mode>A</mode>
+            <input-id>3</input-id>
+            <action-configuration>
+                <root-action>a1a00000-0000-4000-8000-000000000005</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>axis</input-type>
+            <mode>B</mode>
+            <input-id>3</input-id>
+            <action-configuration>
+                <root-action>a1a00000-0000-4000-8000-000000000006</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
     </inputs>
     <settings>
         <startup-mode>A</startup-mode>
@@ -50,7 +70,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>A: Map relative scale 5.0 to out_relative_mode_a</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -60,7 +80,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>3</input-id>
-            <label>Input Axis 3</label>
+            <label>A: Map to out_absolute_mode_a, B: Inverting curve to out_inverted_mode_b</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -70,17 +90,17 @@
         <input>
             <input-type>axis</input-type>
             <input-id>11</input-id>
-            <label>Output Axis 1</label>
+            <label>out_relative_mode_a</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>12</input-id>
-            <label>Output Axis 2</label>
+            <label>out_absolute_mode_a</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>13</input-id>
-            <label>Output Axis 3</label>
+            <label>out_inverted_mode_b</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -95,7 +115,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>Input Button 2</label>
+            <label>A: Switch to C</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -105,7 +125,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>4</input-id>
-            <label>Input Button 4</label>
+            <label>A: Switch to B, B: Switch to A</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -297,6 +317,127 @@
             <property type="float">
                 <name>axis-scaling</name>
                 <value>5.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="a1a00000-0000-4000-8000-000000000005" type="root">
+            <actions>
+                <action-id>a1b00000-0000-4000-8000-000000000005</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="a1b00000-0000-4000-8000-000000000005" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>12</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>absolute</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="a1a00000-0000-4000-8000-000000000006" type="root">
+            <actions>
+                <action-id>a1c00000-0000-4000-8000-000000000006</action-id>
+                <action-id>a1b00000-0000-4000-8000-000000000006</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="a1c00000-0000-4000-8000-000000000006" type="response-curve">
+            <deadzone>
+                <property type="float">
+                    <name>low</name>
+                    <value>-1.0</value>
+                </property>
+                <property type="float">
+                    <name>center-low</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>center-high</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>high</name>
+                    <value>1.0</value>
+                </property>
+            </deadzone>
+            <control-points>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-1.0,1.0</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>1.0,-1.0</value>
+                </property>
+            </control-points>
+            <property type="string">
+                <name>curve-type</name>
+                <value>PiecewiseLinear</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Response Curve</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="a1b00000-0000-4000-8000-000000000006" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>13</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>absolute</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
             </property>
             <property type="string">
                 <name>action-label</name>

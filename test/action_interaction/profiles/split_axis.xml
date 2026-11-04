@@ -20,7 +20,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>Input Axis 1</label>
+            <label>Split 0.5: out_lower, out_upper</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -40,12 +40,12 @@
         <input>
             <input-type>axis</input-type>
             <input-id>11</input-id>
-            <label>Output Axis 1</label>
+            <label>out_lower</label>
         </input>
         <input>
             <input-type>axis</input-type>
             <input-id>12</input-id>
-            <label>Output Axis 2</label>
+            <label>out_upper</label>
         </input>
         <input>
             <input-type>axis</input-type>

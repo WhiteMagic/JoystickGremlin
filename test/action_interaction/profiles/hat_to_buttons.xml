@@ -80,12 +80,12 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>Output Button 1</label>
+            <label>out_north_south</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>12</input-id>
-            <label>Output Button 2</label>
+            <label>out_east</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -100,7 +100,7 @@
         <input>
             <input-type>hat</input-type>
             <input-id>1</input-id>
-            <label>Input Hat 1</label>
+            <label>Hat Buttons - N,S: out_north_south, E: out_east</label>
         </input>
         <input>
             <input-type>hat</input-type>
