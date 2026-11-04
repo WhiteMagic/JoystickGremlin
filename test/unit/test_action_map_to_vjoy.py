@@ -8,12 +8,17 @@ sys.path.append(".")
 
 import pathlib
 import uuid
+from unittest import mock
 from xml.etree import ElementTree
 
 import pytest
 
+from action_plugins import map_to_vjoy
 from action_plugins.description import DescriptionData
-from action_plugins.map_to_vjoy import MapToVjoyData
+from action_plugins.map_to_vjoy import (
+    MapToVjoyData,
+    MapToVjoyFunctor,
+)
 from action_plugins.root import RootData
 from gremlin import (
     shared_state,
@@ -157,3 +162,26 @@ def test_create_selects_first_unused_input(
     assert action.vjoy_device_id == 1
     assert action.vjoy_input_type == input_type
     assert action.vjoy_input_id == expected_id
+
+
+@pytest.mark.parametrize(
+    "is_inverted",
+    [
+        pytest.param(True, id="inverted"),
+        pytest.param(False, id="not_inverted"),
+    ],
+)
+def test_reset_releases_only_inverted_button(
+    joystick_init: None, monkeypatch: pytest.MonkeyPatch, is_inverted: bool
+) -> None:
+    vjoy_proxy = mock.MagicMock()
+    monkeypatch.setattr(map_to_vjoy, "VJoyProxy", lambda: vjoy_proxy)
+    action = MapToVjoyData(types.InputType.JoystickButton)
+    action.button_inverted = is_inverted
+    button = vjoy_proxy[action.vjoy_device_id].button.return_value
+    button.is_pressed = True
+
+    MapToVjoyFunctor(action).reset()
+
+    assert button.is_pressed is not is_inverted
+

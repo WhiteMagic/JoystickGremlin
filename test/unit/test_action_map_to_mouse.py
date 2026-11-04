@@ -76,6 +76,26 @@ def _sign(value: float) -> int:
     return 1 if value > 0 else -1
 
 
+def test_reset_stops_axis_motion(manager: MouseMotionManager) -> None:
+    functor = _axis_functor(90)
+    functor(_event(InputType.JoystickAxis), Value(1.0))
+    assert len(manager._sources) == 1
+
+    functor.reset()
+
+    assert len(manager._sources) == 0
+
+
+def test_reset_keeps_hat_motion(manager: MouseMotionManager) -> None:
+    functor = _hat_functor()
+    functor(_event(InputType.JoystickHat), Value(HatDirection.North))
+    assert len(manager._sources) == 1
+
+    functor.reset()
+
+    assert len(manager._sources) == 1
+
+
 @pytest.mark.parametrize(
     ("behavior", "mode"),
     [
