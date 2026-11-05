@@ -6,12 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from gremlin.types import (
-    HatDirection,
-    InputType,
-)
+from gremlin.types import HatDirection
 
-from . import input_definitions as inout
 from .conftest import (
     EventSpec,
     JoystickGremlinBot,
@@ -21,40 +17,40 @@ from .conftest import (
 def test_axis_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "treat_as_button.xml")
 
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    assert jgbot.axis(inout.IN_AXIS_1) == 0.0
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.20)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.30)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.80)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button("out_button")
+    assert jgbot.axis("Axis Button 0.25-0.75: out_button") == 0.0
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.20)
+    assert not jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.30)
+    assert jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.80)
+    assert not jgbot.button("out_button")
 
 
 def test_axis_edge_below(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "treat_as_button.xml")
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.2499)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.25)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.75)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.75001)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.2499)
+    assert not jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.25)
+    assert jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.75)
+    assert jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.75001)
+    assert not jgbot.button("out_button")
 
 
 def test_axis_edge_above(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "treat_as_button.xml")
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.7501)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.75)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.25)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, 0.24999)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.7501)
+    assert not jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.75)
+    assert jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.25)
+    assert jgbot.button("out_button")
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", 0.24999)
+    assert not jgbot.button("out_button")
 
 
 @pytest.mark.parametrize(
@@ -69,17 +65,11 @@ def test_axis_skips_across_range_pulses(
 ) -> None:
     jgbot.load_profile(profile_dir / "treat_as_button.xml")
 
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, start)
-    jgbot.set_axis_absolute(inout.IN_AXIS_1, end)
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", start)
+    jgbot.set_axis_absolute("Axis Button 0.25-0.75: out_button", end)
 
-    assert (
-        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
-        == jgbot.next_event()
-    )
-    assert (
-        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
-        == jgbot.next_event()
-    )
+    assert EventSpec("out_button", True) == jgbot.next_event()
+    assert EventSpec("out_button", False) == jgbot.next_event()
     with pytest.raises(jgbot.qtbot.TimeoutError):
         jgbot.next_event()
 
@@ -87,12 +77,12 @@ def test_axis_skips_across_range_pulses(
 def test_hat_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "treat_as_button.xml")
 
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_hat_direction(inout.IN_HAT_1, HatDirection.North)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_hat_direction(inout.IN_HAT_1, HatDirection.East)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_hat_direction(inout.IN_HAT_1, HatDirection.South)
-    assert jgbot.button(inout.OUT_BUTTON_1)
-    jgbot.set_hat_direction(inout.IN_HAT_1, HatDirection.Center)
-    assert not jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button("out_button")
+    jgbot.set_hat_direction("Hat Button N,S: out_button", HatDirection.North)
+    assert jgbot.button("out_button")
+    jgbot.set_hat_direction("Hat Button N,S: out_button", HatDirection.East)
+    assert not jgbot.button("out_button")
+    jgbot.set_hat_direction("Hat Button N,S: out_button", HatDirection.South)
+    assert jgbot.button("out_button")
+    jgbot.set_hat_direction("Hat Button N,S: out_button", HatDirection.Center)
+    assert not jgbot.button("out_button")
