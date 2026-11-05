@@ -51,6 +51,21 @@
                 </virtual-button>
             </action-configuration>
         </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>axis</input-type>
+            <mode>B</mode>
+            <input-id>4</input-id>
+            <action-configuration>
+                <root-action>c1a00000-0000-4000-8000-000000000005</root-action>
+                <behavior>button</behavior>
+                <virtual-button>
+                    <lower-limit>0.5</lower-limit>
+                    <upper-limit>1.0</upper-limit>
+                    <axis-button-direction>anywhere</axis-button-direction>
+                </virtual-button>
+            </action-configuration>
+        </input>
     </inputs>
     <settings>
         <startup-mode>A</startup-mode>
@@ -75,7 +90,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>4</input-id>
-            <label>Input Axis 4</label>
+            <label>B: Axis Button 0.5-1.0: Map inverted to out_inverted_mode_b</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -130,7 +145,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>Output Button 3</label>
+            <label>out_inverted_mode_b</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -305,6 +320,41 @@
             <property type="bool">
                 <name>button-inverted</name>
                 <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="c1a00000-0000-4000-8000-000000000005" type="root">
+            <actions>
+                <action-id>c1b00000-0000-4000-8000-000000000005</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="c1b00000-0000-4000-8000-000000000005" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>13</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>True</value>
             </property>
             <property type="string">
                 <name>action-label</name>
