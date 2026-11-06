@@ -49,9 +49,9 @@ class LoadProfileFunctor(AbstractFunctor):
     @override
     def __call__(
         self, event: types.Event, value: Value, properties: list[ActionProperty]
-    ) -> None:
+    ) -> bool:
         if not self._should_execute(value):
-            return
+            return False
 
         logging.getLogger("system").debug(
             f"Loading profile ... {self.data.profile_filename}"
@@ -65,6 +65,7 @@ class LoadProfileFunctor(AbstractFunctor):
             QtCore.Qt.ConnectionType.QueuedConnection,
             QtCore.Q_ARG(str, self.data.profile_filename),
         )
+        return self._requires_paired_event(value)
 
 
 class LoadProfileModel(ActionModel):

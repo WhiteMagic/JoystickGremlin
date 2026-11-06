@@ -69,9 +69,10 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
         event: Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        if not self._should_execute(value):
-            return
+    ) -> bool:
+        inverted = self._is_inverted_button()
+        if not self._should_execute(value, inverted):
+            return False
         input = self._logical[
             LogicalDevice.Input.Identifier(
                 self.data.logical_input_type, self.data.logical_input_id
@@ -82,6 +83,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
         # internal state.
         is_pressed = None
         input_value = None
+        raw_value = value.raw
         if input.type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:
                 input_value = value.current
@@ -100,16 +102,24 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                     self.thread = threading.Thread(target=self.relative_axis_thread)
                     self.thread.start()
                 # Don't emit an event in relative mode.
-                return
+                return False
 
         elif input.type == InputType.JoystickButton:
             is_pressed = value.current
-            if self.data.button_inverted:
+            if inverted:
                 is_pressed = not is_pressed
+            # A release can reach an output that is already off, nothing changes then.
+            if input.is_pressed == is_pressed:
+                return self._requires_paired_event(value, inverted)
             input.update(is_pressed)
         elif input.type == InputType.JoystickHat:
             input_value = value.current
+            # A centre can reach a hat that is already centred, nothing changes then.
+            if input.direction == input_value:
+                return self._requires_paired_event(value)
             input.update(input_value)
+            # A foreign hat's raw value keeps the physical direction, not the output's.
+            raw_value = input_value
 
         # Emit an event with the LogicalDevice guid and the rest of the
         # system will then take care of executing it.
@@ -121,27 +131,36 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                 mode=mode_manager.ModeManager().current.name,
                 value=input_value,
                 is_pressed=is_pressed,
-                raw_value=value.raw,
+                raw_value=raw_value,
             )
+        )
+        return self._requires_paired_event(value, inverted)
+
+    @override
+    def waiting_for_event(self) -> bool:
+        # An inverted output left on by a release waits for the next press.
+        if not self._is_inverted_button():
+            return False
+        identifier = LogicalDevice.Input.Identifier(
+            self.data.logical_input_type, self.data.logical_input_id
+        )
+        return self._logical.exists(identifier) and self._logical[identifier].is_pressed
+
+    def _is_inverted_button(self) -> bool:
+        """Returns whether the action drives a button with inverted activation.
+
+        Returns:
+            True if the logical output is a button and inverted
+        """
+        return (
+            self.data.button_inverted
+            and self.data.logical_input_type == InputType.JoystickButton
         )
 
     @override
     def reset(self) -> None:
-        # Stop relative axis motion on reset and release buttons using inverted state.
+        # Stop relative axis motion on reset.
         self.thread_running = False
-
-        if (
-            self.data.button_inverted
-            and self.data.logical_input_type == InputType.JoystickButton
-        ):
-            identifier = LogicalDevice.Input.Identifier(
-                self.data.logical_input_type, self.data.logical_input_id
-            )
-            if (
-                self._logical.exists(identifier)
-                and self._logical[identifier].is_pressed
-            ):
-                self._logical[identifier].update(False)
 
     @override
     def teardown(self) -> None:

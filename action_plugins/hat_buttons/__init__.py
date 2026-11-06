@@ -92,6 +92,11 @@ class DirectionalButton:
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
+    @property
+    def is_pressed(self) -> bool:
+        """Returns whether the hat is currently in this button's direction."""
+        return self.fsm.current_state == "down"
+
     def __call__(
         self,
         event: Event,
@@ -110,7 +115,7 @@ class DirectionalButton:
             is_pressed=is_pressed,
             raw_value=is_pressed,
         )
-        btn_value = Value(is_pressed)
+        btn_value = Value(is_pressed, value.mode_type)
 
         self.fsm.perform(action, virtual_btn_event, btn_value, properties)
         event_handler.EventListener().virtual_event.emit(virtual_btn_event)
@@ -140,9 +145,15 @@ class HatButtonsFunctor(AbstractFunctor):
         event: Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         for button in self.buttons:
             button(event, value, properties)
+        # A pressed button needs its release counterpart, for an inverted button that
+        # is the next press.
+        return (
+            any(button.is_pressed for button in self.buttons)
+            or self.waiting_for_event()
+        )
 
 
 class HatButtonsModel(ActionModel):

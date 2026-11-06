@@ -64,7 +64,7 @@ class DualAxisDeadzoneFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         # Retrieve current joystick values
         x_value = (
             self.joy[self.data.axis1.device_guid].axis(self.data.axis1.input_id).value
@@ -91,18 +91,22 @@ class DualAxisDeadzoneFunctor(AbstractFunctor):
             # corespond to the correct axis but that should be fine.
             value_x = copy.deepcopy(value)
             value_x.current = math.copysign(px, x_value)
-            for functor in self.functors["first"]:
-                functor(event, value_x, properties)
+            wants_next_x_event = self._process_event(
+                self.functors["first"], event, value_x, properties
+            )
 
             value_y = copy.deepcopy(value)
             value_y.current = math.copysign(py, y_value)
-            for functor in self.functors["second"]:
-                functor(event, value_y, properties)
+            wants_next_y_event = self._process_event(
+                self.functors["second"], event, value_y, properties
+            )
+            return wants_next_x_event or wants_next_y_event
         except ZeroDivisionError:
             logging.getLogger("system").error(
                 f"DualAxisDeadzone: ({self.data.label}) deadzone limits too "
                 + "close to each other"
             )
+            return False
 
 
 class DualAxisDeadzoneModel(ActionModel):

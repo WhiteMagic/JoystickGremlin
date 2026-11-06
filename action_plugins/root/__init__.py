@@ -42,9 +42,8 @@ class RootFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        for functor in self.functors["children"]:
-            functor(event, value, properties)
+    ) -> bool:
+        return self._process_event(self.functors["children"], event, value, properties)
 
 
 class RootModel(ActionModel):

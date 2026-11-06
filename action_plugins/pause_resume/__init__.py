@@ -64,7 +64,7 @@ class PauseResumeFunctor(AbstractFunctor):
         event: Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if self._should_execute(value):
             if self.data.operation == PauseResumeType.Pause:
                 event_handler.EventHandler().pause()
@@ -72,6 +72,8 @@ class PauseResumeFunctor(AbstractFunctor):
                 event_handler.EventHandler().resume()
             elif self.data.operation == PauseResumeType.Toggle:
                 event_handler.EventHandler().toggle_active()
+            return self._requires_paired_event(value)
+        return False
 
 
 class PauseResumeModel(ActionModel):

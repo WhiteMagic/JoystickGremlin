@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import os
 import sys
-import time
 from abc import (
     ABCMeta,
     abstractmethod,
@@ -41,6 +40,7 @@ from gremlin.types import (
     Event,
     HatDirection,
     InputType,
+    ModeType,
 )
 from vjoy.vjoy import VJoyProxy
 
@@ -177,13 +177,20 @@ class VirtualButtonFunctor:
         """Returns whether the virtual button is currently pressed."""
         return self._virtual_button.is_pressed
 
-    def __call__(self, event: Event, value: Value) -> None:
+    def __call__(self, event: Event, value: Value) -> bool:
         states = self._virtual_button(event)
         for state in states:
+            # Create the event for the event including mode information which is
+            # required for correct mode switch behavior.
             new_event = self._event_template.clone()
+            new_event.mode = event.mode
             new_event.is_pressed = state
             new_event.raw_value = state
             self._event_listener.virtual_event.emit(new_event)
+        return (
+            self._virtual_button.is_pressed
+            or event_handler.EventHandler().has_pending_callbacks(self._event_template)
+        )
 
 
 class CallbackObject:
@@ -222,24 +229,19 @@ class CallbackObject:
         values = [ActionProperty.AlwaysExecute in a.properties for a in actions]
         return any(values)
 
-    def __call__(self, event: Event) -> None:
-        values = self._generate_values(event)
-        for i, value in enumerate(values):
-            self._functor(event, value)
+    def __call__(self, event: Event, mode_type: ModeType) -> bool:
+        """Runs the binding's functor with the event.
 
-            # Pause between the execution of subsequent bindings
-            if i < len(values) - 1:
-                time.sleep(0.01)
-
-    def is_held(self) -> bool:
-        """Returns whether the binding's virtual button is currently pressed.
+        Args:
+            event: the event to process
+            mode_type: how the binding was reached
 
         Returns:
-            True if the binding drives a virtual button which is pressed
+            True if the binding wants the next event of the input
         """
-        return (
-            isinstance(self._functor, VirtualButtonFunctor) and self._functor.is_pressed
-        )
+        if self._functor is None:
+            return False
+        return self._functor(event, self._create_value(event, mode_type))
 
     def reset(self) -> None:
         """Resets action functors of the binding."""
@@ -299,10 +301,11 @@ class CallbackObject:
                 + "button is configured."
             )
 
-        # Create new callback entries for the virtual button event to execute
-        # the actions. This requires the creation of "fake" InputItem and
-        # InputItemBinding instances to create another CallbackObject to
-        # handle the virtual button events.
+        # Create new callback entries for the virtual button event to execute the
+        # actions. This requires the creation of "fake" InputItem and InputItemBinding
+        # instances to create another CallbackObject to handle the virtual button
+        # events.
+
         # Create virtual InputItem instance
         virt_item = profile.InputItem(self._binding.input_item.library)
         virt_item.device_id = dill.UUID_Virtual
@@ -328,19 +331,32 @@ class CallbackObject:
             CallbackObject(virt_binding),
         )
 
-    def _generate_values(self, event: Event) -> list[Value]:
+    def _create_value(self, event: Event, mode_type: ModeType) -> Value:
+        """Returns the value the binding's functor processes.
+
+        Args:
+            event: the event to create the value for
+            mode_type: how the binding was reached
+
+        Returns:
+            Value of the event
+        """
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
-            value = Value(event.value)
+            value = Value(event.value, mode_type)
         elif event.event_type in [
             InputType.JoystickButton,
             InputType.Keyboard,
             InputType.VirtualButton,
         ]:
-            value = Value(event.is_pressed)
+            value = Value(event.is_pressed, mode_type)
         else:
             raise error.GremlinError("Invalid event type")
 
-        return [value]
+        # A foreign binding only ever sees a center value for a hat event, the raw
+        # value remains untouched.
+        if mode_type == ModeType.Foreign and event.event_type == InputType.JoystickHat:
+            value.current = HatDirection.Center
+        return value
 
 
 def resolve_start_mode(active_profile: profile.Profile) -> str:

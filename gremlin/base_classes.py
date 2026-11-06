@@ -35,6 +35,7 @@ from gremlin.types import (
     DataInsertionMode,
     HatDirection,
     InputType,
+    ModeType,
     PropertyType,
 )
 
@@ -64,14 +65,26 @@ class UserFeedback:
 class Value:
     """Represents an input value, keeping track of raw and "seen" value."""
 
-    def __init__(self, raw: bool | float | HatDirection) -> None:
+    def __init__(self, raw: bool | float | HatDirection, mode_type: ModeType) -> None:
         """Creates a new value and initializes it.
 
         Args:
             raw: the initial raw data
+            mode_type: how the binding receiving the value was reached
         """
         self._raw = raw
         self._current = raw
+        self._mode_type = mode_type
+
+    def clone(self) -> Value:
+        """Returns a copy of this value.
+
+        Returns:
+            Copy with the same raw value, current value, and mode type
+        """
+        value = Value(self._raw, self._mode_type)
+        value.current = self._current
+        return value
 
     @property
     def raw(self) -> bool | float | HatDirection:
@@ -81,6 +94,15 @@ class Value:
             raw unmodified value
         """
         return self._raw
+
+    @property
+    def mode_type(self) -> ModeType:
+        """Returns how the binding receiving the value was reached.
+
+        Returns:
+            Mode type of the value
+        """
+        return self._mode_type
 
     @property
     def current(self) -> bool | float | HatDirection:
@@ -508,7 +530,7 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
     @abstractmethod
     def __call__(
         self, event: Event, value: Value, properties: list[ActionProperty] = []
-    ) -> None:
+    ) -> bool:
         """Processes the functor using the provided event and value data.
 
         Args:
@@ -516,7 +538,20 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
             value: the possibly modified value
             properties: additional property information to pass to child
                 functors
+
+        Returns:
+            True if the functor wants the next event of the input
         """
+
+    def waiting_for_event(self) -> bool:
+        """Returns whether the functor still wants the next event of its input.
+
+        Containers ask this for the children they didn't call on the last event.
+
+        Returns:
+            True if the functor or any of its children waits for the next event
+        """
+        return any(child.waiting_for_event() for child in self._all_children())
 
     def reset(self) -> None:
         """Stops outputs that persist without further input events.
@@ -536,7 +571,7 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         """Processes the provided event data with every provided functor.
 
         Args:
@@ -545,9 +580,19 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
             value: value of the event
             properties: additional property information to pass to child
                 functors
+
+        Returns:
+            True if any of the functors wants the next event of the input
         """
-        for functor in functors:
-            functor(event, value, properties)
+        return any(functor(event, value, properties) for functor in functors)
+
+    def _all_children(self) -> list[AbstractFunctor]:
+        """Returns every child functor.
+
+        Returns:
+            Children of all selectors, in tree order
+        """
+        return [functor for functors in self.functors.values() for functor in functors]
 
     def _pulse_event(
         self,
@@ -555,7 +600,7 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
         event_press: types.Event,
         value_press: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         """Processes the provided event as a pulse with every provided functor.
 
         This assumes that the provided event and value correspond to an input
@@ -568,25 +613,60 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
             value: press value to use
             properties: additional property information to pass to child
                 functors
+
+        Returns:
+            True if any of the functors wants the next event after the release
         """
         self._process_event(functors, event_press, value_press, properties)
         time.sleep(0.05)
-        value_release = Value(False)
+        value_release = Value(False, value_press.mode_type)
         event_release = event_press.clone()
         event_release.is_pressed = False
         event_release.raw_value = None
-        self._process_event(functors, event_release, value_release, properties)
+        return self._process_event(functors, event_release, value_release, properties)
 
-    def _should_execute(self, value: Value) -> bool:
+    @staticmethod
+    def _sequence_value(value: Value, value_press: Value) -> Value:
+        """Returns the value as part of the sequence the press started.
+
+        A sequence belongs to the mode of its press, so a foreign event continuing it
+        carries the press's mode type.
+
+        Args:
+            value: the value continuing the sequence
+            value_press: the value of the press that started the sequence
+
+        Returns:
+            Copy of the value with the press's mode type
+        """
+        sequence_value = Value(value.raw, value_press.mode_type)
+        sequence_value.current = value.current
+        return sequence_value
+
+    def _should_execute(self, value: Value, inverted: bool = False) -> bool:
         """Checks if the action should execute based on the value and
         internal activation behavior.
 
+        An value derive from a foreign even is only executed to run the part of an
+        action waiting for the second part of an activation.
+
         Args:
             value: the current input value to consider
+            inverted: True if a release starts the pair and a press ends it
 
         Returns:
             True if the action should execute, False otherwise
         """
+        if value.mode_type == ModeType.Foreign:
+            # Foreign events are only used to complete actions that have already been
+            # triggered by a native event.
+            return (
+                self.data.activation_mode == ActionActivationMode.Both
+                and value.current in [inverted, HatDirection.Center]
+                # Never execute foreign events for axes.
+                and not isinstance(value.current, float)
+            )
+
         match self.data.activation_mode:
             case ActionActivationMode.Both:
                 return True
@@ -601,6 +681,27 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
                     "Invalid activation mode encountered when executing "
                     + f"action '{self.data.id}'"
                 )
+
+    def _requires_paired_event(self, value: Value, inverted: bool = False) -> bool:
+        """Returns whether the action requires the event ending the activation.
+
+        Only meaningful after the action executed with the given value.
+
+        Args:
+            value: the value the action executed with
+            inverted: True if a release starts the pair and a press ends it
+
+        Returns:
+            True if the value started a press and release pair
+        """
+        # A press, or release if inverted, and any hat direction start a paired
+        # activation that requires a second event to complete.
+        return (
+            self.data.activation_mode == ActionActivationMode.Both
+            and value.current not in [inverted, HatDirection.Center]
+            # Axes never wait for a follow-up event.
+            and not isinstance(value.current, float)
+        )
 
 
 def reset_functor_tree(functor: AbstractFunctor) -> None:

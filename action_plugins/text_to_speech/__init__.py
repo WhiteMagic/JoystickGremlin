@@ -49,9 +49,9 @@ class TextToSpeechFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if not self._should_execute(value):
-            return
+            return False
 
         substitutions = {"current_mode": mode_manager.ModeManager().current.name}
         tts.TTSManager().enqueue(
@@ -63,6 +63,7 @@ class TextToSpeechFunctor(AbstractFunctor):
             ),
             tts.TTSQueueMode(self.data.queue_mode),
         )
+        return self._requires_paired_event(value)
 
 
 class TextToSpeechModel(ActionModel):
