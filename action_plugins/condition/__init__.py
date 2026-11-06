@@ -34,6 +34,7 @@ from gremlin.types import (
     HatDirection,
     InputType,
     LogicalOperator,
+    ModeType,
     PropertyType,
 )
 from gremlin.ui.action_model import ActionModel
@@ -64,21 +65,46 @@ class ConditionFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
+        if value.mode_type == ModeType.Foreign:
+            return self._process_foreign(event, value, properties)
+
         if not self._should_execute(value):
-            return
+            return False
 
         match self.data.behavior_type:
             case InputType.JoystickAxis:
-                self._process_axis(event, value, properties)
+                return self._process_axis(event, value, properties)
             case InputType.JoystickButton | InputType.Keyboard:
-                self._process_button(event, value, properties)
+                return self._process_button(event, value, properties)
             case InputType.JoystickHat:
-                self._process_hat(event, value, properties)
+                return self._process_hat(event, value, properties)
+        return False
+
+    def _process_foreign(
+        self, event: types.Event, value: Value, properties: list[ActionProperty]
+    ) -> bool:
+        """Lets go of what a native press started, without evaluating the condition.
+
+        Args:
+            event: the event to process
+            value: the foreign value, a hat's is always centred
+            properties: additional property information to pass to child functors
+
+        Returns:
+            True if any child still wants the next event of the input
+        """
+        # A foreign press only gets through to inverted outputs waiting for it.
+        if value.current is True:
+            self._process_event(self._all_children(), event, value, properties)
+        else:
+            self._process_event(self._functor_cache[0], event, value, properties)
+            self._functor_cache = ([], False)
+        return self.waiting_for_event()
 
     def _process_axis(
         self, event: types.Event, value: Value, properties: list[ActionProperty]
-    ) -> None:
+    ) -> bool:
         functors = self._select_functors(value)
         # When the condition state changed, reset the underlying functors to ensure
         # things can stop and reset properly.
@@ -86,37 +112,41 @@ class ConditionFunctor(AbstractFunctor):
             for functor in self._functor_cache[0]:
                 reset_functor_tree(functor)
         self._functor_cache = (functors, True)
-        self._process_event(self._select_functors(value), event, value, properties)
+        return self._process_event(
+            self._select_functors(value), event, value, properties
+        )
 
     def _process_button(
         self,
         event: types.Event,
         value: Value,
         properties: list[ActionProperty],
-    ) -> None:
-        # On press, remember the executed functors.
+    ) -> bool:
+        # On press, remember the executed functors, the release has to clear them.
         if value.current:
             self._functor_cache = (self._select_functors(value), True)
             self._process_event(self._functor_cache[0], event, value, properties)
+            return True
+
         # On release execute remembered functors, otherwise evaluate condition, then
         # clear the cache.
-        else:
-            self._process_event(
-                self._functor_cache[0]
-                if self._functor_cache[1]
-                else self._select_functors(value),
-                event,
-                value,
-                properties,
-            )
-            self._functor_cache = ([], False)
+        self._process_event(
+            self._functor_cache[0]
+            if self._functor_cache[1]
+            else self._select_functors(value),
+            event,
+            value,
+            properties,
+        )
+        self._functor_cache = ([], False)
+        return self.waiting_for_event()
 
     def _process_hat(
         self,
         event: types.Event,
         value: Value,
         properties: list[ActionProperty],
-    ) -> None:
+    ) -> bool:
         # Hat center uses cached functors, if present, and resets the cache.
         if value.current == HatDirection.Center:
             self._process_event(
@@ -128,23 +158,25 @@ class ConditionFunctor(AbstractFunctor):
                 properties,
             )
             self._functor_cache = ([], False)
-        else:
-            # If cached functors exist and differ from the ones the condition would
-            # select now, send a center event to the cache functors first. Then run the
-            # functors and cache them.
-            current_functors = self._select_functors(value)
-            if self._functor_cache[0] != current_functors:
-                center_event = event.clone()
-                center_event.value = HatDirection.Center
-                self._process_event(
-                    self._functor_cache[0],
-                    center_event,
-                    Value(HatDirection.Center),
-                    properties,
-                )
+            return self.waiting_for_event()
 
-            self._functor_cache = (current_functors, True)
-            self._process_event(self._functor_cache[0], event, value, properties)
+        # If cached functors exist and differ from the ones the condition would
+        # select now, send a center event to the cache functors first. Then run the
+        # functors and cache them, the centre has to clear them.
+        current_functors = self._select_functors(value)
+        if self._functor_cache[0] != current_functors:
+            center_event = event.clone()
+            center_event.value = HatDirection.Center
+            self._process_event(
+                self._functor_cache[0],
+                center_event,
+                Value(HatDirection.Center, value.mode_type),
+                properties,
+            )
+
+        self._functor_cache = (current_functors, True)
+        self._process_event(self._functor_cache[0], event, value, properties)
+        return True
 
     def _select_functors(self, value: Value) -> list[AbstractFunctor]:
         try:

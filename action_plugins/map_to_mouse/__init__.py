@@ -78,9 +78,9 @@ class MapToMouseFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if not self._should_execute(value):
-            return
+            return False
 
         if self.data.mode == MapToMouseMode.Motion:
             if event.event_type == InputType.JoystickAxis:
@@ -91,6 +91,7 @@ class MapToMouseFunctor(AbstractFunctor):
                 self._perform_button_motion(event, value)
         else:
             self._perform_mouse_button(event, value)
+        return self._requires_paired_event(value)
 
     @override
     def reset(self) -> None:

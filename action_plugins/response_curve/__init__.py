@@ -100,7 +100,7 @@ class ResponseCurveFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         dz_value = deadzone(
             value.current,
             self.data.deadzone[DeadzoneIndex.LOW.value],
@@ -109,6 +109,7 @@ class ResponseCurveFunctor(AbstractFunctor):
             self.data.deadzone[DeadzoneIndex.HIGH.value],
         )
         value.current = self.data.curve(dz_value)
+        return False
 
 
 @QtQml.QmlElement

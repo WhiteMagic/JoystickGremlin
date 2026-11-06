@@ -29,6 +29,7 @@ from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     InputType,
+    ModeType,
     PropertyType,
 )
 from gremlin.ui.action_model import (
@@ -80,12 +81,12 @@ class ChangeModeFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        if (
-            not self._should_execute(value)
-            and self.data.change_type != ChangeType.Temporary
-        ):
-            return
+    ) -> bool:
+        if self.data.change_type == ChangeType.Temporary:
+            return self._change_temporary(value)
+
+        if not self._should_execute(value):
+            return False
 
         mm = mode_manager.ModeManager()
         if self.data.change_type == ChangeType.Switch:
@@ -96,25 +97,34 @@ class ChangeModeFunctor(AbstractFunctor):
             mm.cycle(self._mode_sequence)
         elif self.data.change_type == ChangeType.Unwind:
             mm.unwind()
-        elif self.data.change_type == ChangeType.Temporary:
-            # Enter the temporary mode when the input is pressed
-            if value.current:
-                mm.switch_to(
-                    mode_manager.Mode(self.data.target_modes[0], mm.current.name, True)
-                )
-            # Leave the temporary mode when the input is released while in the
-            # correct mode
-            else:
-                if (
-                    mm.current.name == self.data._target_modes[0]
-                    and mm.current.is_temporary
-                ):
-                    mm.unwind()
 
-        logging.getLogger("system").debug(
-            f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], "
-            + f"Action : {self.data.change_type.name}"
-        )
+        return self._requires_paired_event(value)
+
+    def _change_temporary(self, value: Value) -> bool:
+        """Enters the temporary mode on press and leaves it on release.
+
+        A temporary change pairs press and release regardless of the checkboxes.
+
+        Args:
+            value: the input value to process
+
+        Returns:
+            True after entering the temporary mode, as the release has to leave it
+        """
+        mm = mode_manager.ModeManager()
+        if value.current:
+            # Entering is an activation, which only happens in the active mode.
+            if value.mode_type != ModeType.Native:
+                return False
+            mm.switch_to(
+                mode_manager.Mode(self.data.target_modes[0], mm.current.name, True)
+            )
+            return True
+
+        # Only undo the transition this press made, not one made since.
+        if mm.current.name == self.data._target_modes[0] and mm.current.is_temporary:
+            mm.unwind()
+        return False
 
 
 class ChangeModeModel(ActionModel):

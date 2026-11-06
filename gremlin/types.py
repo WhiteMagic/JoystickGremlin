@@ -668,6 +668,18 @@ class ActionActivationMode(enum.Enum):
         return value
 
 
+class ModeType(enum.Enum):
+    """What does the event's mode represent to an action.
+
+    Encodes if the event given to an action is native, i.e. the mode in which the
+    action was configured, or foreign, i.e. any mode the action would not normally
+    be triggered from.
+    """
+
+    Native = 1
+    Foreign = 2
+
+
 class DataInsertionMode(enum.Enum):
     """Specifies to insertion type to be performed."""
 
@@ -904,9 +916,7 @@ class InputBindingCallback(Protocol):
     @property
     def always_execute(self) -> bool: ...
 
-    def __call__(self, event: Event) -> None: ...
-
-    def is_held(self) -> bool: ...
+    def __call__(self, event: Event, mode_type: ModeType) -> bool: ...
 
     def reset(self) -> None: ...
 

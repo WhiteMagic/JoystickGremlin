@@ -49,13 +49,13 @@ class AxisDeltaFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if self._last_value is None:
             self._last_value = event.value
-            return
+            return False
 
         if not event.value:
-            return
+            return False
 
         delta = event.value - self._last_value
         self._last_value = event.value
@@ -63,17 +63,20 @@ class AxisDeltaFunctor(AbstractFunctor):
 
         press_event = event.clone()
         press_event.is_pressed = True
+        press_value = Value(True, value.mode_type)
 
+        wants_next_event = False
         if self._accumulated >= self.data.change_threshold:
-            self._pulse_event(
-                self.functors["positive"], press_event, Value(True), properties
+            wants_next_event = self._pulse_event(
+                self.functors["positive"], press_event, press_value, properties
             )
             self._accumulated = 0.0
         elif self._accumulated <= -self.data.change_threshold:
-            self._pulse_event(
-                self.functors["negative"], press_event, Value(True), properties
+            wants_next_event = self._pulse_event(
+                self.functors["negative"], press_event, press_value, properties
             )
             self._accumulated = 0.0
+        return wants_next_event
 
 
 class AxisDeltaModel(ActionModel):

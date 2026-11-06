@@ -26,6 +26,7 @@ from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     InputType,
+    ModeType,
     PropertyType,
 )
 from gremlin.ui.action_model import (
@@ -45,6 +46,7 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
 
         self.current_index = 0
         self.last_execution = 0.0
+        self._is_pressed = False
 
     @override
     def __call__(
@@ -52,7 +54,13 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
+        ends_press = self._is_pressed and not value.current
+        if value.mode_type == ModeType.Foreign and not ends_press:
+            # The step stays, only inverted outputs waiting for it act on the event.
+            self._process_event(self._all_children(), event, value, properties)
+            return self.waiting_for_event()
+
         if self.data.timeout > 0.0:
             # Timeout is only checked on the press portion to ensure a release goes to
             # the correct chain.
@@ -60,13 +68,16 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
                 self.current_index = 0
             self.last_execution = time.time()
 
-        for functor in self.functors[str(self.current_index)]:
-            functor(event, value, properties)
+        self._process_event(
+            self.functors[str(self.current_index)], event, value, properties
+        )
+        self._is_pressed = bool(value.current)
 
-        if not value.current:
-            self.current_index = (self.current_index + 1) % len(
-                self.data.chain_sequences
-            )
+        if value.current:
+            # The release has to advance the chain.
+            return True
+        self.current_index = (self.current_index + 1) % len(self.data.chain_sequences)
+        return self.waiting_for_event()
 
 
 class ChainModel(ActionModel):

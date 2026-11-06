@@ -48,8 +48,8 @@ class DescriptionFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        pass
+    ) -> bool:
+        return False
 
 
 class DescriptionModel(ActionModel):

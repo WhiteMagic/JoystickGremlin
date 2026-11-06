@@ -587,12 +587,16 @@ class MacroFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
+        is_hold = self.data.repeat_mode == MacroRepeatModes.Hold
         # Ensure a held macro is terminated when a release event arrives.
-        if self.data.repeat_mode == MacroRepeatModes.Hold and not value.current:
+        if is_hold and not value.current:
             macro.MacroManager().terminate_macro(self.macro)
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
+            # Hold mode needs the release to stop, whatever the checkboxes say.
+            return self._requires_paired_event(value) or (is_hold and value.current)
+        return False
 
 
 class ActionListModel(QtCore.QAbstractListModel):

@@ -129,7 +129,7 @@ class MergeAxisFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         joy = Joystick()
         axis1 = (
             joy[self.data.axis_in1.device_guid].axis(self.data.axis_in1.input_id).value
@@ -140,8 +140,7 @@ class MergeAxisFunctor(AbstractFunctor):
 
         value.current = MergeAxisFunctor.actions[self.data.operation](axis1, axis2)
 
-        for functor in self.functors["children"]:
-            functor(event, value, properties)
+        return self._process_event(self.functors["children"], event, value, properties)
 
     @staticmethod
     def _average(value1: float, value2: float) -> float:

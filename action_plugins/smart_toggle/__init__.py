@@ -28,6 +28,7 @@ from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     InputType,
+    ModeType,
     PropertyType,
 )
 from gremlin.ui.action_model import ActionModel
@@ -42,6 +43,7 @@ class SmartToggleFunctor(AbstractFunctor):
         super().__init__(action)
 
         self.timer = None
+        self.value_press: Value | None = None
         self.fsm = self._create_fsm()
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
@@ -84,10 +86,36 @@ class SmartToggleFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        self.fsm.perform(
-            "press" if value.current else "release", event, value, properties
+    ) -> bool:
+        state = self.fsm.current_state
+        if value.mode_type == ModeType.Foreign:
+            # A latch only ends with a tap in its own mode.
+            if state == "toggle":
+                return False
+            # No sequence runs, only inverted outputs waiting for it act on it.
+            if state == "wait":
+                self._process_event(self._all_children(), event, value, properties)
+                return self.waiting_for_event()
+        elif state == "wait" and value.current:
+            self.value_press = value.clone()
+
+        sequence_value = (
+            self._sequence_value(value, self.value_press)
+            if self.value_press is not None
+            else value
         )
+        self.fsm.perform(
+            "press" if value.current else "release", event, sequence_value, properties
+        )
+
+        # While held the release has to arrive, a latch ignores other modes.
+        match self.fsm.current_state:
+            case "down" | "held":
+                return True
+            case "toggle":
+                return False
+            case _:
+                return self.waiting_for_event()
 
     @override
     def teardown(self) -> None:

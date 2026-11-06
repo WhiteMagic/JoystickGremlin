@@ -70,9 +70,10 @@ class MapToVjoyFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
-        if not self._should_execute(value):
-            return
+    ) -> bool:
+        is_inverted = self._is_inverted_button()
+        if not self._should_execute(value, is_inverted):
+            return False
 
         try:
             if self.data.vjoy_input_type == InputType.JoystickAxis:
@@ -99,7 +100,7 @@ class MapToVjoyFunctor(AbstractFunctor):
                 InputType.Keyboard,
             ]:
                 is_pressed = value.current
-                if self.data.button_inverted:
+                if is_inverted:
                     is_pressed = not is_pressed
                 VJoyProxy()[self.data.vjoy_device_id].button(
                     self.data.vjoy_input_id
@@ -113,24 +114,38 @@ class MapToVjoyFunctor(AbstractFunctor):
             logging.getLogger("event").error(
                 f"Failed to execute {self.data.name} action due to vJoy error: {e}."
             )
+            return False
+        return self._requires_paired_event(value, is_inverted)
+
+    @override
+    def waiting_for_event(self) -> bool:
+        # An inverted output left on by a release waits for the next press.
+        if not self._is_inverted_button():
+            return False
+        try:
+            return (
+                VJoyProxy()[self.data.vjoy_device_id]
+                .button(self.data.vjoy_input_id)
+                .is_pressed
+            )
+        except error.VJoyError:
+            return False
+
+    def _is_inverted_button(self) -> bool:
+        """Returns whether the action drives a button with inverted activation.
+
+        Returns:
+            True if the vJoy output is a button and inverted
+        """
+        return self.data.button_inverted and self.data.vjoy_input_type in [
+            InputType.JoystickButton,
+            InputType.Keyboard,
+        ]
 
     @override
     def reset(self) -> None:
-        # Stop relative axis motion on reset and release buttons using inverted state.
+        # Stop relative axis motion on reset.
         self.thread_running = False
-
-        if self.data.button_inverted and self.data.vjoy_input_type in [
-            InputType.JoystickButton,
-            InputType.Keyboard,
-        ]:
-            try:
-                VJoyProxy()[self.data.vjoy_device_id].button(
-                    self.data.vjoy_input_id
-                ).is_pressed = False
-            except error.VJoyError as e:
-                logging.getLogger("event").error(
-                    f"Failed to reset {self.data.name} action due to vJoy error: {e}."
-                )
 
     @override
     def teardown(self) -> None:

@@ -49,11 +49,12 @@ class PlaySoundFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if not self._should_execute(value):
-            return
+            return False
 
         AudioPlayer().enqueue(self.data.sound_filename, self.data.sound_volume)
+        return self._requires_paired_event(value)
 
 
 class PlaySoundModel(ActionModel):

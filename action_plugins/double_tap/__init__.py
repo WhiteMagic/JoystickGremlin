@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 import logging
 import threading
 from typing import (
@@ -34,6 +33,7 @@ from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     InputType,
+    ModeType,
     PropertyType,
 )
 from gremlin.ui.action_model import (
@@ -50,8 +50,8 @@ class DoubleTapFunctor(AbstractFunctor):
         super().__init__(action)
 
         self.timer = None
-        self.value_press = None
-        self.event_press = None
+        self.value_press: Value | None = None
+        self.event_press: types.Event | None = None
         self.fsm = self._create_fsm()
 
     @override
@@ -60,21 +60,30 @@ class DoubleTapFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
                 f"Invalid data type received in DoubleTap action: {event.value}"
             )
-            return
+            return False
 
-        # Copy state when input is pressed
-        if value.current:
-            self.value_press = copy.deepcopy(value)
-            self.event_press = event.clone()
+        if self.fsm.current_state == "neutral":
+            if value.mode_type == ModeType.Foreign:
+                # No sequence runs, only inverted outputs waiting for it act on it.
+                self._process_event(self._all_children(), event, value, properties)
+                return self.waiting_for_event()
+            # Copy state when a sequence starts, the second press keeps the first's.
+            if value.current:
+                self.value_press = value.clone()
+                self.event_press = event.clone()
 
+        sequence_value = value
+        if self.value_press is not None:
+            sequence_value = self._sequence_value(value, self.value_press)
         action = "press" if value.current else "release"
-        if self.fsm.try_perform(action, event, value, properties) is None:
-            self._reset_fsm(event, value, properties)
+        if self.fsm.try_perform(action, event, sequence_value, properties) is None:
+            self._reset_fsm(event, sequence_value, properties)
+        return self.fsm.current_state != "neutral" or self.waiting_for_event()
 
     @override
     def teardown(self) -> None:

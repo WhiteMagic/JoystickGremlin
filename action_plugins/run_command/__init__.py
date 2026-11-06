@@ -49,18 +49,19 @@ class RunCommandFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if not self._should_execute(value):
-            return
+            return False
 
         if not self.data.executable:
-            return
+            return False
 
         arguments = QtCore.QProcess.splitCommand(self.data.arguments)
         if not QtCore.QProcess.startDetached(self.data.executable, arguments)[0]:
             logging.getLogger("system").error(
                 f"Failed to run command '{self.data.executable}'"
             )
+        return self._requires_paired_event(value)
 
 
 class RunCommandModel(ActionModel):

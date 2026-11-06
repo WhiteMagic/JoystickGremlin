@@ -7,7 +7,7 @@ import inspect
 import logging
 import threading
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from typing import (
     Any,
 )
@@ -36,6 +36,7 @@ from gremlin.types import (
     HatDirection,
     InputBindingCallback,
     InputType,
+    ModeType,
 )
 
 
@@ -288,237 +289,6 @@ class EventListener(QtCore.QObject):
                 self.reload_calibration(dev_info.device_guid, entry.axis_index)
 
 
-class EventGenerator(QtCore.QObject):
-    """Generates events required to ensure consistent action executiong behavior.
-
-    Turns a single event into possibly multiple events. In most cases the generator
-    returns the original event. In rare cases related to global state changes additional
-    events may be generated or events modified. This is to ensure that Gremlin behaves
-    in a way that feels natural to users.
-
-    A core purpose of the class is to generate additional events when a mode change
-    has happened to ensure actions behave correctly. It also ensures events reach all
-    relevant callbacks.
-    """
-
-    def __init__(self) -> None:
-        """Creates a new instance."""
-        super().__init__()
-        # Stores the last mode an event has been dispatched in to ensure the
-        # corresponding release event is dispatched. Used only for buttons and hats.
-        self._last_dispatch_mode: dict[Event, str] = {}
-        # Stores events tied to axis callbacks that need to be called no matter the
-        # mode.
-        self._axis_callbacks: dict[Event, list[tuple[str, InputBindingCallback]]] = {}
-        mode_manager.ModeManager().modeChanged.connect(self._mode_changed_cb)
-
-    def __call__(self, event: Event) -> Iterator[Event]:
-        """Returns events to process.
-
-        Args:
-            event: Event from which to generate the events to process.
-
-        Yields:
-            Events to process.
-        """
-        match event.event_type:
-            case (
-                InputType.JoystickButton | InputType.Keyboard | InputType.VirtualButton
-            ):
-                yield self._generate_button_event(event)
-            case InputType.JoystickHat:
-                yield from self._generate_hat_events(event)
-            case InputType.JoystickAxis:
-                # First let the events be processed by callbacks before ensuring other
-                # axis callbacks are called.
-                axis_event = self._event_for_mode(
-                    event, mode_manager.ModeManager().current.name
-                )
-                yield axis_event
-                self._process_axis_callbacks(axis_event)
-            case _:
-                yield event
-
-    def reset(self) -> None:
-        """Resets the generator to default state."""
-        self._last_dispatch_mode = {}
-        self._axis_callbacks = {}
-
-    def _generate_button_event(self, event: Event) -> Event:
-        """Returns the button event to dispatch.
-
-        Args:
-            event: The button event to generate an event for.
-
-        Returns:
-            The press or release event corresponding to the given event.
-        """
-        mode_last_activated_in = self._last_dispatch_mode.get(event, event.mode)
-        if event.is_pressed:
-            self._last_dispatch_mode[event] = event.mode
-            # Ensure actions can reset when a mode change ocurred since they were last
-            # activated.
-            if not EventHandler().is_same_binding(
-                event, mode_last_activated_in, event.mode
-            ):
-                self._reset_binding(mode_last_activated_in, event)
-            return event
-
-        # Release events always have to be processed by the actions in the mode that
-        # activated them.
-        self._last_dispatch_mode[event] = mode_last_activated_in
-        return self._event_for_mode(event, mode_last_activated_in)
-
-    def _generate_hat_events(self, event: Event) -> list[Event]:
-        """Returns the hat event(s) to dispatch.
-
-        The logic implemented is similar to buttons in that an activated action should
-        always receive a deactivation event. For a hat that's a center value event. If
-        a center event would go to a different mode it is rerouted, and if none exists
-        one is created.
-
-        Args:
-            event: The hat event to generate event(s) for.
-
-        Returns:
-            The event(s) to process.
-        """
-        mode_last_activated_in = self._last_dispatch_mode.pop(event, event.mode)
-
-        if event.value == HatDirection.Center:
-            return [self._event_for_mode(event, mode_last_activated_in)]
-
-        self._last_dispatch_mode[event] = event.mode
-        # Generate a center event for the last mode if a different binding would
-        # receive this non-center event.
-        if not EventHandler().is_same_binding(
-            event, mode_last_activated_in, event.mode
-        ):
-            center_event = event.clone()
-            center_event.mode = mode_last_activated_in
-            center_event.value = HatDirection.Center
-            return [center_event, event]
-
-        return [event]
-
-    def _process_axis_callbacks(self, event: Event) -> None:
-        """Calls all matching callbacks for the given event.
-
-        Args:
-            event: The axis event to process.
-        """
-        if event not in self._axis_callbacks:
-            return
-
-        handler = EventHandler()
-        event_callbacks = handler.binding_for(event.mode, event) or []
-        remaining = []
-        for mode, callback in self._axis_callbacks[event]:
-            # Binding is active again and already received the event.
-            if any(callback is entry for entry in event_callbacks):
-                continue
-            if handler.process_callbacks or callback.always_execute:
-                callback(self._event_for_mode(event, mode))
-            if callback.is_held():
-                remaining.append((mode, callback))
-        # A release fed above may have changed mode and added further callbacks.
-        remaining += self._axis_callbacks.pop(event, [])
-        if remaining:
-            self._axis_callbacks[event] = remaining
-
-    def _event_for_mode(self, event: Event, mode: str) -> Event:
-        """Returns the event to dispatch in the given mode.
-
-        If the event's mode and given mode match the original event is returned. If not
-        a copy of the event with only the mode changed is returned.
-
-        Args:
-            event: the event to dispatch
-            mode: name of the mode to dispatch the event in
-
-        Returns:
-            The event itself if it already is in the mode, a clone otherwise
-        """
-        if event.mode != mode:
-            mode_event = event.clone()
-            mode_event.mode = mode
-            return mode_event
-        return event
-
-    @QtCore.Slot(str, str)
-    def _mode_changed_cb(self, mode_name: str, previous_mode: str) -> None:
-        """Performs maintenance required by a mode change.
-
-        A Qt slot is used to ensure processing handles on the main thread together with
-        other events, ensuring ordering.
-
-        Args:
-            mode_name: Name of the now active mode.
-            previous_mode: Name of the previously active mode.
-        """
-        if previous_mode == mode_name:
-            return
-
-        # Process only axis events as buttons and hats have correct release events.
-        # Every binding from the previous mode that would execute different actions in
-        # the new mode triggers their actions' reset. Additionally, a callback is
-        # registered for every axis to ensure that virtual buttons are properly managed.
-        handler = EventHandler()
-        for modes in handler.callbacks.values():
-            for event in list(modes.get(previous_mode, {})):
-                if (
-                    event is not None
-                    and event.event_type == InputType.JoystickAxis
-                    and not handler.is_same_binding(event, previous_mode, mode_name)
-                ):
-                    self._reset_binding(previous_mode, event)
-                    self._add_axis_callbacks(previous_mode, event)
-
-    def _add_axis_callbacks(self, mode: str, event: Event) -> None:
-        """Remembers the pressed virtual buttons of the axis binding.
-
-        Args:
-            mode: Name of the mode whose binding is no longer active.
-            event: The axis event whose binding is no longer active.
-        """
-        callbacks = self._axis_callbacks.get(event, [])
-        for callback in self._get_input_binding_callbacks(mode, event):
-            if callback.is_held() and not any(
-                callback is entry for _, entry in callbacks
-            ):
-                callbacks.append((mode, callback))
-        if callbacks:
-            self._axis_callbacks[event] = callbacks
-
-    def _reset_binding(self, mode: str, event: Event) -> None:
-        """Resets the functors bound to the event in the given mode.
-
-        Args:
-            mode: Name of the mode whose binding to reset.
-            event: The event whose binding to reset.
-        """
-        for callback in self._get_input_binding_callbacks(mode, event):
-            callback.reset()
-
-    def _get_input_binding_callbacks(
-        self, mode: str, event: Event
-    ) -> list[InputBindingCallback]:
-        """Returns the action callbacks bound to the event in the given mode.
-
-        Args:
-            mode: Name of the mode to look the event up in.
-            event: The event to look up.
-
-        Returns:
-            The bound callbacks without those of user scripts.
-        """
-        return [
-            callback
-            for callback in EventHandler().binding_for(mode, event) or []
-            if isinstance(callback, InputBindingCallback)
-        ]
-
-
 @common.SingletonDecorator
 class EventHandler(QtCore.QObject):
     """Listens to the inputs from multiple different input devices."""
@@ -535,7 +305,9 @@ class EventHandler(QtCore.QObject):
         self.plugins = {}
         self.callbacks = {}
         self._event_lookup = {}
-        self._event_generator = EventGenerator()
+        # Callbacks that asked for the next event of an input, irrespective the mode.
+        self._pending_callbacks: dict[Event, list[Callable[[Event], None]]] = {}
+        mode_manager.ModeManager().modeChanged.connect(self._mode_changed_cb)
 
     def add_plugin(self, plugin: Any) -> None:  # noqa: ANN401
         """Adds a new plugin to be attached to event callbacks.
@@ -611,6 +383,17 @@ class EventHandler(QtCore.QObject):
             second_mode, event
         )
 
+    def has_pending_callbacks(self, event: Event) -> bool:
+        """Returns whether any callback asked for this next event.
+
+        Args:
+            event: the event identifying the input
+
+        Returns:
+            True if at least one callback waits for the input's next event
+        """
+        return bool(self._pending_callbacks.get(event))
+
     def binding_for(
         self, mode: str, event: Event
     ) -> list[Callable[[Event], None]] | None:
@@ -646,7 +429,7 @@ class EventHandler(QtCore.QObject):
     def clear(self) -> None:
         """Removes all attached callbacks."""
         self.callbacks = {}
-        self._event_generator.reset()
+        self._pending_callbacks = {}
 
     def teardown_bindings(self) -> None:
         """Tears down the functors of every attached input binding callback."""
@@ -662,49 +445,142 @@ class EventHandler(QtCore.QObject):
 
     @QtCore.Slot(Event)
     def process_event(self, input_event: Event) -> None:
-        """Passes the event to all callbacks registered for it.
+        """Passes the event to all callbacks registered for or waiting on it.
 
-        The method ensures that additional events required by switching modes and other
-        tricky edge cases are generated and emitted.
+        Callbacks waiting on the input that the event's mode doesn't bind are called
+        first, as foreign, then the ones bound in the event's mode, as native.
 
         Args:
-            event: the event to process
+            input_event: the event to process
         """
+        event = input_event
+        current_mode = mode_manager.ModeManager().current.name
+        # Axis events queued before a mode change belong to the new mode.
+        if event.event_type == InputType.JoystickAxis and event.mode != current_mode:
+            event = input_event.clone()
+            event.mode = current_mode
+
+        native_mode_bindings = list(self.binding_for(event.mode, event) or [])
+        foreign_mode_bindings = set(self._pending_callbacks.get(event, [])) - set(
+            native_mode_bindings
+        )
+        calls = [(callback, ModeType.Foreign) for callback in foreign_mode_bindings] + [
+            (callback, ModeType.Native) for callback in native_mode_bindings
+        ]
+
+        # Get the reference to the callback list such that it can later be compared
+        # to detect when a load profile action happened, as that makes the identity
+        # test fail.
         callbacks = self.callbacks
-        for event in self._event_generator(input_event):
-            for cb in self._matching_callbacks(event):
+        for callback, mode_type in calls:
+            if self._may_run(callback):
                 try:
-                    cb(event)
+                    wants_next_event = self._run_callback(callback, event, mode_type)
                 except error.VJoyError as e:
                     signal.display_error("Error encountered with vJoy.", str(e))
                     logging.getLogger("system").exception(f"VJoy error: '{e}'")
                     self.pause()
-                # In case a callback triggered a profile reload, stop here.
+                    return
+                # A callback that triggered a profile reload ends further processing.
                 if self.callbacks is not callbacks:
                     return
+                self._set_pending(event, callback, wants_next_event)
 
-    def _matching_callbacks(self, event: Event) -> list[Callable[[Event], None]]:
-        """Returns the list of callbacks to execute in response to
-        the provided event.
+    @QtCore.Slot(str, str)
+    def _mode_changed_cb(self, mode_name: str, previous_mode: str) -> None:
+        """Stops continuous actions performed by axis actions.
 
         Args:
-            event: the event for which to search the matching callbacks
+            mode_name: name of the now active mode
+            previous_mode: name of the previously active mode
+        """
+        if previous_mode == mode_name:
+            return
+
+        for modes in self.callbacks.values():
+            for event in list(modes.get(previous_mode, {})):
+                if (
+                    event is not None
+                    and event.event_type == InputType.JoystickAxis
+                    and not self.is_same_binding(event, previous_mode, mode_name)
+                ):
+                    for callback in self.binding_for(previous_mode, event) or []:
+                        if isinstance(callback, InputBindingCallback):
+                            callback.reset()
+
+    def _may_run(self, callback: Callable[[Event], None]) -> bool:
+        """Returns whether the callback may run given Gremlin's execution state.
+
+        When paused only certain actions that interact with the paused state are
+        allowed to run.
+
+        Args:
+            callback: the callback to check
 
         Returns:
-            A list of all callbacks registered and valid for the given event.
+            True if processing is active or the callback always executes
         """
-        # Obtain callbacks matching the event
-        callback_list = []
-        if event.device_guid in self.callbacks:
-            callback_list = (
-                self.callbacks[event.device_guid].get(event.mode, {}).get(event, [])
-            )
+        return self.process_callbacks or (
+            isinstance(callback, InputBindingCallback) and callback.always_execute
+        )
 
-        # Filter events when the system is paused
-        if not self.process_callbacks:
-            return [c for c in callback_list if c.always_execute]
-        else:
-            return callback_list
+    def _run_callback(
+        self, callback: Callable[[Event], None], event: Event, mode_type: ModeType
+    ) -> bool:
+        """Runs the callback with the event.
+
+        Script callbacks have no notion of paired activations, they always receive the
+        release or centre for event "pairs".
+
+        Args:
+            callback: the callback to run
+            event: the event to run it with
+            mode_type: how the callback was reached
+
+        Returns:
+            True if the callback wants the next event of the input
+        """
+        if isinstance(callback, InputBindingCallback):
+            return callback(event, mode_type)
+
+        script_event = event
+        if (
+            mode_type == ModeType.Foreign
+            and event.event_type == InputType.JoystickHat
+            and event.value != HatDirection.Center
+        ):
+            script_event = event.clone()
+            script_event.value = HatDirection.Center
+        callback(script_event)
+
+        match script_event.event_type:
+            case InputType.JoystickHat:
+                return script_event.value != HatDirection.Center
+            case (
+                InputType.JoystickButton | InputType.Keyboard | InputType.VirtualButton
+            ):
+                return bool(script_event.is_pressed)
+            case _:
+                return False
+
+    def _set_pending(
+        self, event: Event, callback: Callable[[Event], None], wants_next_event: bool
+    ) -> None:
+        """Adds the callback to or removes it from the input's pending callbacks.
+
+        Args:
+            event: the event identifying the input
+            callback: the callback that answered
+            wants_next_event: True if the callback wants the input's next event
+        """
+        pending = self._pending_callbacks.setdefault(event, [])
+        is_pending = any(callback is entry for entry in pending)
+        # Add to the list of pending callbacks.
+        if wants_next_event and not is_pending:
+            pending.append(callback)
+        # Remove from the list of pending callbacks.
+        elif is_pending and not wants_next_event:
+            pending[:] = [entry for entry in pending if entry is not callback]
 
     def _install_plugins(
         self, callback: InputBindingCallback | Callable[[Event], None]

@@ -58,12 +58,14 @@ class MapToKeyboardFunctor(AbstractFunctor):
         event: types.Event,
         value: Value,
         properties: list[ActionProperty] = [],
-    ) -> None:
+    ) -> bool:
         if self._should_execute(value):
             if value.current:
                 macro.MacroManager().queue_macro(self.press)
             else:
                 macro.MacroManager().queue_macro(self.release)
+            return self._requires_paired_event(value)
+        return False
 
 
 class MapToKeyboardModel(ActionModel):
