@@ -79,6 +79,9 @@ class VirtualButton(metaclass=ABCMeta):
         """Returns whether the virtual button is currently pressed."""
         return self._fsm.current_state == "down"
 
+    def clear_last_value(self) -> None:
+        """Forgets the last input value seen by the button."""
+
     @abstractmethod
     def __call__(self, event: Event) -> list[bool]:
         """Process the input event and updates the value as needed.
@@ -101,18 +104,18 @@ class VirtualAxisButton(VirtualButton):
         self._direction = direction
         self._last_value = None
 
+    def clear_last_value(self) -> None:
+        """Forgets the last axis value, the next one carries no direction."""
+        self._last_value = None
+
     def __call__(self, event: Event) -> list[bool]:
         value = event.value if event.value is not None else 0.0
         forced_activation = False
-        newly_initialized = False
         direction = AxisButtonDirection.Anywhere
 
-        if self._last_value is None:
-            newly_initialized = True
-            self._last_value = event.value
-        else:
-            # Check if we moved over the activation region between two
-            # consecutive measurements
+        if self._last_value is not None:
+            # Check if we moved over the activation region between two consecutive
+            # measurements
             if (
                 self._last_value < self._lower_limit
                 and value > self._upper_limit
@@ -129,27 +132,19 @@ class VirtualAxisButton(VirtualButton):
 
         self._last_value = event.value
 
-        # If the input moved across the activation an activation will be
-        # emitted as a single pulse.
-        states = []
-        if forced_activation:
-            self._fsm.perform("press")
-            self._fsm.perform("release")
-            states = [True, False]
         inside_range = self._lower_limit <= value <= self._upper_limit
         valid_direction = (
             direction == self._direction
             or self._direction == AxisButtonDirection.Anywhere
         )
-        if inside_range and valid_direction:
-            if newly_initialized:
-                self._fsm.set_state("down")
-            else:
-                states = [True] if self._fsm.perform("press")[0] else []
+        # Execute FSM transitions based on the activation directions.
+        if forced_activation:
+            actions = ["press", "release"]
+        elif inside_range and valid_direction:
+            actions = ["press"]
         else:
-            states = [False] if self._fsm.perform("release")[0] else []
-
-        return states
+            actions = ["release"]
+        return [action == "press" for action in actions if self._fsm.perform(action)[0]]
 
 
 class VirtualHatButton(VirtualButton):
@@ -187,6 +182,25 @@ class VirtualButtonFunctor:
             new_event.is_pressed = state
             new_event.raw_value = state
             self._event_listener.virtual_event.emit(new_event)
+
+        wants_next_event = self._wants_next_event()
+        # No further events arrive until the button's mode is active again.
+        if value.mode_type == ModeType.Foreign and not wants_next_event:
+            self._virtual_button.clear_last_value()
+        return wants_next_event
+
+    def reset(self) -> None:
+        """Forgets the last input value unless events keep arriving outside its
+        mode."""
+        if not self._wants_next_event():
+            self._virtual_button.clear_last_value()
+
+    def _wants_next_event(self) -> bool:
+        """Returns whether the button or its actions wait for the next event.
+
+        Returns:
+            True if the input's next event has to reach the button
+        """
         return (
             self._virtual_button.is_pressed
             or event_handler.EventHandler().has_pending_callbacks(self._event_template)
@@ -247,6 +261,8 @@ class CallbackObject:
         """Resets action functors of the binding."""
         if isinstance(self._functor, AbstractFunctor):
             reset_functor_tree(self._functor)
+        elif isinstance(self._functor, VirtualButtonFunctor):
+            self._functor.reset()
 
     def teardown(self) -> None:
         """Stops timers and threads of the binding's action functors."""

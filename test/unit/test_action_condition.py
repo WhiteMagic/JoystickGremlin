@@ -27,6 +27,7 @@ from gremlin.types import (
     Event,
     HatDirection,
     InputType,
+    ModeType,
 )
 
 _PROFILE_SIMPLE = "action_condition_simple.xml"
@@ -206,8 +207,12 @@ class _BranchRecorder:
         self.functors: dict = {}
         self.reset_count = 0
 
-    def __call__(self, event: Event, value: Value, properties: list = []) -> None:
+    def __call__(self, event: Event, value: Value, properties: list = []) -> bool:
         self.values.append(value.current)
+        return False
+
+    def waiting_for_event(self) -> bool:
+        return False
 
     def reset(self) -> None:
         self.reset_count += 1
@@ -231,7 +236,7 @@ def _send(
     current: bool | float | HatDirection,
 ) -> None:
     event = Event(input_type, 1, uuid.uuid4(), "Default", value=current)
-    functor(event, Value(current))
+    functor(event, Value(current, ModeType.Native))
 
 
 def test_functor_button_release_follows_press() -> None:

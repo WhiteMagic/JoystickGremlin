@@ -19,7 +19,10 @@ from action_plugins.run_command import (
 )
 from gremlin.base_classes import Value
 from gremlin.profile import Library
-from gremlin.types import InputType
+from gremlin.types import (
+    InputType,
+    ModeType,
+)
 
 _ACTION_RUN_COMMAND_SIMPLE = "action_run_command_simple.xml"
 _RUN_COMMAND_UUID = uuid.UUID("b5d8f3a1-2c47-4e9a-8f16-7d0e4a6c9b32")
@@ -131,7 +134,7 @@ def test_functor_launches_with_split_arguments() -> None:
     functor = RunCommandFunctor(action)
 
     with mock.patch.object(QtCore.QProcess, "startDetached") as launch:
-        functor(mock.MagicMock(), Value(True))
+        functor(mock.MagicMock(), Value(True, ModeType.Native))
 
     launch.assert_called_once_with(
         "C:\\Windows\\System32\\notepad.exe",
@@ -146,7 +149,7 @@ def test_functor_skips_when_no_executable() -> None:
     functor = RunCommandFunctor(action)
 
     with mock.patch.object(QtCore.QProcess, "startDetached") as launch:
-        functor(mock.MagicMock(), Value(True))
+        functor(mock.MagicMock(), Value(True, ModeType.Native))
 
     launch.assert_not_called()
 
@@ -157,6 +160,6 @@ def test_functor_skips_when_not_pressed() -> None:
     functor = RunCommandFunctor(action)
 
     with mock.patch.object(QtCore.QProcess, "startDetached") as launch:
-        functor(mock.MagicMock(), Value(False))
+        functor(mock.MagicMock(), Value(False, ModeType.Native))
 
     launch.assert_not_called()

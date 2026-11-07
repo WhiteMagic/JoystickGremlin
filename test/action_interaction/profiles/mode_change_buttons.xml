@@ -25,16 +25,6 @@
             <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
             <input-type>button</input-type>
             <mode>A</mode>
-            <input-id>2</input-id>
-            <action-configuration>
-                <root-action>b1a00000-0000-4000-8000-000000000003</root-action>
-                <behavior>button</behavior>
-            </action-configuration>
-        </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>button</input-type>
-            <mode>A</mode>
             <input-id>1</input-id>
             <action-configuration>
                 <root-action>b1a00000-0000-4000-8000-000000000004</root-action>
@@ -48,26 +38,6 @@
             <input-id>1</input-id>
             <action-configuration>
                 <root-action>b1a00000-0000-4000-8000-000000000005</root-action>
-                <behavior>button</behavior>
-            </action-configuration>
-        </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>button</input-type>
-            <mode>A</mode>
-            <input-id>3</input-id>
-            <action-configuration>
-                <root-action>b1a00000-0000-4000-8000-000000000006</root-action>
-                <behavior>button</behavior>
-            </action-configuration>
-        </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>button</input-type>
-            <mode>B</mode>
-            <input-id>3</input-id>
-            <action-configuration>
-                <root-action>b1a00000-0000-4000-8000-000000000007</root-action>
                 <behavior>button</behavior>
             </action-configuration>
         </input>
@@ -145,12 +115,12 @@
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>A: Switch to C</label>
+            <label>Input Button 2</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>3</input-id>
-            <label>A: Map inverted to out_inverted_mode_a, B: Map to out_plain_mode_b</label>
+            <label>Input Button 3</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -170,12 +140,12 @@
         <input>
             <input-type>button</input-type>
             <input-id>13</input-id>
-            <label>out_inverted_mode_a</label>
+            <label>Output Button 3</label>
         </input>
         <input>
             <input-type>button</input-type>
             <input-id>14</input-id>
-            <label>out_plain_mode_b</label>
+            <label>Output Button 4</label>
         </input>
         <input>
             <input-type>hat</input-type>
@@ -285,39 +255,6 @@
                 <value>press</value>
             </property>
         </action>
-        <action id="b1a00000-0000-4000-8000-000000000003" type="root">
-            <actions>
-                <action-id>b1b00000-0000-4000-8000-000000000003</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="b1b00000-0000-4000-8000-000000000003" type="change-mode">
-            <property type="string">
-                <name>change-type</name>
-                <value>Switch</value>
-            </property>
-            <target-mode>
-                <property type="string">
-                    <name>name</name>
-                    <value>C</value>
-                </property>
-            </target-mode>
-            <property type="string">
-                <name>action-label</name>
-                <value>Change Mode</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>press</value>
-            </property>
-        </action>
         <action id="b1a00000-0000-4000-8000-000000000004" type="root">
             <actions>
                 <action-id>b1b00000-0000-4000-8000-000000000004</action-id>
@@ -370,76 +307,6 @@
             <property type="int">
                 <name>logical-input-id</name>
                 <value>12</value>
-            </property>
-            <property type="input_type">
-                <name>logical-input-type</name>
-                <value>button</value>
-            </property>
-            <property type="bool">
-                <name>button-inverted</name>
-                <value>False</value>
-            </property>
-            <property type="string">
-                <name>action-label</name>
-                <value>Map to Logical Device</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>both</value>
-            </property>
-        </action>
-        <action id="b1a00000-0000-4000-8000-000000000006" type="root">
-            <actions>
-                <action-id>b1b00000-0000-4000-8000-000000000006</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="b1b00000-0000-4000-8000-000000000006" type="map-to-logical-device">
-            <property type="int">
-                <name>logical-input-id</name>
-                <value>13</value>
-            </property>
-            <property type="input_type">
-                <name>logical-input-type</name>
-                <value>button</value>
-            </property>
-            <property type="bool">
-                <name>button-inverted</name>
-                <value>True</value>
-            </property>
-            <property type="string">
-                <name>action-label</name>
-                <value>Map to Logical Device</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>both</value>
-            </property>
-        </action>
-        <action id="b1a00000-0000-4000-8000-000000000007" type="root">
-            <actions>
-                <action-id>b1b00000-0000-4000-8000-000000000007</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="b1b00000-0000-4000-8000-000000000007" type="map-to-logical-device">
-            <property type="int">
-                <name>logical-input-id</name>
-                <value>14</value>
             </property>
             <property type="input_type">
                 <name>logical-input-type</name>
@@ -524,7 +391,6 @@
     <modes>
         <mode>A</mode>
         <mode>B</mode>
-        <mode parent="A">C</mode>
     </modes>
     <scripts/>
     <devices/>

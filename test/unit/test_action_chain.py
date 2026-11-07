@@ -10,6 +10,7 @@ from unittest import mock
 
 from action_plugins.chain import ChainData, ChainFunctor
 from gremlin.base_classes import Value
+from gremlin.types import ModeType
 
 
 def test_release_after_timeout_reaches_pressed_sequence() -> None:
@@ -21,11 +22,11 @@ def test_release_after_timeout_reaches_pressed_sequence() -> None:
 
     with mock.patch("action_plugins.chain.time.time", return_value=1.0):
         for is_pressed in [True, False, True]:
-            functor(event, Value(is_pressed))
+            functor(event, Value(is_pressed, ModeType.Native))
     assert functor.current_index == 1
 
     # Hold longer than the timeout before releasing.
     with mock.patch("action_plugins.chain.time.time", return_value=2.0):
-        functor(event, Value(False))
+        functor(event, Value(False, ModeType.Native))
 
     assert functor.current_index == 2

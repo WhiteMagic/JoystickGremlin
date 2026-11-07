@@ -21,31 +21,6 @@
                 <behavior>button</behavior>
             </action-configuration>
         </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>button</input-type>
-            <mode>T1</mode>
-            <input-id>3</input-id>
-            <action-configuration>
-                <root-action>e1a00000-0000-4000-8000-000000000003</root-action>
-                <behavior>button</behavior>
-            </action-configuration>
-        </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>axis</input-type>
-            <mode>A</mode>
-            <input-id>1</input-id>
-            <action-configuration>
-                <root-action>e1a00000-0000-4000-8000-000000000004</root-action>
-                <behavior>button</behavior>
-                <virtual-button>
-                    <lower-limit>0.5</lower-limit>
-                    <upper-limit>1.0</upper-limit>
-                    <axis-button-direction>anywhere</axis-button-direction>
-                </virtual-button>
-            </action-configuration>
-        </input>
     </inputs>
     <settings>
         <startup-mode>A</startup-mode>
@@ -55,7 +30,7 @@
         <input>
             <input-type>axis</input-type>
             <input-id>1</input-id>
-            <label>A: Axis Button 0.5-1.0: Temporary to T1</label>
+            <label>Input Axis 1</label>
         </input>
         <input>
             <input-type>axis</input-type>
@@ -105,7 +80,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>3</input-id>
-            <label>T1: Map to out_button_mode_t1</label>
+            <label>Input Button 3</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -115,7 +90,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>11</input-id>
-            <label>out_button_mode_t1</label>
+            <label>Output Button 1</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -229,74 +204,6 @@
                 <property type="string">
                     <name>name</name>
                     <value>T2</value>
-                </property>
-            </target-mode>
-            <property type="string">
-                <name>action-label</name>
-                <value>Change Mode</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>press</value>
-            </property>
-        </action>
-        <action id="e1a00000-0000-4000-8000-000000000003" type="root">
-            <actions>
-                <action-id>e1b00000-0000-4000-8000-000000000003</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="e1b00000-0000-4000-8000-000000000003" type="map-to-logical-device">
-            <property type="int">
-                <name>logical-input-id</name>
-                <value>11</value>
-            </property>
-            <property type="input_type">
-                <name>logical-input-type</name>
-                <value>button</value>
-            </property>
-            <property type="bool">
-                <name>button-inverted</name>
-                <value>False</value>
-            </property>
-            <property type="string">
-                <name>action-label</name>
-                <value>Map to Logical Device</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>both</value>
-            </property>
-        </action>
-        <action id="e1a00000-0000-4000-8000-000000000004" type="root">
-            <actions>
-                <action-id>e1b00000-0000-4000-8000-000000000004</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="e1b00000-0000-4000-8000-000000000004" type="change-mode">
-            <property type="string">
-                <name>change-type</name>
-                <value>Temporary</value>
-            </property>
-            <target-mode>
-                <property type="string">
-                    <name>name</name>
-                    <value>T1</value>
                 </property>
             </target-mode>
             <property type="string">
