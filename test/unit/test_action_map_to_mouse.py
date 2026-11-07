@@ -22,7 +22,12 @@ from action_plugins.map_to_mouse import (
 from gremlin.base_classes import Value
 from gremlin.profile import Library
 from gremlin.sendinput import MouseMotionManager, Vector2
-from gremlin.types import HatDirection, InputType, MouseButton
+from gremlin.types import (
+    HatDirection,
+    InputType,
+    ModeType,
+    MouseButton,
+)
 
 _ACTION_MAP_TO_MOUSE_SIMPLE = "action_map_to_mouse_simple.xml"
 _MAP_TO_MOUSE_UUID = uuid.UUID("3f8c1d07-5b2a-4e61-9c84-06ad7e2b41f9")
@@ -78,7 +83,7 @@ def _sign(value: float) -> int:
 
 def test_reset_stops_axis_motion(manager: MouseMotionManager) -> None:
     functor = _axis_functor(90)
-    functor(_event(InputType.JoystickAxis), Value(1.0))
+    functor(_event(InputType.JoystickAxis), Value(1.0, ModeType.Native))
     assert len(manager._sources) == 1
 
     functor.reset()
@@ -88,7 +93,7 @@ def test_reset_stops_axis_motion(manager: MouseMotionManager) -> None:
 
 def test_reset_keeps_hat_motion(manager: MouseMotionManager) -> None:
     functor = _hat_functor()
-    functor(_event(InputType.JoystickHat), Value(HatDirection.North))
+    functor(_event(InputType.JoystickHat), Value(HatDirection.North, ModeType.Native))
     assert len(manager._sources) == 1
 
     functor.reset()
@@ -176,7 +181,7 @@ def test_axis_motion_direction(
 ) -> None:
     functor = _axis_functor(direction)
 
-    functor(_event(InputType.JoystickAxis), Value(value))
+    functor(_event(InputType.JoystickAxis), Value(value, ModeType.Native))
 
     velocity = _sole_velocity(manager)
     assert _sign(velocity.x) == expected_x
@@ -187,9 +192,9 @@ def test_axis_at_rest_removes_contribution(manager: MouseMotionManager) -> None:
     """A centered axis must not keep moving the cursor at min_speed."""
     functor = _axis_functor(90)
     event = _event(InputType.JoystickAxis)
-    functor(event, Value(0.5))
+    functor(event, Value(0.5, ModeType.Native))
 
-    functor(event, Value(0.0))
+    functor(event, Value(0.0, ModeType.Native))
 
     assert manager._sources == {}
 
@@ -200,9 +205,9 @@ def test_axis_values_below_threshold_remove_contribution(
 ) -> None:
     functor = _axis_functor(90)
     event = _event(InputType.JoystickAxis)
-    functor(event, Value(0.5))
+    functor(event, Value(0.5, ModeType.Native))
 
-    functor(event, Value(residual))
+    functor(event, Value(residual, ModeType.Native))
 
     assert manager._sources == {}
 
@@ -211,7 +216,9 @@ def test_hat_north_east_is_unit_length(manager: MouseMotionManager) -> None:
     """Hat coordinates are cartesian, screen coordinates grow downwards."""
     functor = _hat_functor()
 
-    functor(_event(InputType.JoystickHat), Value(HatDirection.NorthEast))
+    functor(
+        _event(InputType.JoystickHat), Value(HatDirection.NorthEast, ModeType.Native)
+    )
 
     velocity = _sole_velocity(manager)
     assert velocity.magnitude() == pytest.approx(100.0)
@@ -222,9 +229,9 @@ def test_hat_north_east_is_unit_length(manager: MouseMotionManager) -> None:
 def test_hat_center_clears_contribution(manager: MouseMotionManager) -> None:
     functor = _hat_functor()
     event = _event(InputType.JoystickHat)
-    functor(event, Value(HatDirection.North))
+    functor(event, Value(HatDirection.North, ModeType.Native))
 
-    functor(event, Value(HatDirection.Center))
+    functor(event, Value(HatDirection.Center, ModeType.Native))
 
     assert manager._sources == {}
 
@@ -235,11 +242,11 @@ def test_button_release_clears_contribution(manager: MouseMotionManager) -> None
     functor = MapToMouseFunctor(action)
     event = _event(InputType.JoystickButton)
     event.is_pressed = True
-    functor(event, Value(True))
+    functor(event, Value(True, ModeType.Native))
     assert len(manager._sources) == 1
 
     event.is_pressed = False
-    functor(event, Value(False))
+    functor(event, Value(False, ModeType.Native))
 
     assert manager._sources == {}
 
@@ -247,7 +254,7 @@ def test_button_release_clears_contribution(manager: MouseMotionManager) -> None
 def test_distinct_actions_get_distinct_keys(manager: MouseMotionManager) -> None:
     """Two actions on one input must not overwrite each other."""
     event = _event(InputType.JoystickAxis)
-    _axis_functor(90)(event, Value(0.5))
-    _axis_functor(0)(event, Value(0.5))
+    _axis_functor(90)(event, Value(0.5, ModeType.Native))
+    _axis_functor(0)(event, Value(0.5, ModeType.Native))
 
     assert len(manager._sources) == 2

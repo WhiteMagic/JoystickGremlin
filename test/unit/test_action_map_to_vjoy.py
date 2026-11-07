@@ -24,6 +24,7 @@ from gremlin import (
     shared_state,
     types,
 )
+from gremlin.base_classes import Value
 from gremlin.error import GremlinError
 from gremlin.profile import (
     InputItem,
@@ -165,14 +166,17 @@ def test_create_selects_first_unused_input(
 
 
 @pytest.mark.parametrize(
-    "is_inverted",
+    ("is_inverted", "expected_pressed"),
     [
-        pytest.param(True, id="inverted"),
-        pytest.param(False, id="not_inverted"),
+        pytest.param(True, False, id="inverted"),
+        pytest.param(False, True, id="not_inverted"),
     ],
 )
-def test_reset_releases_only_inverted_button(
-    joystick_init: None, monkeypatch: pytest.MonkeyPatch, is_inverted: bool
+def test_foreign_press_releases_only_inverted_button(
+    joystick_init: None,
+    monkeypatch: pytest.MonkeyPatch,
+    is_inverted: bool,
+    expected_pressed: bool,
 ) -> None:
     vjoy_proxy = mock.MagicMock()
     monkeypatch.setattr(map_to_vjoy, "VJoyProxy", lambda: vjoy_proxy)
@@ -181,7 +185,6 @@ def test_reset_releases_only_inverted_button(
     button = vjoy_proxy[action.vjoy_device_id].button.return_value
     button.is_pressed = True
 
-    MapToVjoyFunctor(action).reset()
+    MapToVjoyFunctor(action)(mock.MagicMock(), Value(True, types.ModeType.Foreign))
 
-    assert button.is_pressed is not is_inverted
-
+    assert button.is_pressed is expected_pressed

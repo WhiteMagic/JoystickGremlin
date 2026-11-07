@@ -25,6 +25,9 @@ pyright = "^1.1.414"
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = "--import-mode=importlib"
+markers = [
+    "axis_refresh_on_mode_change: keep the axis refresh every mode change emits",
+]
 
 [build-system]
 requires = ["poetry-core"]

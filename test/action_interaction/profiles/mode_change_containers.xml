@@ -1,0 +1,654 @@
+<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000001</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>B</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000002</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>2</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000003</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>4</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000005</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>6</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000007</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>7</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000008</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>9</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000009</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>A</mode>
+            <input-id>10</input-id>
+            <action-configuration>
+                <root-action>f0a00000-0000-4000-8000-000000000010</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <settings>
+        <startup-mode>A</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <logical-device>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>11</input-id>
+            <label>out_axis_macro</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>12</input-id>
+            <label>out_axis_macro_both</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <label>A: Switch to B, B: Switch to A</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>2</input-id>
+            <label>A: Macro on both [out_axis_macro_both]</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>4</input-id>
+            <label>A: Smart Toggle 0.3: out_toggle_mode_a</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>6</input-id>
+            <label>A: [Tempo 0.3 on release - short: out_short, long: out_long]</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>7</input-id>
+            <label>A: Condition condition_button pressed - true: out_condition</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>8</input-id>
+            <label>condition_button</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>9</input-id>
+            <label>A: Chain 1: out_chain_1 2: out_chain_2</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>10</input-id>
+            <label>A: Macro hold [out_axis_macro]</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>11</input-id>
+            <label>out_toggle_mode_a</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>14</input-id>
+            <label>out_short</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>15</input-id>
+            <label>out_long</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>16</input-id>
+            <label>out_condition</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>17</input-id>
+            <label>out_chain_1</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>18</input-id>
+            <label>out_chain_2</label>
+        </input>
+    </logical-device>
+    <library>
+        <action id="f0a00000-0000-4000-8000-000000000001" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000001</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000001" type="change-mode">
+            <property type="string">
+                <name>change-type</name>
+                <value>Switch</value>
+            </property>
+            <target-mode>
+                <property type="string">
+                    <name>name</name>
+                    <value>B</value>
+                </property>
+            </target-mode>
+            <property type="string">
+                <name>action-label</name>
+                <value>Change Mode</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>press</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000002" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000002</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000002" type="change-mode">
+            <property type="string">
+                <name>change-type</name>
+                <value>Switch</value>
+            </property>
+            <target-mode>
+                <property type="string">
+                    <name>name</name>
+                    <value>A</value>
+                </property>
+            </target-mode>
+            <property type="string">
+                <name>action-label</name>
+                <value>Change Mode</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>press</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000003" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000003</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000003" type="macro">
+            <property type="bool">
+                <name>is-exclusive</name>
+                <value>False</value>
+            </property>
+            <property type="bool">
+                <name>is-preemptive</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>repeat-mode</name>
+                <value>Single</value>
+            </property>
+            <property type="int">
+                <name>repeat-count</name>
+                <value>1</value>
+            </property>
+            <property type="float">
+                <name>repeat-delay</name>
+                <value>0.1</value>
+            </property>
+            <macro-action type="logical-device">
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>12</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.1</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>relative</value>
+                </property>
+            </macro-action>
+            <property type="string">
+                <name>action-label</name>
+                <value>Macro</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000005" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000005</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000005" type="smart-toggle">
+            <actions>
+                <action-id>f0c00000-0000-4000-8000-000000000011</action-id>
+            </actions>
+            <property type="float">
+                <name>delay</name>
+                <value>0.3</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Smart Toggle</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000007" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000007</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000007" type="tempo">
+            <short-actions>
+                <action-id>f0c00000-0000-4000-8000-000000000014</action-id>
+            </short-actions>
+            <long-actions>
+                <action-id>f0c00000-0000-4000-8000-000000000015</action-id>
+            </long-actions>
+            <property type="float">
+                <name>threshold</name>
+                <value>0.3</value>
+            </property>
+            <property type="string">
+                <name>activate-on</name>
+                <value>release</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Tempo</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000008" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000008</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000008" type="condition">
+            <property type="string">
+                <name>logical-operator</name>
+                <value>all</value>
+            </property>
+            <condition>
+                <property type="string">
+                    <name>condition-type</name>
+                    <value>logical_device</value>
+                </property>
+                <comparator>
+                    <property type="string">
+                        <name>comparator-type</name>
+                        <value>pressed</value>
+                    </property>
+                    <property type="bool">
+                        <name>is-pressed</name>
+                        <value>True</value>
+                    </property>
+                </comparator>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>8</value>
+                </property>
+            </condition>
+            <true-actions>
+                <action-id>f0c00000-0000-4000-8000-000000000016</action-id>
+            </true-actions>
+            <false-actions/>
+            <property type="string">
+                <name>action-label</name>
+                <value>Condition</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000009" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000009</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000009" type="chain">
+            <chain-0>
+                <action-id>f0c00000-0000-4000-8000-000000000017</action-id>
+            </chain-0>
+            <chain-1>
+                <action-id>f0c00000-0000-4000-8000-000000000018</action-id>
+            </chain-1>
+            <property type="float">
+                <name>timeout</name>
+                <value>0.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Chain</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0a00000-0000-4000-8000-000000000010" type="root">
+            <actions>
+                <action-id>f0b00000-0000-4000-8000-000000000010</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="f0b00000-0000-4000-8000-000000000010" type="macro">
+            <property type="bool">
+                <name>is-exclusive</name>
+                <value>False</value>
+            </property>
+            <property type="bool">
+                <name>is-preemptive</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>repeat-mode</name>
+                <value>Hold</value>
+            </property>
+            <property type="int">
+                <name>repeat-count</name>
+                <value>1</value>
+            </property>
+            <property type="float">
+                <name>repeat-delay</name>
+                <value>0.1</value>
+            </property>
+            <macro-action type="logical-device">
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>11</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.1</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>relative</value>
+                </property>
+            </macro-action>
+            <property type="string">
+                <name>action-label</name>
+                <value>Macro</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>press</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000011" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>11</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000014" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>14</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000015" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>15</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000016" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>16</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000017" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>17</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f0c00000-0000-4000-8000-000000000018" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>18</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>A</mode>
+        <mode>B</mode>
+    </modes>
+    <scripts/>
+    <devices/>
+</profile>
