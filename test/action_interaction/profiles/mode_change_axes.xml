@@ -23,16 +23,6 @@
         </input>
         <input>
             <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
-            <input-type>button</input-type>
-            <mode>A</mode>
-            <input-id>2</input-id>
-            <action-configuration>
-                <root-action>a1a00000-0000-4000-8000-000000000003</root-action>
-                <behavior>button</behavior>
-            </action-configuration>
-        </input>
-        <input>
-            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
             <input-type>axis</input-type>
             <mode>A</mode>
             <input-id>1</input-id>
@@ -115,7 +105,7 @@
         <input>
             <input-type>button</input-type>
             <input-id>2</input-id>
-            <label>A: Switch to C</label>
+            <label>Input Button 2</label>
         </input>
         <input>
             <input-type>button</input-type>
@@ -244,39 +234,6 @@
                 <property type="string">
                     <name>name</name>
                     <value>A</value>
-                </property>
-            </target-mode>
-            <property type="string">
-                <name>action-label</name>
-                <value>Change Mode</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>press</value>
-            </property>
-        </action>
-        <action id="a1a00000-0000-4000-8000-000000000003" type="root">
-            <actions>
-                <action-id>a1b00000-0000-4000-8000-000000000003</action-id>
-            </actions>
-            <property type="string">
-                <name>action-label</name>
-                <value>Root</value>
-            </property>
-            <property type="activation-mode">
-                <name>activation-mode</name>
-                <value>disallowed</value>
-            </property>
-        </action>
-        <action id="a1b00000-0000-4000-8000-000000000003" type="change-mode">
-            <property type="string">
-                <name>change-type</name>
-                <value>Switch</value>
-            </property>
-            <target-mode>
-                <property type="string">
-                    <name>name</name>
-                    <value>C</value>
                 </property>
             </target-mode>
             <property type="string">
@@ -452,7 +409,6 @@
     <modes>
         <mode>A</mode>
         <mode>B</mode>
-        <mode parent="A">C</mode>
     </modes>
     <scripts/>
     <devices/>

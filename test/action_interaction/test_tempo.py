@@ -55,10 +55,7 @@ def test_on_release_short_tap(jgbot: JoystickGremlinBot, profile_dir: Path) -> N
     jgbot.load_profile(profile_dir / "tempo.xml")
 
     assert not jgbot.button("out_short")
-    jgbot.tap_button(
-        "Default: [Tempo 0.2 on release - short: out_short, long: out_long], "
-        "Second: Map to out_second"
-    )
+    jgbot.tap_button("Default: Tempo 0.2 on release - short: out_short, long: out_long")
 
     assert EventSpec("out_short", True) == jgbot.next_event()
     assert EventSpec("out_short", False) == jgbot.next_event()
@@ -74,13 +71,11 @@ def test_on_release_short_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> 
 
     assert not jgbot.button("out_short")
     jgbot.press_button(
-        "Default: [Tempo 0.2 on release - short: out_short, long: out_long], "
-        "Second: Map to out_second"
+        "Default: Tempo 0.2 on release - short: out_short, long: out_long"
     )
     jgbot.wait(0.15)
     jgbot.release_button(
-        "Default: [Tempo 0.2 on release - short: out_short, long: out_long], "
-        "Second: Map to out_second"
+        "Default: Tempo 0.2 on release - short: out_short, long: out_long"
     )
 
     assert EventSpec("out_short", True) == jgbot.next_event()
@@ -95,8 +90,7 @@ def test_on_release_long(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
     jgbot.press_button(
-        "Default: [Tempo 0.2 on release - short: out_short, long: out_long], "
-        "Second: Map to out_second"
+        "Default: Tempo 0.2 on release - short: out_short, long: out_long"
     )
     jgbot.wait(0.22)
     assert EventSpec("out_long", True) == jgbot.next_event()
@@ -104,8 +98,7 @@ def test_on_release_long(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 
     jgbot.wait(0.05)
     jgbot.release_button(
-        "Default: [Tempo 0.2 on release - short: out_short, long: out_long], "
-        "Second: Map to out_second"
+        "Default: Tempo 0.2 on release - short: out_short, long: out_long"
     )
     assert EventSpec("out_long", False) == jgbot.next_event()
     assert not jgbot.button("out_long")

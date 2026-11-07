@@ -26,6 +26,7 @@ from gremlin import (
     tts,
 )
 from gremlin.error import GremlinError
+from gremlin.input_refresh import RefreshPhysicalInputs
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
     Event,
@@ -467,11 +468,16 @@ class JoystickGremlinBot:
 
 @pytest.fixture
 def jgbot(
-    qtbot: pytestqt.qtbot.QtBot, qapp: joystick_gremlin.JoystickGremlinApp
+    qtbot: pytestqt.qtbot.QtBot,
+    qapp: joystick_gremlin.JoystickGremlinApp,
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Generator[JoystickGremlinBot]:
     bot = JoystickGremlinBot(qtbot)
     cfg = config.Configuration()
     cfg.set("global", "behavior", "refresh-axis-on-activation", False)
+    if not request.node.get_closest_marker("axis_refresh_on_mode_change"):
+        monkeypatch.setattr(RefreshPhysicalInputs, "refresh_axes", lambda: None)
     qapp.minimize()
     yield bot
     bot.stop()

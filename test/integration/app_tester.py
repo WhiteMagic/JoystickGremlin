@@ -59,7 +59,7 @@ class GremlinAppTester:
             mode=mode_manager.ModeManager().current.name,
             value=value,
         )
-        functor(event, base_classes.Value(value))
+        functor(event, base_classes.Value(value, gremlin.types.ModeType.Native))
 
     def _assert_input_eventually_equals(
         self,

@@ -22,6 +22,7 @@ from gremlin.base_classes import (
 from gremlin.types import (
     Event,
     InputType,
+    ModeType,
 )
 
 
@@ -67,7 +68,7 @@ def test_load_profile_in_double_tap_does_not_deadlock(
                 "Default",
                 is_pressed=pressed,
             )
-            functor(event, Value(pressed))
+            functor(event, Value(pressed, ModeType.Native))
 
     # Daemon so a deadlocked timer thread, which inherits it, can't block exit.
     worker = threading.Thread(target=double_tap, daemon=True)

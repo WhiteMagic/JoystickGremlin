@@ -7,6 +7,9 @@ import sys
 sys.path.append(".")
 
 import uuid
+from collections.abc import Iterator
+
+import pytest
 
 from action_plugins.map_to_logical_device import (
     MapToLogicalDeviceData,
@@ -14,16 +17,29 @@ from action_plugins.map_to_logical_device import (
 )
 from gremlin.base_classes import Value
 from gremlin.logical_device import LogicalDevice
-from gremlin.types import Event, InputType
+from gremlin.types import (
+    Event,
+    InputType,
+    ModeType,
+)
 
 
-def test_reset_turns_inverted_logical_button_off() -> None:
-    logical = LogicalDevice()
-    logical.reset()
+@pytest.fixture(autouse=True)
+def reset_logical() -> Iterator[None]:
+    LogicalDevice().reset()
+    yield
+    LogicalDevice().reset()
+
+
+def test_foreign_press_turns_inverted_logical_button_off() -> None:
     action = MapToLogicalDeviceData(InputType.JoystickButton)
     action.button_inverted = True
     functor = MapToLogicalDeviceFunctor(action)
-    button = logical.inputs_of_type([InputType.JoystickButton])[0]
+    button = LogicalDevice()[
+        LogicalDevice.Input.Identifier(
+            InputType.JoystickButton, action.logical_input_id
+        )
+    ]
     release = Event(
         event_type=InputType.JoystickButton,
         identifier=1,
@@ -31,11 +47,10 @@ def test_reset_turns_inverted_logical_button_off() -> None:
         mode="Default",
         is_pressed=False,
     )
+    press = release.clone()
+    press.is_pressed = True
 
-    try:
-        functor(release, Value(False))
-        assert button.is_pressed
-        functor.reset()
-        assert not button.is_pressed
-    finally:
-        logical.reset()
+    assert functor(release, Value(False, ModeType.Native))
+    assert button.is_pressed
+    assert not functor(press, Value(True, ModeType.Foreign))
+    assert not button.is_pressed
