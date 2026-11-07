@@ -36,6 +36,13 @@ Decide the mode from the invocation:
 `<target>` is a file, directory, test id, or a diff/branch. If no target is
 given in review mode, ask what to review. Do not guess a scope.
 
+`--auto` and gate run in a fresh subagent, so the agent that wrote or changed the
+tests does not judge them. That agent spawns a `general-purpose` subagent (no
+fork, no worktree, which would lack uncommitted tests) and relays its result. The
+prompt is only the invocation: `/gremlin-test-review --auto <target>`, or
+`/gremlin-test-review gate` with the behavior, the level, and the draft test. A
+subagent given such a prompt runs the skill itself.
+
 ## Test levels (project taxonomy)
 
 The project's levels are authoritative (`AGENTS.md`, `test/*/README.md`).
@@ -65,7 +72,7 @@ chose in one line, and move on — do not lecture about terminology.
 
 ## The admission bar
 
-A test is worth having when all three hold:
+A test is worth having when all four hold:
 
 1. **Not already covered.** Search the existing tests for the same behavior
    (grep for the function, action, profile, or input involved) before judging.
@@ -74,7 +81,12 @@ A test is worth having when all three hold:
    change could break: branching, arithmetic, parsing, state machines, timing,
    mode inheritance, XML round-trips. Trivial accessors, enum values, framework
    behavior, and constants do not qualify.
-3. **At the cheapest level that can observe it** (see above).
+3. **Would catch a real break.** Name a realistic code change that breaks this
+   behavior for users, including changes outside the function under test (e.g.
+   renaming a registered option), and confirm from the test that it would fail.
+   A branch being executed is not enough. If realistic breaks leave the test
+   green, it does not qualify.
+4. **At the cheapest level that can observe it** (see above).
 
 Explicitly favored, so skepticism does not strip meaningful coverage:
 - Regression tests tied to a real bug (issue, report, or a profile from a user).
@@ -84,13 +96,15 @@ Explicitly favored, so skepticism does not strip meaningful coverage:
 
 ## Gate mode
 
-Input from the calling agent: the behavior to test (one sentence), the intended
-level, optionally a draft test.
+Input from the calling agent: one behavior to test (one sentence), the intended
+level, and the draft test. Each behavior gets its own gate call. If a call has
+several behaviors or no draft, return `do-not-write` with that as the reason.
+Run the gate again when the design of the code or of the test changes.
 
 1. Search existing tests for coverage of the behavior; read the matches.
 2. Read the code that implements the behavior enough to judge whether it can
    plausibly regress.
-3. Apply the admission bar.
+3. Apply the admission bar to the draft.
 4. Return exactly this block and nothing else:
 
 ```
@@ -118,7 +132,8 @@ writing, run `/gremlin-test-quality --auto <test id>`".
      `keep`.
    - `move-level` — worthwhile but at the wrong level (name the target).
    - `delete` — fails the admission bar: duplicate, tautological, tests
-     Python/Qt/mocks rather than Gremlin, or no plausible regression.
+     Python/Qt/mocks rather than Gremlin, no plausible regression, or stays
+     green on a realistic break (name the break in the reason).
 3. Report in this format:
 
 ```
@@ -157,6 +172,10 @@ verdict. Keep each to one line plus a short rationale.
 
 - Prefer level 2 (`jgbot`) over level 3 for action behavior. — Level 2 runs in
   CI and needs no vJoy.
+- Tests exist to fail when a code change breaks something, so they run real code
+  on real data; mocks and hand-written data are a last resort and stay as close
+  to the real thing as possible. — Anything faked stops following the code, so
+  the test stays green when the real thing breaks.
 
 ### Adding principles
 
@@ -272,11 +291,13 @@ From [Project] unless noted.
   test that mutates them without restoring state is **nondeterministic**.
 
 **Level 2 — `test/action_interaction/`**
-- Configure behavior in a profile under `profiles/` (based on `template.xml`),
-  load it with `jgbot.load_profile`, drive inputs with `jgbot.press_button`,
+- Configure behavior in a profile under `profiles/` (based on `template.xml`)
+  with descriptive input labels (naming rules in the folder's `README.md`), load
+  it with `jgbot.load_profile`, drive inputs by label with `jgbot.press_button`,
   `tap_button`, `hold_button`, `set_axis_absolute`, `set_hat_direction`, etc.
-- Assert on emitted events with `jgbot.next_event()` compared to `EventSpec`,
-  and on output state via `jgbot.axis/button/hat`. Asserting internal action
+- Assert on emitted events with `jgbot.next_event()` compared to
+  `EventSpec(label, value)`, and on output state via
+  `jgbot.axis/button/hat`. Asserting internal action
   state instead is **implementation-coupled**.
 - Assert absence of extra events with
   `pytest.raises(jgbot.qtbot.TimeoutError): jgbot.next_event()` — that is the

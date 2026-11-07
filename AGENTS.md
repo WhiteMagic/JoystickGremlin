@@ -257,7 +257,7 @@ class SpecialActionData(AbstractActionData):
 - Tests in `test/action_interaction` have access to a `jgbot` fixture (`test/action_interaction/conftest.py:JoystickGremlinBot) which is similar to the Qt pytest fixture
 - Use pytest fixtures from `test/conftest.py` and `test/unit/conftest.py`
 - Use `pytest.raises()` for exception testing
-- Before writing a new test, run `/gremlin-test-review gate` with the behavior to test, the intended level, and optionally the draft test. Follow its verdict.
+- Before adding a new test, run `/gremlin-test-review gate` with the behavior to test, the intended level, and the draft test. Follow its verdict.
 - After writing or changing tests, run `/gremlin-test-review --auto <changed test files>`.
 
 Example:

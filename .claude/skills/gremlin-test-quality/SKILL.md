@@ -48,7 +48,7 @@ is not questioned here.
 | Level | Location | Harness |
 |---|---|---|
 | 1. Unit | `test/unit/` | public API of one module/class; `xml_dir` for profile XML; `qtbot` for Qt models/signals |
-| 2. Simulated system | `test/action_interaction/` (and legacy `test/integration/action_plugins/`) | `jgbot`, `profile_dir`, profiles based on `template.xml`, ids from `input_definitions` |
+| 2. Simulated system | `test/action_interaction/` (and legacy `test/integration/action_plugins/`) | `jgbot`, `profile_dir`, profiles based on `template.xml`, inputs addressed by their profile label (naming rules in `test/action_interaction/README.md`) |
 | 3. E2E | `test/integration/` | vJoy loopback; `tester`, `vjoy_control_device`, `vjoy_di_device`; one profile per module from `test/integration/xml/` |
 | 4. Automated ui test | not yet established | conventions not defined; judge on the general criteria only and say so |
 
@@ -99,8 +99,8 @@ Use these names in the `dimension` column. Sources are listed at the end.
      defaults
    - values copied from configuration or profiles with no stated link
      (e.g. waiting `0.2` s against the `0.1` s threshold in `double_tap.xml`)
-   - raw ids or paths where named constants or fixtures exist
-     (`inout.IN_BUTTON_1`, `profile_dir`)
+   - raw ids or paths where named constants, labels or fixtures exist
+     (profile input labels, `profile_dir`)
    - full object or tuple literals compared when only one field is the point
      of the test
 

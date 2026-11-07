@@ -14,6 +14,17 @@ paths:
 
   - Never put arguments in the `(...)` if the signal has no arguments, as that causes control value shadowing
 
+- `objectName` goes directly under `id` with no blank line, or first in the item if there is no `id`, before any property declarations; a blank line follows:
+
+  ```qml
+  TextField {
+      id: _profile
+      objectName: "autoLoadProfileField"
+
+      property string foo
+  }
+  ```
+
 - A `ComboBox` delegate in a `reuseItems: true` `ListView` needs `currentIndex = Qt.binding(() => ...)` in `onCompleted`, not a one-shot assignment, or it goes stale on recycle.
 
 - Delegates in a `reuseItems: true` list should use implicit `modelData`/`index`, not `required property` -- reuse rebinds the former, not reliably the latter.
