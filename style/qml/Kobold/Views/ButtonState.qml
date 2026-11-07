@@ -20,6 +20,7 @@ Item {
 
     readonly property int buttonSize:   Metrics.dp(40)
     readonly property int buttonRadius: Metrics.even(10)
+    readonly property int minimumVisibleDuration: 100
 
     readonly property DeviceButtonState _buttonState: ModelFactory.deviceButtonState(_root)
     readonly property DeviceHatState _hatState: ModelFactory.deviceHatState(_root)
@@ -93,20 +94,36 @@ Item {
                         required property int identifier
                         required property bool value
 
+                        // Keeps taps shorter than a frame visible.
+                        readonly property bool showPressed:
+                            value || _minimumPressDisplay.running
+
                         width: _root.buttonSize
                         height: _root.buttonSize
                         radius: _root.buttonRadius
 
                         color: Theme.bgAlt
                         border.width: Metrics.hairline
-                        border.color: value ? Theme.accent : Theme.line
+                        border.color: showPressed ? Theme.accent : Theme.line
+
+                        onValueChanged: () => {
+                            if (value) {
+                                _minimumPressDisplay.restart()
+                            }
+                        }
+
+                        Timer {
+                            id: _minimumPressDisplay
+
+                            interval: _root.minimumVisibleDuration
+                        }
 
                         Label {
                             anchors.centerIn: parent
 
                             text: _button.identifier
                             font.pixelSize: Metrics.textDetail
-                            color: _button.value ? Theme.accent : Theme.fg
+                            color: _button.showPressed ? Theme.accent : Theme.fg
                         }
                     }
                 }
@@ -134,11 +151,31 @@ Item {
                         required property int identifier
                         required property point value
 
+                        // Keeps changes shorter than a frame visible.
+                        property point heldDirection
+
                         height: _hatGrid.cellHeight - Metrics.gapL
                         width: _hatGrid.cellWidth - Metrics.gapL
 
                         text: identifier
-                        currentValue: value
+                        currentValue:
+                            value.x === 0 && value.y === 0
+                                && _minimumHatDisplay.running
+                            ? heldDirection
+                            : value
+
+                        onValueChanged: () => {
+                            if (value.x !== 0 || value.y !== 0) {
+                                heldDirection = value
+                                _minimumHatDisplay.restart()
+                            }
+                        }
+
+                        Timer {
+                            id: _minimumHatDisplay
+
+                            interval: _root.minimumVisibleDuration
+                        }
                     }
                 }
             }
