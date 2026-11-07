@@ -3,27 +3,26 @@ title: Changelog
 nav_order: 9
 ---
 
-# Release 14
+# Release 16.1
 
-This release is a complete rewrite of the user interface and how the profile architecture. Along the way a lot of other things have changed, some of which are summarized below.
+{: .note }
+Conditions and mode changes now should behave more "natural". This effectively means that button presses and releases are coupled in a manner of speaking. An action triggered by a button press should always expect to receive that button's release irrespective of the mode the release happens in or the  state of the action. There are a number of edge casses in this so this may not fully work as one would expect yet.
 
-- User interface entirely redone in QML using PySide6
-  - Drag & drop for action reordering
-  - Collapsing actions
-  - Dark mode support
-  - Turning axis or hat into a button accessible at the top of an action sequence
-- Profile architecture completely redone with actions and inputs no longer being tied together
-  - Assigning existing actions to different inputs
-  - Copying contents of an action to new inputs
-  - Only actions which can be nested to an arbitrary depth
-  - Actions can exist on multiple inputs, enabling, multi-input actions
-- Conditions are actions too now
-- User configurable folder for third-party action plugins
-- An internal logical device was added that can be used as an internal storage
-- Mode switching supports more complicated flows
-- Improved various tools such as calibration and 1:1 mapping
-- Improved actions
-  - Piecewise linear response curve added
-  - More control over the activation of "Map to X" actions
+## New Features
 
-A side effect of these changes, especially the profile architecture, is that previous profiles are not compatible. For now there is no conversion tool and there may never be one as writing a robust one likely will take significant amount of time to write and especially test. There are also some aspects that are still missing. Depending on their utility they will over time be added back in.
+- Automatic profile switching now has the notion of a "Default" profile which will be activated whenever no application driven profile is active.
+
+
+## Bug Fixes
+
+- Rework how condition actions handle condition state changes.
+- Keyboard key F13 to F24 properly display their label.
+- Fix vJoy related crashes.
+- Ensure state shown in the UI matches that of the loaded profile.
+- Always update action chips.
+- Fix file encoding related issues.
+- Macro button entries always default to "press" now.
+- Improve audio playback handling.
+- Keep button and hat activations visible for a minimum amount of time.
+- Plethora of fixes to UI code to work around and reduce memory management issues.
+- Behavior of actions around mode switches made consistent and behave more "natural".
