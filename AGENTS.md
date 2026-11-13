@@ -154,6 +154,7 @@ if TYPE_CHECKING:
 
 - Use `@QtCore.Signal` and `@QtCore.Slot` decorators for Qt signals/slots
 - Every method of a `QObject` subclass that is connected to a signal gets `@QtCore.Slot(<types>)`
+- Python models that QML creates are never freed (PYSIDE-1407). Add a slot for each one to `gremlin/ui/model_factory.py` and create it in QML with `ModelFactory.<name>(_root)`, never as a declared `SomeModel { }` element
 - Properties exposed to Qt/QML always use `QtCore.Property`
 - Signals are defined as class attributes: `imageReady = QtCore.Signal(str, str)`
 - Subclass `QtCore.QObject` for QML-accessible classes if no more specialized class is applicable
