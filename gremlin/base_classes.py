@@ -584,7 +584,8 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
         Returns:
             True if any of the functors wants the next event of the input
         """
-        return any(functor(event, value, properties) for functor in functors)
+        # Run all functors beofre returning the truth value.
+        return any([functor(event, value, properties) for functor in functors])  # noqa: C419
 
     def _all_children(self) -> list[AbstractFunctor]:
         """Returns every child functor.
