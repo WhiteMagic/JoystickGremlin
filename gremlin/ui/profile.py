@@ -469,7 +469,7 @@ class ActionSequenceModel(QtCore.QObject):
         )
         return self._container_index_lookup[index] >= indices[-1]
 
-    @QtCore.Property(type=str, notify=inputTypeChanged)
+    @QtCore.Property(type=str, constant=True)
     def inputType(self) -> str:
         return InputType.to_string(self.input_type)
 

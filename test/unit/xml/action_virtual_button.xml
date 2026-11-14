@@ -1,0 +1,127 @@
+<profile version="17">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+
+    <library>
+        <action id="b7c10000-0000-4000-8000-000000000001" type="virtual-button">
+            <actions>
+                <action-id>b7c10000-0000-4000-8000-000000000011</action-id>
+            </actions>
+            <property type="float">
+                <name>lower-limit</name>
+                <value>0.5</value>
+            </property>
+            <property type="float">
+                <name>upper-limit</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>axis-button-direction</name>
+                <value>anywhere</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Throttle detent</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="b7c10000-0000-4000-8000-000000000002" type="virtual-button">
+            <actions>
+                <action-id>b7c10000-0000-4000-8000-000000000012</action-id>
+            </actions>
+            <property type="float">
+                <name>lower-limit</name>
+                <value>0.5</value>
+            </property>
+            <property type="float">
+                <name>upper-limit</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>axis-button-direction</name>
+                <value>below</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Afterburner from below</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="b7c10000-0000-4000-8000-000000000003" type="virtual-button">
+            <actions>
+                <action-id>b7c10000-0000-4000-8000-000000000013</action-id>
+            </actions>
+            <property type="hat_direction">
+                <name>hat-direction</name>
+                <value>north</value>
+            </property>
+            <property type="hat_direction">
+                <name>hat-direction</name>
+                <value>north-east</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Hat up</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="b7c10000-0000-4000-8000-000000000011" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>detent</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="b7c10000-0000-4000-8000-000000000012" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>afterburner</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="b7c10000-0000-4000-8000-000000000013" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>hat up</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+</profile>

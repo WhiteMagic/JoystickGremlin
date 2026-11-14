@@ -31,12 +31,12 @@ def _upgrade_from_14(root: ElementTree.Element) -> None:
     """
     library = root.find("library")
     if library is None:
-        raise error.ProfileError("Profile has no library")
+        library = ElementTree.SubElement(root, "library")
 
     referenced_root_ids = set()
     for input_node in root.findall("./inputs/input"):
-        input_type = util.read_subelement(input_node, "input-type")
         for configuration in input_node.findall("action-configuration"):
+            input_type = util.read_subelement(input_node, "input-type")
             root_id = util.read_subelement(configuration, "root-action")
             root_action = _library_action(library, root_id)
             root_action.append(
