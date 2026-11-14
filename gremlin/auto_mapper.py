@@ -12,10 +12,7 @@ from collections.abc import Iterable
 from typing import Self
 
 import dill
-from action_plugins import (
-    map_to_vjoy,
-    root,
-)
+from action_plugins import map_to_vjoy
 from gremlin import (
     device_initialization,
     plugin_manager,
@@ -42,16 +39,16 @@ class AutoMapper:
     "available" physical inputs to "available" vJoy inputs.
 
     To keep things simple, a vJoy input is considered "available" even if
-    there's a binding to it in the profile, but:
-    1. The binding is from a disconnected device.
-    2. The binding is not a direct vJoy mapping (e.g. from a macro, a
+    there's a mapping to it in the profile, but:
+    1. The mapping is from a disconnected device.
+    2. The mapping is not a direct vJoy mapping (e.g. from a macro, a
        sub-action like temp, chain, or condition), or in a user script.
 
-    A physical input is considered "available" if it has no binding/actions
+    A physical input is considered "available" if it has no action sequences
     in the profile. An option is provided to overwrite unavailable inputs, in
-    which case any existing bindings are removed.
+    which case any existing mappings are removed.
 
-    Bindings are generated for the specified mode only, bindings from other
+    Mappings are generated for the specified mode only, mappings from other
     modes are not checked (i.e. any physical and vJoy inputs used only in other
     modes are considered available in the specified mode).
 
@@ -65,7 +62,7 @@ class AutoMapper:
 
         # For debug, testing and creating a report for the user.
         self._created_mappings: list[map_to_vjoy.MapToVjoyData] = []
-        self._num_retained_bindings = 0
+        self._num_retained_mappings = 0
 
     @classmethod
     def from_current_profile(cls) -> Self:
@@ -100,7 +97,7 @@ class AutoMapper:
         ]
 
         self._prepare_profile(input_devices, options)
-        self._num_retained_bindings = 0
+        self._num_retained_mappings = 0
         used_vjoy_inputs = set(self._get_used_vjoy_inputs(options.mode))
         vjoy_axes = self._iter_unused_vjoy_axes(output_vjoy_ids, used_vjoy_inputs)
         vjoy_buttons = self._iter_unused_vjoy_buttons(output_vjoy_ids, used_vjoy_inputs)
@@ -151,7 +148,7 @@ class AutoMapper:
                 if not input_item.action_sequences:
                     yield input_item
                 else:
-                    self._num_retained_bindings += 1
+                    self._num_retained_mappings += 1
 
     def _iter_physical_buttons(
         self,
@@ -172,7 +169,7 @@ class AutoMapper:
                 if not input_item.action_sequences:
                     yield input_item
                 else:
-                    self._num_retained_bindings += 1
+                    self._num_retained_mappings += 1
 
     def _iter_physical_hats(
         self,
@@ -193,7 +190,7 @@ class AutoMapper:
                 if not input_item.action_sequences:
                     yield input_item
                 else:
-                    self._num_retained_bindings += 1
+                    self._num_retained_mappings += 1
 
     def _get_used_vjoy_inputs(self, mode: str) -> list[types.VjoyInput]:
         """Returns a list of all vJoy inputs that are already used in the
@@ -210,9 +207,8 @@ class AutoMapper:
                 if input_item.mode != mode:
                     # vJoy mapping from other modes is considered unused.
                     continue
-                for binding in input_item.action_sequences:
-                    assert isinstance(binding.root_action, root.RootData)
-                    for child_action in binding.root_action.children:
+                for root_action in input_item.action_sequences:
+                    for child_action in root_action.children:
                         if isinstance(child_action, map_to_vjoy.MapToVjoyData):
                             used_vjoy_inputs.append(
                                 types.VjoyInput(
@@ -277,13 +273,13 @@ class AutoMapper:
         vjoy_action.vjoy_device_id = vjoy_input.vjoy_id
         vjoy_action.vjoy_input_id = vjoy_input.input_id
         vjoy_action.vjoy_input_type = vjoy_input.input_type
-        binding = physical_input.add_item_binding()
-        binding.root_action.insert_action(vjoy_action, "children")
+        root_action = physical_input.add_action_sequence()
+        root_action.insert_action(vjoy_action, "children")
         self._created_mappings.append(vjoy_action)
 
     def _create_mappings_report(self) -> str:
         """Creates a text report for the user after a mapping operation."""
         return (
             f"Created {len(self._created_mappings)} mappings, "
-            f"retained {self._num_retained_bindings} previous bindings."
+            f"retained {self._num_retained_mappings} previous mappings."
         )

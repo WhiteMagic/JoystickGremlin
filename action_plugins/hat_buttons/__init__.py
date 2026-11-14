@@ -16,7 +16,6 @@ from PySide6 import QtCore
 
 import dill
 from gremlin import (
-    event_handler,
     fsm,
     util,
 )
@@ -25,8 +24,8 @@ from gremlin.base_classes import (
     AbstractFunctor,
     UserFeedback,
     Value,
+    next_virtual_identifier,
 )
-from gremlin.code_runner import CallbackObject
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import (
@@ -42,7 +41,7 @@ from gremlin.ui.action_model import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 class DirectionalButton:
@@ -71,8 +70,7 @@ class DirectionalButton:
         self.functors = functors
         self.functor_direction = direction
         self.type_direction = DirectionalButton.resolve_direction[direction]
-        self.identifier = CallbackObject.c_next_virtual_identifier
-        CallbackObject.c_next_virtual_identifier += 1
+        self.identifier = next_virtual_identifier()
 
         self.fsm = self._create_fsm()
 
@@ -118,7 +116,6 @@ class DirectionalButton:
         btn_value = Value(is_pressed, value.mode_type)
 
         self.fsm.perform(action, virtual_btn_event, btn_value, properties)
-        event_handler.EventListener().virtual_event.emit(virtual_btn_event)
 
     def _execute(
         self,
@@ -178,12 +175,12 @@ class HatButtonsModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return (
@@ -206,7 +203,7 @@ class HatButtonsModel(ActionModel):
     def _set_button_count(self, count: int) -> None:
         if self._data.button_count != count:
             self._data.set_button_count(count)
-            self._binding_model.sync_data()
+            self._sequence_model.sync_data()
             self.changed.emit()
 
     buttonCount = QtCore.Property(

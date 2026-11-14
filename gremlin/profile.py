@@ -7,14 +7,11 @@ import hashlib
 import logging
 import os
 import uuid
-from abc import (
-    ABCMeta,
-    abstractmethod,
-)
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    cast,
 )
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -24,13 +21,12 @@ from gremlin import (
     device_initialization,
     error,
     plugin_manager,
+    profile_migration,
     signal,
 )
 from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
 from gremlin.types import (
-    AxisButtonDirection,
-    HatDirection,
     InputType,
     ScanCode,
 )
@@ -42,111 +38,14 @@ from gremlin.util import (
     read_action_ids,
     read_subelement,
     read_subelement_custom,
+    read_subelements,
     safe_format,
     safe_read,
 )
 
 if TYPE_CHECKING:
+    from action_plugins.root import RootData
     from gremlin.base_classes import AbstractActionData
-
-
-class AbstractVirtualButton(metaclass=ABCMeta):
-    """Base class of all virtual buttons."""
-
-    def __init__(self) -> None:
-        """Creates a new instance."""
-
-    @abstractmethod
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Populates the virtual button based on the node's data.
-
-        Args:
-            node: the XML node containing data for this instance
-        """
-
-    @abstractmethod
-    def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node representing the data of this instance.
-
-        Returns:
-            XML node containing the instance's data
-        """
-
-
-class VirtualAxisButton(AbstractVirtualButton):
-    """Virtual button which turns an axis range into a button."""
-
-    def __init__(self, lower_limit: float = -0.1, upper_limit: float = 0.1) -> None:
-        """Creates a new instance.
-
-        Args:
-            lower_limit: the lower limit of the virtual button
-            upper_limit: the upper limit of the virtual button
-        """
-        super().__init__()
-
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
-        self.direction = AxisButtonDirection.Anywhere
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Populates the virtual button based on the node's data.
-
-        Args:
-            node: the node containing data for this instance
-        """
-        self.lower_limit = read_subelement(node, "lower-limit")
-        self.upper_limit = read_subelement(node, "upper-limit")
-        self.direction = read_subelement(node, "axis-button-direction")
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node representing the data of this instance.
-
-        Returns:
-            XML node containing the instance's data
-        """
-        node = ElementTree.Element("virtual-button")
-        node.append(create_subelement_node("lower-limit", self.lower_limit))
-        node.append(create_subelement_node("upper-limit", self.upper_limit))
-        node.append(create_subelement_node("axis-button-direction", self.direction))
-        return node
-
-
-class VirtualHatButton(AbstractVirtualButton):
-    """Virtual button which combines hat directions into a button."""
-
-    def __init__(self, directions: set = set()) -> None:
-        """Creates a instance.
-
-        Args:
-            directions: list of direction that form the virtual button
-        """
-        super().__init__()
-
-        self.directions = list(set(directions))
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Populates the activation condition based on the node's data.
-
-        Args:
-            node: the node containing data for this instance
-        """
-        self.directions = []
-        for hd_node in node.findall("hat-direction"):
-            self.directions.append(HatDirection.to_enum(str(hd_node.text)))
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node representing the data of this instance.
-
-        Returns:
-            XML node containing the instance's data
-        """
-        node = ElementTree.Element("virtual-button")
-        for direction in self.directions:
-            hd_node = ElementTree.Element("hat-direction")
-            hd_node.text = HatDirection.to_string(direction)
-            node.append(hd_node)
-        return node
 
 
 class Settings:
@@ -261,7 +160,7 @@ class Settings:
 
 
 class Library:
-    """Stores actions in order to be reference by input binding instances.
+    """Stores actions assigned to input items via action sequences.
 
     Each item is a self-contained entry with a UUID assigned to it which
     is used by the input items to reference the actual content.
@@ -553,7 +452,7 @@ class DeviceDatabase:
 class Profile:
     """Stores the contents and an entire configuration profile."""
 
-    current_version = 14
+    current_version = 17
 
     def __init__(self) -> None:
         self.inputs: dict[uuid.UUID, list[InputItem]] = {}
@@ -575,6 +474,7 @@ class Profile:
         tree = ElementTree.parse(str(fpath))
         root = tree.getroot()
 
+        profile_migration.migrate_profile(root, fpath)
         version = int(root.get("version", "0"))
         if version != Profile.current_version:
             signal.display_error(
@@ -717,23 +617,22 @@ class Profile:
         else:
             return None
 
-    def bound_actions_by_type[T: AbstractActionData](
+    def assigned_actions_by_type[T: AbstractActionData](
         self, action_type: type[T]
     ) -> list[T]:
-        """Returns all actions reachable from an input binding matching the given type.
+        """Returns all actions of the given type reachable from an action sequence.
 
         Args:
             action_type: type of the action to return
 
         Returns:
-            All bound actions of the given type, each listed once
+            All assigned actions of the given type, each listed once
         """
-        pending = [
-            binding.root_action
+        pending: list[AbstractActionData] = [
+            root_action
             for input_items in self.inputs.values()
             for input_item in input_items
-            for binding in input_item.action_sequences
-            if binding.root_action is not None
+            for root_action in input_item.action_sequences
         ]
         visited: set[uuid.UUID] = set()
         actions: list[T] = []
@@ -747,19 +646,15 @@ class Profile:
             pending.extend(action.get_actions()[0])
         return actions
 
-    def remove_action(
-        self, action: AbstractActionData, binding: InputItemBinding
-    ) -> None:
-        """Removes an action from the specified InputBinding instance.
+    def remove_action(self, action: AbstractActionData, root_action: RootData) -> None:
+        """Removes an action from the specified action sequence.
 
         Args:
             action: the action instance to remove
-            binding: the InputBinding instance from which to remove the action
+            root_action: root action of the sequence from which to remove the action
         """
         # Remove action from its parent
-        all_actions = [
-            (binding.root_action, child) for child in binding.root_action.get_actions()
-        ]
+        all_actions = [(root_action, child) for child in root_action.get_actions()]
         while len(all_actions) > 0:
             entry = all_actions.pop(0)
             all_actions.extend([(entry[1], child) for child in entry[1].get_actions()])
@@ -840,7 +735,7 @@ class InputItem:
         self.input_id: int | ScanCode | None = None
         self.mode: str | None = None
         self.library = library
-        self.action_sequences: list[InputItemBinding] = []
+        self.action_sequences: list[RootData] = []
         self.is_active = True
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -854,11 +749,14 @@ class InputItem:
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id & 0xFF, self.input_id >> 8 == 1)
 
-        # Parse every action configuration entry
-        for entry in node.findall("action-configuration"):
-            action = InputItemBinding(self)
-            action.from_xml(entry)
-            self.action_sequences.append(action)
+        for root_id in read_subelements(node, "root-action"):
+            if not self.library.has_action(root_id):
+                raise error.ProfileError(
+                    f"{self.descriptor()} links to an invalid library item {root_id}"
+                )
+            self.action_sequences.append(
+                cast("RootData", self.library.get_action(root_id))
+            )
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("input")
@@ -876,9 +774,8 @@ class InputItem:
             input_id = self.input_id[1] << 8 | self.input_id[0]
         node.append(create_subelement_node("input-id", input_id))
 
-        # Action configurations
-        for entry in self.action_sequences:
-            node.append(entry.to_xml())
+        for root_action in self.action_sequences:
+            node.append(create_subelement_node("root-action", root_action.id))
 
         return node
 
@@ -892,128 +789,23 @@ class InputItem:
             f"{self.device_id}: {InputType.to_string(self.input_type)} {self.input_id}"
         )
 
-    def add_item_binding(self) -> InputItemBinding:
-        """Adds a new binding to this input item and returns it."""
-        p_manager = plugin_manager.PluginManager()
-        root_action = p_manager.create_instance("Root", self.input_type)
-        binding = InputItemBinding(self)
-        binding.root_action = root_action
-        binding.behavior = self.input_type
-        self.action_sequences.append(binding)
-        return binding
+    def add_action_sequence(self) -> RootData:
+        """Adds a new action sequence to this input item and returns its root action."""
+        root_action = cast(
+            "RootData",
+            plugin_manager.PluginManager().create_instance("Root", self.input_type),
+        )
+        self.action_sequences.append(root_action)
+        return root_action
 
-    def remove_item_binding(self, binding: InputItemBinding) -> None:
-        """Removes the given binding instance if present.
-
-        Args:
-            binding: InputItemBinding instance to remove from the item
-        """
-        if binding in self.action_sequences:
-            del self.action_sequences[self.action_sequences.index(binding)]
-
-
-class InputItemBinding:
-    """Links together a LibraryItem and it's activation behavior."""
-
-    def __init__(self, input_item: InputItem) -> None:
-        self.input_item = input_item
-        self.root_action: AbstractActionData | None = None
-        self.behavior: InputType | None = None
-        self.virtual_button: AbstractVirtualButton | None = None
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        root_id = read_subelement(node, "root-action")
-        if not self.input_item.library.has_action(root_id):
-            raise error.ProfileError(
-                f"{self.input_item.descriptor()} links to an invalid library "
-                f"item {root_id}"
-            )
-        self.root_action = self.input_item.library.get_action(root_id)
-        self.behavior = read_subelement(node, "behavior")
-        self._apply_behavior(self.root_action, self.behavior)
-        self.virtual_button = self._parse_virtual_button(node)
-
-    def to_xml(self) -> ElementTree.Element:
-        node = ElementTree.Element("action-configuration")
-        node.append(create_subelement_node("root-action", self.root_action.id))
-        node.append(create_subelement_node("behavior", self.behavior))
-        vb_node = self._write_virtual_button()
-        if vb_node is not None:
-            node.append(vb_node)
-
-        return node
-
-    @property
-    def library(self) -> Library:
-        """Returns the profile's library instance.
-
-        Returns:
-            Library instance of the profile
-        """
-        return self.input_item.library
-
-    def _apply_behavior(self, action: AbstractActionData, behavior: InputType) -> None:
-        """Sets the behavior type of the action and all its children.
+    def remove_action_sequence(self, root_action: RootData) -> None:
+        """Removes the action sequence with the given root action if present.
 
         Args:
-            action: root of the action tree to update
-            behavior: behavior type the action operates under
+            root_action: root action of the sequence to remove
         """
-        action.behavior_type = behavior
-        for child in action.get_actions()[0]:
-            self._apply_behavior(child, action.child_behavior_type or behavior)
-
-    def _parse_virtual_button(self, node: ElementTree.Element) -> AbstractVirtualButton:
-        # Ensure the configuration requires a virtual button
-        virtual_button = None
-        if (
-            self.input_item.input_type == InputType.JoystickAxis
-            and self.behavior == InputType.JoystickButton
-        ):
-            virtual_button = VirtualAxisButton()
-        elif (
-            self.input_item.input_type == InputType.JoystickHat
-            and self.behavior == InputType.JoystickButton
-        ):
-            virtual_button = VirtualHatButton()
-
-        # Ensure we have a virtual button entry to parse
-        if virtual_button is not None:
-            vb_node = node.find("virtual-button")
-            if vb_node is None:
-                raise error.ProfileError(
-                    f"Missing virtual-button entry library item "
-                    f"{self.library_reference.id}"
-                )
-            virtual_button.from_xml(vb_node)
-
-        return virtual_button
-
-    def _write_virtual_button(self) -> ElementTree.Element | None:
-        # Ascertain whether or not a virtual button node needs to be created
-        needs_virtual_button = False
-        if (
-            self.input_item.input_type == InputType.JoystickAxis
-            and self.behavior == InputType.JoystickButton
-        ) or (
-            self.input_item.input_type == InputType.JoystickHat
-            and self.behavior == InputType.JoystickButton
-        ):
-            needs_virtual_button = True
-
-        # Ensure there is no virtual button information present
-        # if it is not needed
-        if not needs_virtual_button:
-            self.virtual_button = None
-            return None
-
-        # Check we have virtual button data
-        if self.virtual_button is None:
-            raise error.ProfileError(
-                f"Virtual button specification not present for action "
-                f"configuration part of input {self.input_item.descriptor()}."
-            )
-        return self.virtual_button.to_xml()
+        if root_action in self.action_sequences:
+            self.action_sequences.remove(root_action)
 
 
 class ModeHierarchy:

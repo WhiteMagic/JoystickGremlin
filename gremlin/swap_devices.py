@@ -16,7 +16,7 @@ import gremlin.profile
 class ProfileDeviceInfo:
     device_uuid: uuid.UUID
     name: str = ""
-    num_bindings: int = 0
+    num_mapped_inputs: int = 0
 
 
 @dataclasses.dataclass
@@ -42,14 +42,15 @@ def get_profile_devices(profile: gremlin.profile.Profile) -> list[ProfileDeviceI
         A list of ProfileDeviceInfo objects for all devices present in the
         profile.
     """
-    # Count the number of non-empty bindings.
+    # Count the inputs with action sequences.
     profile_devices = {}
     for device_uuid, inputs in profile.inputs.items():
         if device_uuid not in profile_devices:
             profile_devices[device_uuid] = ProfileDeviceInfo(device_uuid)
 
-        binding_count = sum(1 for e in inputs if e.action_sequences)
-        profile_devices[device_uuid].num_bindings += binding_count
+        profile_devices[device_uuid].num_mapped_inputs += sum(
+            1 for e in inputs if e.action_sequences
+        )
 
     # Attempt to retrieve device name from the database.
     for dev_info in profile.device_database.devices.values():

@@ -555,6 +555,21 @@ def read_subelement(node: ElementTree.Element, name: str) -> Any:  # noqa: ANN40
     return _element_parsers[name](element)
 
 
+def read_subelements(node: ElementTree.Element, name: str) -> list[Any]:
+    """Returns the values of all subelements with the given name.
+
+    Args:
+        node: the node whose subelements should be read and parsed
+        name: the name of the subelements to parse
+
+    Returns:
+        Parsed values of all subelements of the given name, in document order
+    """
+    if name not in _element_parsers:
+        raise error.ProfileError(f"No parser available for subelement with name {name}")
+    return [_element_parsers[name](element) for element in node.findall(name)]
+
+
 def read_subelement_custom(
     node: ElementTree.Element,
     name: str,

@@ -32,9 +32,9 @@ from gremlin.input_cache import (
     Keyboard,
 )
 from gremlin.types import (
+    ActionSequenceCallback,
     Event,
     HatDirection,
-    InputBindingCallback,
     InputType,
     ModeType,
 )
@@ -52,8 +52,6 @@ class EventListener(QtCore.QObject):
     keyboard_event = QtCore.Signal(Event)
     # Signal emitted when mouse events are received
     mouse_event = QtCore.Signal(Event)
-    # Signal emitted when virtual button events are received
-    virtual_event = QtCore.Signal(Event)
     # Signal emitted when a joystick is attached or removed
     device_change_event = QtCore.Signal()
 
@@ -324,7 +322,7 @@ class EventHandler(QtCore.QObject):
         device_guid: uuid.UUID,
         mode: str,
         event: Event,
-        callback: InputBindingCallback | Callable[[Event], None],
+        callback: ActionSequenceCallback | Callable[[Event], None],
     ) -> None:
         """Installs the provided callback for the given event.
 
@@ -368,18 +366,20 @@ class EventHandler(QtCore.QObject):
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
 
-    def is_same_binding(self, event: Event, first_mode: str, second_mode: str) -> bool:
-        """Returns whether both modes route the given event to the same binding.
+    def has_same_callbacks(
+        self, event: Event, first_mode: str, second_mode: str
+    ) -> bool:
+        """Returns whether both modes route the given event to the same callbacks.
 
         Args:
-            event: the event whose binding to compare
+            event: the event whose callbacks to compare
             first_mode: name of the mode to compare against second_mode
             second_mode: name of the mode to compare against first_mode
 
         Returns:
             True if both modes dispatch the event to the same callbacks
         """
-        return self.binding_for(first_mode, event) is self.binding_for(
+        return self.callbacks_for(first_mode, event) is self.callbacks_for(
             second_mode, event
         )
 
@@ -394,20 +394,20 @@ class EventHandler(QtCore.QObject):
         """
         return bool(self._pending_callbacks.get(event))
 
-    def binding_for(
+    def callbacks_for(
         self, mode: str, event: Event
     ) -> list[Callable[[Event], None]] | None:
-        """Returns the callbacks bound to the event in the given mode.
+        """Returns the callbacks registered for the event in the given mode.
 
         Mode inheritance shares the very same list instance with every child mode,
-        making identity of the returned list a test for an unchanged binding.
+        making identity of the returned list a test for unchanged callbacks.
 
         Args:
             mode: name of the mode to look the event up in
             event: the event to look up
 
         Returns:
-            The callbacks bound to the event, None if there are none
+            The callbacks registered for the event, None if there are none
         """
         return self.callbacks.get(event.device_guid, {}).get(mode, {}).get(event)
 
@@ -431,24 +431,25 @@ class EventHandler(QtCore.QObject):
         self.callbacks = {}
         self._pending_callbacks = {}
 
-    def teardown_bindings(self) -> None:
-        """Tears down the functors of every attached input binding callback."""
-        bindings = {}
+    def teardown_callbacks(self) -> None:
+        """Tears down the functors of every attached action sequence callback."""
+        sequence_callbacks = {}
         for modes in self.callbacks.values():
             for events in modes.values():
                 for callback_list in events.values():
                     for callback in callback_list:
-                        if isinstance(callback, InputBindingCallback):
-                            bindings[id(callback)] = callback
-        for binding in bindings.values():
-            binding.teardown()
+                        if isinstance(callback, ActionSequenceCallback):
+                            sequence_callbacks[id(callback)] = callback
+        for callback in sequence_callbacks.values():
+            callback.teardown()
 
     @QtCore.Slot(Event)
     def process_event(self, input_event: Event) -> None:
         """Passes the event to all callbacks registered for or waiting on it.
 
-        Callbacks waiting on the input that the event's mode doesn't bind are called
-        first, as foreign, then the ones bound in the event's mode, as native.
+        Callbacks waiting on the input that aren't registered in the event's mode are
+        called first, as foreign, then the ones registered in the event's mode, as
+        native.
 
         Args:
             input_event: the event to process
@@ -460,13 +461,13 @@ class EventHandler(QtCore.QObject):
             event = input_event.clone()
             event.mode = current_mode
 
-        native_mode_bindings = list(self.binding_for(event.mode, event) or [])
-        foreign_mode_bindings = set(self._pending_callbacks.get(event, [])) - set(
-            native_mode_bindings
+        native_mode_callbacks = list(self.callbacks_for(event.mode, event) or [])
+        foreign_mode_callbacks = set(self._pending_callbacks.get(event, [])) - set(
+            native_mode_callbacks
         )
-        calls = [(callback, ModeType.Foreign) for callback in foreign_mode_bindings] + [
-            (callback, ModeType.Native) for callback in native_mode_bindings
-        ]
+        calls = [
+            (callback, ModeType.Foreign) for callback in foreign_mode_callbacks
+        ] + [(callback, ModeType.Native) for callback in native_mode_callbacks]
 
         # Get the reference to the callback list such that it can later be compared
         # to detect when a load profile action happened, as that makes the identity
@@ -502,10 +503,10 @@ class EventHandler(QtCore.QObject):
                 if (
                     event is not None
                     and event.event_type == InputType.JoystickAxis
-                    and not self.is_same_binding(event, previous_mode, mode_name)
+                    and not self.has_same_callbacks(event, previous_mode, mode_name)
                 ):
-                    for callback in self.binding_for(previous_mode, event) or []:
-                        if isinstance(callback, InputBindingCallback):
+                    for callback in self.callbacks_for(previous_mode, event) or []:
+                        if isinstance(callback, ActionSequenceCallback):
                             callback.reset()
 
     def _may_run(self, callback: Callable[[Event], None]) -> bool:
@@ -521,7 +522,7 @@ class EventHandler(QtCore.QObject):
             True if processing is active or the callback always executes
         """
         return self.process_callbacks or (
-            isinstance(callback, InputBindingCallback) and callback.always_execute
+            isinstance(callback, ActionSequenceCallback) and callback.always_execute
         )
 
     def _run_callback(
@@ -540,7 +541,7 @@ class EventHandler(QtCore.QObject):
         Returns:
             True if the callback wants the next event of the input
         """
-        if isinstance(callback, InputBindingCallback):
+        if isinstance(callback, ActionSequenceCallback):
             return callback(event, mode_type)
 
         script_event = event
@@ -583,7 +584,7 @@ class EventHandler(QtCore.QObject):
             pending[:] = [entry for entry in pending if entry is not callback]
 
     def _install_plugins(
-        self, callback: InputBindingCallback | Callable[[Event], None]
+        self, callback: ActionSequenceCallback | Callable[[Event], None]
     ) -> Callable[[Event], None]:
         """Installs the current plugins into the given callback.
 

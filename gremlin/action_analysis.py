@@ -5,15 +5,20 @@ from __future__ import annotations
 import time
 import uuid
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from gremlin.base_classes import (
     AbstractActionData,
     UserFeedback,
 )
-from gremlin.profile import InputItemBinding
 from gremlin.types import InputType
 
-AnalysisFunction = Callable[[InputItemBinding, InputType], list[UserFeedback]]
+if TYPE_CHECKING:
+    from action_plugins.root import RootData
+
+AnalysisFunction = Callable[
+    [list[list[AbstractActionData]], InputType], list[UserFeedback]
+]
 
 
 # Definition of action tags. Actions are not imported due to their significant
@@ -28,26 +33,26 @@ _CACHE_TTL = 0.25
 _feedback_cache: dict[uuid.UUID, tuple[float, list[UserFeedback]]] = {}
 
 
-def action_sequence_feedback(binding: InputItemBinding) -> list[UserFeedback]:
-    analysis_functions = [
+def action_sequence_feedback(
+    root_action: RootData, input_type: InputType
+) -> list[UserFeedback]:
+    analysis_functions: list[AnalysisFunction] = [
         _dual_axis_response_curve_analysis,
         _map_to_mouse_analysis,
         _vjoy_analysis,
     ]
 
-    cache_key = binding.root_action.id if binding.root_action else uuid.UUID(int=0)
-    if cache_key in _feedback_cache:
-        cache_time, cached_feedback = _feedback_cache[cache_key]
+    if root_action.id in _feedback_cache:
+        cache_time, cached_feedback = _feedback_cache[root_action.id]
         if time.time() - cache_time < _CACHE_TTL:
             return cached_feedback
 
     feedback = []
-    if binding.root_action:
-        paths = _extract_sequences(binding.root_action)
-        for fn in analysis_functions:
-            feedback.extend(fn(paths, binding.behavior))
+    paths = _extract_sequences(root_action)
+    for fn in analysis_functions:
+        feedback.extend(fn(paths, input_type))
     feedback = list(set(feedback))
-    _feedback_cache[cache_key] = (time.time(), feedback)
+    _feedback_cache[root_action.id] = (time.time(), feedback)
     return feedback
 
 

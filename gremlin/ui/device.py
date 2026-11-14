@@ -49,7 +49,7 @@ def _description_from_item(item: InputItem) -> str:
     if item and len(item.action_sequences) > 0:
         labels = filter(
             lambda x: x != "Root",
-            [seq.root_action.action_label for seq in item.action_sequences],
+            [root_action.action_label for root_action in item.action_sequences],
         )
         return " / ".join(labels)
     else:
@@ -61,10 +61,9 @@ def _action_labels_from_item(item: InputItem) -> list[str]:
     if not item:
         return []
     labels = []
-    for seq in item.action_sequences:
-        assert seq.root_action is not None
+    for root_action in item.action_sequences:
         # Children push order reversed so they pop in their original order.
-        pending = list(reversed(seq.root_action.get_actions()[0]))
+        pending = list(reversed(root_action.get_actions()[0]))
         while pending:
             action = pending.pop()
             labels.append(action.chip_label)
