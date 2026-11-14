@@ -3,6 +3,14 @@ title: Changelog
 nav_order: 9
 ---
 
+# Release 16.2
+
+## Bug Fixes
+
+- Address severe bug which resulted in preventing multiple actions in sequence from executing.
+- Rework handling of macros to behave better in corner cases.
+
+
 # Release 16.1
 
 {: .note }

@@ -3,9 +3,16 @@ title: Download
 nav_order: 8
 ---
 
-# Release 16.1 -- 2026-11-07
+# Release 16.2 -- 2026-11-16
 
-[Download Release 16](https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_16.1/Joystick.Gremlin.R16.1.zip){: .btn .btn-blue }
+[Download Release 16.2](https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_16.2/Joystick.Gremlin.R16.2.zip){: .btn .btn-blue }
+
+# Release 16.2
+
+## Bug Fixes
+
+- Address severe bug which resulted in preventing multiple actions in sequence from executing.
+- Rework handling of macros to behave better in corner cases.
 
 # Release 16.1
 
