@@ -16,20 +16,20 @@ import Kobold.Views
 Item {
     id: _root
 
-    property InputItemBindingModel inputBinding
+    property ActionSequenceModel sequence
     property InputItemModel inputItemModel
-    property BindingHeader headerWidget: _header
+    property SequenceHeader headerWidget: _header
 
     implicitHeight: _content.height
 
     // Load on change or initial load.
-    onInputBindingChanged: _actionTree._loadRootAction()
+    onSequenceChanged: () => { _actionTree._loadRootAction() }
 
     // An edit to the action tree rebuilds every ActionModel behind this
     // sequence, so the subtree has to be reloaded against the new models to
     // ensure edits are visible.
     Connections {
-        target: _root.inputBinding
+        target: _root.sequence
 
         function onRootActionChanged() {
             _actionTree._loadRootAction()
@@ -62,23 +62,14 @@ Item {
         // +--------------------------------------------------------------------
         // | Header
         // +--------------------------------------------------------------------
-        BindingHeader {
+        SequenceHeader {
             id: _header
 
             Layout.fillWidth: true
             Layout.topMargin: -Metrics.actionRowInset
 
-            inputBinding: _root.inputBinding
+            sequence: _root.sequence
             inputItemModel: _root.inputItemModel
-        }
-
-        // Axis/hat "virtual button" activation UI (SPEC doesn't cover this
-        // row -- it isn't part of the binding-header grammar, hence its own
-        // component).
-        ActivationBehavior {
-            Layout.fillWidth: true
-
-            inputBinding: _root.inputBinding
         }
 
         // +--------------------------------------------------------------------
@@ -91,16 +82,16 @@ Item {
             Layout.fillWidth: true
             // An empty sequence loads a real (0-height) RootAction, but
             // ColumnLayout still costs a spacing gap.
-            visible: _root.inputBinding && _root.inputBinding.rootAction &&
-                _root.inputBinding.rootAction.hasChildren
+            visible: _root.sequence && _root.sequence.rootAction &&
+                _root.sequence.rootAction.hasChildren
 
             // RootAction.qml declares `required property RootModel action`,
             // which only counts as initialized if supplied at creation time.
             function _loadRootAction() {
-                if (_root.inputBinding && _root.inputBinding.rootAction) {
+                if (_root.sequence && _root.sequence.rootAction) {
                     load(
-                        Qt.createComponent(_root.inputBinding.rootAction.qmlPath),
-                        { "action": _root.inputBinding.rootAction }
+                        Qt.createComponent(_root.sequence.rootAction.qmlPath),
+                        { "action": _root.sequence.rootAction }
                     )
                 }
             }

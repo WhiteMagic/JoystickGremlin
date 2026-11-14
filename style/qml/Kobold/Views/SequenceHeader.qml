@@ -14,7 +14,7 @@ import Kobold.Foundation
 Item {
     id: root
 
-    property InputItemBindingModel inputBinding
+    property ActionSequenceModel sequence
     property InputItemModel inputItemModel
 
     // Ensures a drag cannot start before the image is ready.
@@ -27,8 +27,8 @@ Item {
     Drag.supportedActions: Qt.MoveAction
     Drag.proposedAction: Qt.MoveAction
     Drag.mimeData: ({
-        "text/plain": root.inputBinding && root.inputBinding.rootAction ?
-            root.inputBinding.rootAction.id : "",
+        "text/plain": root.sequence && root.sequence.rootAction ?
+            root.sequence.rootAction.id : "",
         "type": "sequence"
     })
     Drag.onDragFinished: function(dropAction) {
@@ -82,36 +82,32 @@ Item {
 
             Layout.fillWidth: true
             placeholderText: "Description"
-            text: root.inputBinding && root.inputBinding.rootAction ?
-                root.inputBinding.rootAction.actionLabel : ""
+            text: root.sequence && root.sequence.rootAction ?
+                root.sequence.rootAction.actionLabel : ""
 
             onEditingFinished: {
-                root.inputBinding.rootAction.actionLabel = text
+                root.sequence.rootAction.actionLabel = text
             }
-        }
-
-        InputBehavior {
-            inputBinding: root.inputBinding
         }
 
         AddActionMenuButton {
             objectName: "addActionButton"
 
             variant: "bordered"
-            model: root.inputBinding && root.inputBinding.rootAction ?
-                root.inputBinding.rootAction.compatibleActions : []
+            model: root.sequence && root.sequence.rootAction ?
+                root.sequence.rootAction.compatibleActions : []
 
             onActionRequested: (name) => {
-                root.inputBinding.rootAction.appendAction(name, "children")
+                root.sequence.rootAction.appendAction(name, "children")
             }
         }
 
         AppIcon {
             id: _feedbackIcon
 
-            visible: root.inputBinding && root.inputBinding.userFeedback.length > 0
+            visible: root.sequence && root.sequence.userFeedback.length > 0
             name: "warning"
-            role: root.inputBinding && root._maxSeverity(root.inputBinding.userFeedback) >= 3 ?
+            role: root.sequence && root._maxSeverity(root.sequence.userFeedback) >= 3 ?
                 "error" : "warning"
 
             HoverHandler {
@@ -119,15 +115,15 @@ Item {
             }
 
             ToolTip.visible: _feedbackHover.hovered
-            ToolTip.text: root.inputBinding ?
-                root.inputBinding.userFeedback.map((h) => h.message).join("\n") : ""
+            ToolTip.text: root.sequence ?
+                root.sequence.userFeedback.map((h) => h.message).join("\n") : ""
         }
 
         ToolButton {
             icon.name: "delete"
 
             onClicked: {
-                root.inputItemModel.deleteActionSequnce(root.inputBinding)
+                root.inputItemModel.deleteActionSequence(root.sequence)
             }
         }
     }
