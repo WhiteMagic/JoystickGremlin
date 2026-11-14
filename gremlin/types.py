@@ -910,8 +910,8 @@ class Event:
 
 
 @runtime_checkable
-class InputBindingCallback(Protocol):
-    """Callback executing a profile binding's actions."""
+class ActionSequenceCallback(Protocol):
+    """Callback executing the actions of a profile's action sequence."""
 
     @property
     def always_execute(self) -> bool: ...

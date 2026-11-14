@@ -11,13 +11,11 @@ from abc import (
     abstractmethod,
 )
 
-import dill
 from gremlin import (
     audio_player,
     device_initialization,
     error,
     event_handler,
-    fsm,
     input_cache,
     macro,
     mode_manager,
@@ -37,7 +35,6 @@ from gremlin.config import Configuration
 from gremlin.input_refresh import RefreshPhysicalInputs
 from gremlin.types import (
     ActionProperty,
-    AxisButtonDirection,
     Event,
     HatDirection,
     InputType,
@@ -45,192 +42,21 @@ from gremlin.types import (
 )
 from vjoy.vjoy import VJoyProxy
 
-
-class VirtualButton(metaclass=ABCMeta):
-    """Implements a button like interface."""
-
-    def __init__(self) -> None:
-        """Creates a new instance."""
-        self._fsm = self._initialize_fsm()
-
-    def _initialize_fsm(self) -> fsm.FiniteStateMachine:
-        """Initializes the state of the button FSM."""
-        states = ["up", "down"]
-        actions = ["press", "release"]
-
-        def noop() -> bool:
-            return False
-
-        def press() -> bool:
-            return True
-
-        def release() -> bool:
-            return True
-
-        transitions = {
-            ("up", "press"): fsm.Transition([press], "down"),
-            ("up", "release"): fsm.Transition([noop], "up"),
-            ("down", "release"): fsm.Transition([release], "up"),
-            ("down", "press"): fsm.Transition([noop], "down"),
-        }
-        return fsm.FiniteStateMachine("up", states, actions, transitions)
-
-    @property
-    def is_pressed(self) -> bool:
-        """Returns whether the virtual button is currently pressed."""
-        return self._fsm.current_state == "down"
-
-    def clear_last_value(self) -> None:
-        """Forgets the last input value seen by the button."""
-
-    @abstractmethod
-    def __call__(self, event: Event) -> list[bool]:
-        """Process the input event and updates the value as needed.
-
-        Args:
-            event: The input event to process
-
-        Returns:
-            List of states to process
-        """
-
-
-class VirtualAxisButton(VirtualButton):
-    def __init__(
-        self, lower_limit: float, upper_limit: float, direction: AxisButtonDirection
-    ) -> None:
-        super().__init__()
-        self._lower_limit = lower_limit
-        self._upper_limit = upper_limit
-        self._direction = direction
-        self._last_value = None
-
-    def clear_last_value(self) -> None:
-        """Forgets the last axis value, the next one carries no direction."""
-        self._last_value = None
-
-    def __call__(self, event: Event) -> list[bool]:
-        value = event.value if event.value is not None else 0.0
-        forced_activation = False
-        direction = AxisButtonDirection.Anywhere
-
-        if self._last_value is not None:
-            # Check if we moved over the activation region between two consecutive
-            # measurements
-            if (
-                self._last_value < self._lower_limit
-                and value > self._upper_limit
-                or self._last_value > self._upper_limit
-                and value < self._lower_limit
-            ):
-                forced_activation = True
-
-            # Determine direction in which the axis is moving
-            if self._last_value < value:
-                direction = AxisButtonDirection.Below
-            elif self._last_value > event.value:
-                direction = AxisButtonDirection.Above
-
-        self._last_value = event.value
-
-        inside_range = self._lower_limit <= value <= self._upper_limit
-        valid_direction = (
-            direction == self._direction
-            or self._direction == AxisButtonDirection.Anywhere
-        )
-        # Execute FSM transitions based on the activation directions.
-        if forced_activation:
-            actions = ["press", "release"]
-        elif inside_range and valid_direction:
-            actions = ["press"]
-        else:
-            actions = ["release"]
-        return [action == "press" for action in actions if self._fsm.perform(action)[0]]
-
-
-class VirtualHatButton(VirtualButton):
-    """Treats directional hat events as a button."""
-
-    def __init__(self, directions: list[HatDirection]) -> None:
-        super().__init__()
-        self._directions = directions
-
-    def __call__(self, event: Event) -> list[bool]:
-        is_pressed = event.value in self._directions
-        action = "press" if is_pressed else "release"
-        has_changed = self._fsm.perform(action)[0]
-        return [is_pressed] if has_changed else []
-
-
-class VirtualButtonFunctor:
-    def __init__(self, virtual_button: VirtualButton, event_template: Event) -> None:
-        self._virtual_button = virtual_button
-        self._event_template = event_template
-        self._event_listener = event_handler.EventListener()
-
-    @property
-    def is_pressed(self) -> bool:
-        """Returns whether the virtual button is currently pressed."""
-        return self._virtual_button.is_pressed
-
-    def __call__(self, event: Event, value: Value) -> bool:
-        states = self._virtual_button(event)
-        for state in states:
-            # Create the event for the event including mode information which is
-            # required for correct mode switch behavior.
-            new_event = self._event_template.clone()
-            new_event.mode = event.mode
-            new_event.is_pressed = state
-            new_event.raw_value = state
-            self._event_listener.virtual_event.emit(new_event)
-
-        wants_next_event = self._wants_next_event()
-        # No further events arrive until the button's mode is active again.
-        if value.mode_type == ModeType.Foreign and not wants_next_event:
-            self._virtual_button.clear_last_value()
-        return wants_next_event
-
-    def reset(self) -> None:
-        """Forgets the last input value unless events keep arriving outside its
-        mode."""
-        if not self._wants_next_event():
-            self._virtual_button.clear_last_value()
-
-    def _wants_next_event(self) -> bool:
-        """Returns whether the button or its actions wait for the next event.
-
-        Returns:
-            True if the input's next event has to reach the button
-        """
-        return (
-            self._virtual_button.is_pressed
-            or event_handler.EventHandler().has_pending_callbacks(self._event_template)
-        )
+if TYPE_CHECKING:
+    from action_plugins.root import RootData
 
 
 class CallbackObject:
     """Represents the callback executed in reaction to an input."""
 
-    c_next_virtual_identifier = 1
-
-    def __init__(self, binding: profile.InputItemBinding) -> None:
-        """Creates a new callback instance for a specific input item.
+    def __init__(self, root_action: RootData) -> None:
+        """Creates a new callback instance for an action sequence.
 
         Args:
-            action: actions bound to a single input item
+            root_action: root action of the action sequence
         """
-        self._binding = binding
-        self._functor: AbstractFunctor | VirtualButtonFunctor | None = None
-        self._virtual_identifier = 0
-
-        # Differentiate between bindings utilizing virtual buttons and those
-        # that react to raw physical inputs
-        if self._binding.virtual_button is not None:
-            self._virtual_identifier = CallbackObject.c_next_virtual_identifier
-            CallbackObject.c_next_virtual_identifier += 1
-            self._virtual_event_setup()
-        else:
-            self._physical_event_setup()
+        self._root_action = root_action
+        self._functor: AbstractFunctor = root_action.functor(root_action)
 
     @property
     def always_execute(self) -> bool:
@@ -240,120 +66,36 @@ class CallbackObject:
         Returns:
             True if the callback is to be always executed
         """
-        actions = self._binding.root_action.get_actions()[0]
+        actions = self._root_action.get_actions()[0]
         values = [ActionProperty.AlwaysExecute in a.properties for a in actions]
         return any(values)
 
     def __call__(self, event: Event, mode_type: ModeType) -> bool:
-        """Runs the binding's functor with the event.
+        """Runs the action sequence's functor with the event.
 
         Args:
             event: the event to process
-            mode_type: how the binding was reached
+            mode_type: how the action sequence was reached
 
         Returns:
-            True if the binding wants the next event of the input
+            True if the action sequence wants the next event of the input
         """
-        if self._functor is None:
-            return False
         return self._functor(event, self._create_value(event, mode_type))
 
     def reset(self) -> None:
-        """Resets action functors of the binding."""
-        if isinstance(self._functor, AbstractFunctor):
-            reset_functor_tree(self._functor)
-        elif isinstance(self._functor, VirtualButtonFunctor):
-            self._functor.reset()
+        """Resets the action sequence's functors."""
+        reset_functor_tree(self._functor)
 
     def teardown(self) -> None:
-        """Stops timers and threads of the binding's action functors."""
-        if isinstance(self._functor, AbstractFunctor):
-            teardown_functor_tree(self._functor)
-
-    def _physical_event_setup(self) -> None:
-        """Configures the callback object for traditional physical events."""
-        self._functor = self._binding.root_action.functor(self._binding.root_action)
-
-    def _virtual_event_setup(self) -> None:
-        """Configures the callback object for virtual button handling.
-
-        This creates callbacks that emit virtual button events in reaction to
-        the input items physical events. The actions bound to the input item
-        in turn will trigger in response to the emitted virtual events.
-        """
-        if self._binding.input_item.mode is None:
-            logging.getLogger("system").warning(
-                "Virtual button configured for input item with no mode, ignoring."
-            )
-            return
-
-        # Create template virtual event
-        virtual_event = Event(
-            event_type=InputType.VirtualButton,
-            identifier=self._virtual_identifier,
-            device_guid=dill.UUID_Virtual,
-            mode=self._binding.input_item.mode,
-            is_pressed=False,
-            raw_value=False,
-        )
-
-        # Create virtual button instance and virtual event generator
-        vb_instance = self._binding.virtual_button
-        if isinstance(vb_instance, profile.VirtualAxisButton):
-            self._functor = VirtualButtonFunctor(
-                VirtualAxisButton(
-                    vb_instance.lower_limit,
-                    vb_instance.upper_limit,
-                    vb_instance.direction,
-                ),
-                virtual_event,
-            )
-        elif isinstance(vb_instance, profile.VirtualHatButton):
-            self._functor = VirtualButtonFunctor(
-                VirtualHatButton(vb_instance.directions), virtual_event
-            )
-        else:
-            raise error.GremlinError(
-                "Attempting to create virtual event setup when no virtual "
-                + "button is configured."
-            )
-
-        # Create new callback entries for the virtual button event to execute the
-        # actions. This requires the creation of "fake" InputItem and InputItemBinding
-        # instances to create another CallbackObject to handle the virtual button
-        # events.
-
-        # Create virtual InputItem instance
-        virt_item = profile.InputItem(self._binding.input_item.library)
-        virt_item.device_id = dill.UUID_Virtual
-        virt_item.input_type = InputType.VirtualButton
-        virt_item.input_id = self._virtual_identifier
-        virt_item.mode = self._binding.input_item.mode
-        virt_item.action_sequences = [self._binding]
-        virt_item.is_active = self._binding.input_item.is_active
-
-        # Create virtual InputItemBinding instance
-        virt_binding = profile.InputItemBinding(virt_item)
-        virt_binding.root_action = self._binding.root_action
-        virt_binding.behavior = InputType.JoystickButton
-        virt_binding.virtual_button = None
-
-        # Create callback reacting to the virtual button event using the new
-        # virtual binding that mirrors the original physical one
-        eh = event_handler.EventHandler()
-        eh.add_callback(
-            dill.UUID_Virtual,
-            self._binding.input_item.mode,
-            virtual_event,
-            CallbackObject(virt_binding),
-        )
+        """Stops timers and threads of the action sequence's functors."""
+        teardown_functor_tree(self._functor)
 
     def _create_value(self, event: Event, mode_type: ModeType) -> Value:
-        """Returns the value the binding's functor processes.
+        """Returns the value the action sequence's functor processes.
 
         Args:
             event: the event to create the value for
-            mode_type: how the binding was reached
+            mode_type: how the action sequence was reached
 
         Returns:
             Value of the event
@@ -369,8 +111,8 @@ class CallbackObject:
         else:
             raise error.GremlinError("Invalid event type")
 
-        # A foreign binding only ever sees a center value for a hat event, the raw
-        # value remains untouched.
+        # A foreign action sequence only ever sees a center value for a hat event, the
+        # raw value remains untouched.
         if mode_type == ModeType.Foreign and event.event_type == InputType.JoystickHat:
             value.current = HatDirection.Center
         return value
@@ -468,7 +210,6 @@ class CodeRunner:
             evt_listener = event_handler.EventListener()
             evt_listener.keyboard_event.connect(self.event_handler.process_event)
             evt_listener.joystick_event.connect(self.event_handler.process_event)
-            evt_listener.virtual_event.connect(self.event_handler.process_event)
             evt_listener.gremlin_active = True
 
             # Start various manager-style classes.
@@ -504,12 +245,11 @@ class CodeRunner:
             evt_lst = event_handler.EventListener()
             evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
-            evt_lst.virtual_event.disconnect(self.event_handler.process_event)
             evt_lst.gremlin_active = False
         self._running = False
 
         # Stop functor timers and threads before dropping the callbacks.
-        self.event_handler.teardown_bindings()
+        self.event_handler.teardown_callbacks()
 
         # Empty various callback registries.
         user_script.callback_registry.clear()
@@ -603,20 +343,19 @@ class CodeRunner:
     def _setup_profile(self) -> None:
         # Collect action sequences from physical inputs and logical device
         # input entries.
-        item_list = sum(self._profile.inputs.values(), [])
-        action_sequences = sum([e.action_sequences for e in item_list], [])
-
-        # Create executable unit for each action.
-        for action in action_sequences:
-            # Event on which to trigger this action.
-            event = Event(
-                event_type=action.input_item.input_type,
-                device_guid=action.input_item.device_id,
-                identifier=action.input_item.input_id,
-                mode=action.input_item.mode,
-            )
-
-            # Generate executable unit for the linked library item.
-            self.event_handler.add_callback(
-                event.device_guid, action.input_item.mode, event, CallbackObject(action)
-            )
+        for input_items in self._profile.inputs.values():
+            for input_item in input_items:
+                # Event on which to trigger the input's action sequences.
+                event = Event(
+                    event_type=input_item.input_type,
+                    device_guid=input_item.device_id,
+                    identifier=input_item.input_id,
+                    mode=input_item.mode,
+                )
+                for root_action in input_item.action_sequences:
+                    self.event_handler.add_callback(
+                        event.device_guid,
+                        input_item.mode,
+                        event,
+                        CallbackObject(root_action),
+                    )

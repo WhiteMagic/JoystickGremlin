@@ -42,7 +42,7 @@ from gremlin.ui.action_model import (
 
 if TYPE_CHECKING:
     import gremlin.ui.type_aliases as ta
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -222,12 +222,12 @@ class ResponseCurveModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
         self.widget_size = 400
         self._selected_point = 0
@@ -245,7 +245,7 @@ class ResponseCurveModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 

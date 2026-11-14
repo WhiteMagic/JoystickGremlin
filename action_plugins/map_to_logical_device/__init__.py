@@ -44,7 +44,7 @@ from gremlin.ui.device import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 class MapToLogicalDeviceFunctor(AbstractFunctor):
@@ -213,12 +213,12 @@ class MapToLogicalDeviceModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
         self._logical_input_identifier: InputIdentifier | None = None
         signal.logicalDeviceModified.emit()
 
@@ -231,7 +231,7 @@ class MapToLogicalDeviceModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -254,7 +254,9 @@ class MapToLogicalDeviceModel(ActionModel):
             self._data.logical_input_id = identifier.input_id
             self._data.logical_input_type = identifier.input_type
             self.logicalInputIdentifierChanged.emit()
-            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+            signal.inputItemChanged.emit(
+                self._sequence_model.parent().enumeration_index
+            )
 
     def _get_logical_input_type(self) -> str:
         return InputType.to_string(self._data.logical_input_type)

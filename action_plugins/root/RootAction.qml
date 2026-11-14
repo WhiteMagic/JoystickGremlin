@@ -11,7 +11,7 @@ import Kobold.Foundation
 import Kobold.Composites
 
 
-// The invisible container holding every top-level action of a binding's sequence.
+// The invisible container holding every top-level action of an action sequence.
 ColumnLayout {
     id: root
 

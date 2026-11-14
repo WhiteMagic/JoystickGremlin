@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
+import dill
 from gremlin import (
     types,
     util,
@@ -19,6 +20,7 @@ from gremlin.base_classes import (
     AbstractFunctor,
     UserFeedback,
     Value,
+    next_virtual_identifier,
 )
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
@@ -34,7 +36,7 @@ from gremlin.ui.action_model import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 class AxisDeltaFunctor(AbstractFunctor):
@@ -42,6 +44,7 @@ class AxisDeltaFunctor(AbstractFunctor):
         super().__init__(action)
         self._last_value: float | None = None
         self._accumulated: float = 0.0
+        self._identifier = next_virtual_identifier()
 
     @override
     def __call__(
@@ -61,8 +64,15 @@ class AxisDeltaFunctor(AbstractFunctor):
         self._last_value = event.value
         self._accumulated += delta
 
-        press_event = event.clone()
-        press_event.is_pressed = True
+        # Create a virtual button event to emit presses with.
+        press_event = types.Event(
+            event_type=InputType.VirtualButton,
+            identifier=self._identifier,
+            device_guid=dill.UUID_Virtual,
+            mode=event.mode,
+            is_pressed=True,
+            raw_value=True,
+        )
         press_value = Value(True, value.mode_type)
 
         wants_next_event = False
@@ -85,12 +95,12 @@ class AxisDeltaModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return (

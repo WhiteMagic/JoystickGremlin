@@ -45,7 +45,7 @@ from vjoy.vjoy import VJoyProxy
 if TYPE_CHECKING:
     import dill
     from gremlin.profile import Profile
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 class MapToVjoyFunctor(AbstractFunctor):
@@ -197,12 +197,12 @@ class MapToVjoyModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return (
@@ -211,7 +211,7 @@ class MapToVjoyModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -224,7 +224,7 @@ class MapToVjoyModel(ActionModel):
         self._data.vjoy_device_id = vjoy_device_id
         self.vjoyDeviceIdChanged.emit()
         signal.signal.inputItemChanged.emit(
-            self._binding_model.parent().enumeration_index
+            self._sequence_model.parent().enumeration_index
         )
 
     def _get_vjoy_input_id(self) -> int:
@@ -236,7 +236,7 @@ class MapToVjoyModel(ActionModel):
         self._data.vjoy_input_id = vjoy_input_id
         self.vjoyInputIdChanged.emit()
         signal.signal.inputItemChanged.emit(
-            self._binding_model.parent().enumeration_index
+            self._sequence_model.parent().enumeration_index
         )
 
     def _get_vjoy_input_type(self) -> str:
@@ -249,7 +249,7 @@ class MapToVjoyModel(ActionModel):
         self._data.vjoy_input_type = input_type_tmp
         self.inputTypeChanged.emit()
         signal.signal.inputItemChanged.emit(
-            self._binding_model.parent().enumeration_index
+            self._sequence_model.parent().enumeration_index
         )
 
     def _get_axis_mode(self) -> str:
@@ -381,7 +381,7 @@ class MapToVjoyData(AbstractActionData):
         """
         used_inputs = {
             (action.vjoy_device_id, action.vjoy_input_type, action.vjoy_input_id)
-            for action in profile.bound_actions_by_type(MapToVjoyData)
+            for action in profile.assigned_actions_by_type(MapToVjoyData)
         }
         for device in device_initialization.output_vjoy_devices():
             for input_id in self._input_ids(device, self.vjoy_input_type):

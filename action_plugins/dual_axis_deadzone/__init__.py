@@ -44,7 +44,7 @@ from gremlin.ui.profile import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 Vector2 = collections.namedtuple("Vector2", ["x", "y"])
@@ -115,12 +115,12 @@ class DualAxisDeadzoneModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
         self._deadzone_action_list: LabelValueSelectionModel | None = None
 
@@ -133,14 +133,14 @@ class DualAxisDeadzoneModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
     @QtCore.Slot()
     def newDeadzone(self) -> None:
         action = DualAxisDeadzoneData.create(
-            DataCreationMode.Create, self._binding_model.behavior_type
+            DataCreationMode.Create, self._sequence_model.input_type
         )
         action.label = "Dual Axis Deadzone"
 
@@ -189,7 +189,7 @@ class DualAxisDeadzoneModel(ActionModel):
             return
 
         # Remove current input item assignments from the action being deselected
-        item = self._binding_model.input_item_binding.input_item
+        item = self._sequence_model.input_item
         identifier = InputIdentifier(item.device_id, item.input_type, item.input_id)
 
         if self._data.axis1 == identifier:
@@ -198,12 +198,12 @@ class DualAxisDeadzoneModel(ActionModel):
             self._data.axis2 = InputIdentifier()
 
         # Update the library and action entries
-        self._binding_model.append_action(
+        self._sequence_model.append_action(
             self.library.get_action(util.parse_id_or_uuid(uuid_str)),
             self.sequence_index,
         )
-        self._binding_model.remove_action(self.sequence_index)
-        self._binding_model.rootActionChanged.emit()
+        self._sequence_model.remove_action(self.sequence_index)
+        self._sequence_model.rootActionChanged.emit()
 
     @QtCore.Property(float, notify=modelChanged)
     def innerDeadzone(self) -> float:

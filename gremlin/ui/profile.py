@@ -30,7 +30,6 @@ from gremlin import (
 from gremlin.error import GremlinError
 from gremlin.signal import signal
 from gremlin.types import (
-    AxisButtonDirection,
     DataInsertionMode,
     HatDirection,
     InputType,
@@ -39,154 +38,17 @@ from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
-from gremlin.util import clamp
 
 if TYPE_CHECKING:
-    from action_plugins.root import RootModel
+    from action_plugins.root import (
+        RootData,
+        RootModel,
+    )
     from gremlin.base_classes import AbstractActionData
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
-
-
-@ta.QmlElement
-class VirtualButtonModel(QtCore.QObject):
-    """Represents both axis and hat virtual buttons."""
-
-    lowerLimitChanged = QtCore.Signal()
-    upperLimitChanged = QtCore.Signal()
-    directionChanged = QtCore.Signal()
-    hatDirectionChanged = QtCore.Signal()
-
-    def __init__(
-        self,
-        virtual_button: gremlin.profile.AbstractVirtualButton,
-        parent: ta.OQO = None,
-    ) -> None:
-        """Creates a new instance.
-
-        Args:
-            virtual_button: the profile class representing the instance's data
-            parent: parent object of the widget
-        """
-        super().__init__(parent)
-
-        self.virtual_button = virtual_button
-
-    def _get_lower_limit(self) -> float:
-        return self.virtual_button.lower_limit
-
-    def _set_lower_limit(self, value: float) -> None:
-        if value != self.virtual_button.lower_limit:
-            self.virtual_button.lower_limit = clamp(value, -1.0, 1.0)
-            self.lowerLimitChanged.emit()
-
-    def _get_upper_limit(self) -> float:
-        return self.virtual_button.upper_limit
-
-    def _set_upper_limit(self, value: float) -> None:
-        if value != self.virtual_button.upper_limit:
-            self.virtual_button.upper_limit = clamp(value, -1.0, 1.0)
-            self.upperLimitChanged.emit()
-
-    def _get_direction(self) -> str:
-        return AxisButtonDirection.to_string(self.virtual_button.direction)
-
-    def _set_direction(self, value: str) -> None:
-        direction = AxisButtonDirection.to_enum(value.lower())
-        if direction != self.virtual_button.direction:
-            self.virtual_button.direction = direction
-            self.directionChanged.emit()
-
-    def _get_hat_state(self, hat_direction: HatDirection) -> bool:
-        return hat_direction in self.virtual_button.directions
-
-    def _set_hat_state(self, hat_direction: HatDirection, is_active: bool) -> None:
-        if is_active:
-            if hat_direction not in self.virtual_button.directions:
-                self.virtual_button.directions.append(hat_direction)
-                self.hatDirectionChanged.emit()
-        else:
-            if hat_direction in self.virtual_button.directions:
-                index = self.virtual_button.directions.index(hat_direction)
-                del self.virtual_button.directions[index]
-                self.hatDirectionChanged.emit()
-
-    lowerLimit = QtCore.Property(
-        float, fget=_get_lower_limit, fset=_set_lower_limit, notify=lowerLimitChanged
-    )
-    upperLimit = QtCore.Property(
-        float, fget=_get_upper_limit, fset=_set_upper_limit, notify=upperLimitChanged
-    )
-    direction = QtCore.Property(
-        str, fget=_get_direction, fset=_set_direction, notify=directionChanged
-    )
-
-    hatNorth = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.North),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.North, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatNorthEast = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthEast),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.NorthEast, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatEast = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.East),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.East, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatSouthEast = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthEast),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.SouthEast, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatSouth = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.South),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.South, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatSouthWest = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthWest),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.SouthWest, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatWest = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.West),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.West, x
-        ),
-        notify=hatDirectionChanged,
-    )
-    hatNorthWest = QtCore.Property(
-        bool,
-        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthWest),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
-            cls, HatDirection.NorthWest, x
-        ),
-        notify=hatDirectionChanged,
-    )
 
 
 @ta.QmlElement
@@ -277,11 +139,9 @@ class HatDirectionModel(QtCore.QObject):
 
 
 @ta.QmlElement
-class InputItemBindingModel(QtCore.QObject):
-    """Model representing an ActionTree instance."""
+class ActionSequenceModel(QtCore.QObject):
+    """Model representing an action sequence of an input item."""
 
-    behaviorChanged = QtCore.Signal()
-    virtualButtonChanged = QtCore.Signal()
     rootActionChanged = QtCore.Signal()
     inputTypeChanged = QtCore.Signal()
     userFeedbackChanged = QtCore.Signal()
@@ -289,15 +149,14 @@ class InputItemBindingModel(QtCore.QObject):
 
     def __init__(
         self,
-        input_item_binding: gremlin.profile.InputItemBinding,
+        input_item: gremlin.profile.InputItem,
+        root_action: RootData,
         parent: ta.OQO = None,
     ) -> None:
         super().__init__(parent)
 
-        self._input_item_binding = input_item_binding
-        self._virtual_button_model = VirtualButtonModel(
-            self._input_item_binding.virtual_button
-        )
+        self._input_item = input_item
+        self._root_action = root_action
 
         self._last_feedback_check = 0.0
         signal.inputItemChanged.connect(self._check_user_feedback)
@@ -315,7 +174,7 @@ class InputItemBindingModel(QtCore.QObject):
             model.dispose()
 
     def _create_action_models(self) -> None:
-        # Disconnect stale models so they stop reacting to behaviorChanged
+        # Disconnect stale models so they stop reacting to expansionChanged
         for model in self._action_models.values():
             model.dispose()
             model.deleteLater()
@@ -612,11 +471,7 @@ class InputItemBindingModel(QtCore.QObject):
 
     @QtCore.Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
-        return InputType.to_string(self._input_item_binding.input_item.input_type)
-
-    @QtCore.Property(type=VirtualButtonModel, notify=virtualButtonChanged)
-    def virtualButton(self) -> VirtualButtonModel:
-        return self._virtual_button_model
+        return InputType.to_string(self.input_type)
 
     @QtCore.Property(type=ActionModel, notify=rootActionChanged)
     def rootAction(self) -> RootModel:
@@ -624,7 +479,9 @@ class InputItemBindingModel(QtCore.QObject):
 
     @QtCore.Property(type=list, notify=userFeedbackChanged)
     def userFeedback(self) -> list[dict]:
-        data = action_analysis.action_sequence_feedback(self._input_item_binding)
+        data = action_analysis.action_sequence_feedback(
+            self._root_action, self.input_type
+        )
         return [
             {"type": entry.feedback_type.value, "message": entry.message}
             for entry in data
@@ -641,86 +498,22 @@ class InputItemBindingModel(QtCore.QObject):
             self.userFeedbackChanged.emit()
 
     @property
-    def root_action(self) -> AbstractActionData:
-        return self._input_item_binding.root_action
+    def root_action(self) -> RootData:
+        return self._root_action
 
     @property
-    def input_item_binding(self) -> gremlin.profile.InputItemBinding:
-        return self._input_item_binding
-
-    def _get_behavior(self) -> str:
-        if self._input_item_binding.behavior == InputType.Keyboard:
-            return InputType.to_string(InputType.JoystickButton)
-        return InputType.to_string(self._input_item_binding.behavior)
-
-    def _set_behavior(self, text: str) -> None:
-        behavior = InputType.to_enum(text)
-        if behavior != self._input_item_binding.behavior:
-            self._input_item_binding.behavior = behavior
-            self._input_item_binding.virtual_button = None
-
-            # Ensure a virtual button instance exists of the correct type
-            # if one is needed
-            input_type = self._input_item_binding.input_item.input_type
-            if (
-                input_type == InputType.JoystickAxis
-                and behavior == InputType.JoystickButton
-            ):
-                if not isinstance(
-                    self._input_item_binding.virtual_button,
-                    gremlin.profile.VirtualAxisButton,
-                ):
-                    self._input_item_binding.virtual_button = (
-                        gremlin.profile.VirtualAxisButton()
-                    )
-                    self._virtual_button_model = VirtualButtonModel(
-                        self._input_item_binding.virtual_button
-                    )
-            elif (
-                input_type == InputType.JoystickHat
-                and behavior == InputType.JoystickButton
-                and not isinstance(
-                    self._input_item_binding.virtual_button,
-                    gremlin.profile.VirtualHatButton,
-                )
-            ):
-                self._input_item_binding.virtual_button = (
-                    gremlin.profile.VirtualHatButton()
-                )
-                self._virtual_button_model = VirtualButtonModel(
-                    self._input_item_binding.virtual_button
-                )
-
-            # Remove all actions when the behavior changes.
-            root_action = self.root_action
-            root_action.behavior_type = behavior
-            children, selectors = root_action.get_actions()
-            for i in range(len(children) - 1, -1, -1):
-                root_action.remove_action(i, selectors[i])
-            for child in children:
-                self._input_item_binding.library.remove_unused(child, recursive=True)
-
-            # Tree topology changed, so the model cache needs rebuilding
-            self._create_action_models()
-
-            # Force full redraw of the action
-            self.behaviorChanged.emit()
-            self.rootActionChanged.emit()
-            signal.reloadCurrentInputItem.emit()
+    def input_item(self) -> gremlin.profile.InputItem:
+        return self._input_item
 
     @property
-    def behavior_type(self) -> None:
-        return self._input_item_binding.behavior
-
-    behavior = QtCore.Property(
-        str, fget=_get_behavior, fset=_set_behavior, notify=behaviorChanged
-    )
+    def input_type(self) -> InputType:
+        return self._root_action.input_type
 
 
 @ta.QmlElement
 class InputItemModel(QtCore.QAbstractListModel):
     """QML model class representing an InputItem instance and acting as a
-    model to display the individual InputItemBindingModel instances.
+    model to display the individual ActionSequenceModel instances.
     """
 
     # This fake single role and the roleName function are needed to have the
@@ -729,7 +522,7 @@ class InputItemModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"fake"),
     }
 
-    bindingsChanged = QtCore.Signal()
+    sequencesChanged = QtCore.Signal()
 
     def __init__(
         self,
@@ -749,46 +542,44 @@ class InputItemModel(QtCore.QAbstractListModel):
 
         self._input_item = input_item
         self._enumeration_index = enumeration_index
-        self._binding_cache: dict[
-            gremlin.profile.InputItemBinding, InputItemBindingModel
-        ] = {}
+        self._sequence_cache: dict[RootData, ActionSequenceModel] = {}
 
     @property
     def enumeration_index(self) -> int:
         return self._enumeration_index
 
     def dispose(self) -> None:
-        """Disposes all cached binding models before this model is discarded."""
-        for model in self._binding_cache.values():
+        """Disposes all cached sequence models before this model is discarded."""
+        for model in self._sequence_cache.values():
             model.dispose()
-        self._binding_cache.clear()
+        self._sequence_cache.clear()
 
     @QtCore.Slot()
     def newActionSequence(self) -> None:
         self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
-        self._input_item.add_item_binding()
+        self._input_item.add_action_sequence()
         self.endInsertRows()
-        self.bindingsChanged.emit()
+        self.sequencesChanged.emit()
         signal.inputItemChanged.emit(self._enumeration_index)
 
-    @QtCore.Slot(InputItemBindingModel)
-    def deleteActionSequnce(self, binding: InputItemBindingModel) -> None:
+    @QtCore.Slot(ActionSequenceModel)
+    def deleteActionSequence(self, sequence: ActionSequenceModel) -> None:
         try:
-            index = self._input_item.action_sequences.index(binding.input_item_binding)
+            index = self._input_item.action_sequences.index(sequence.root_action)
             self.beginRemoveRows(QtCore.QModelIndex(), index, index)
-            self._input_item.remove_item_binding(binding.input_item_binding)
+            self._input_item.remove_action_sequence(sequence.root_action)
             self.endRemoveRows()
-            cached = self._binding_cache.pop(binding.input_item_binding, None)
+            cached = self._sequence_cache.pop(sequence.root_action, None)
             if cached is not None:
                 cached.dispose()
                 cached.deleteLater()
-            self.bindingsChanged.emit()
+            self.sequencesChanged.emit()
             signal.inputItemChanged.emit(self._enumeration_index)
         except ValueError:
             pass
 
-    @QtCore.Property(list, notify=bindingsChanged)
-    def bindings(self) -> list[InputItemBindingModel]:
+    @QtCore.Property(list, notify=sequencesChanged)
+    def sequences(self) -> list[ActionSequenceModel]:
         return [self.data(self.index(row, 0)) for row in range(self.rowCount())]
 
     @QtCore.Slot(str, str, bool)
@@ -822,8 +613,8 @@ class InputItemModel(QtCore.QAbstractListModel):
         source_index = next(
             (
                 index
-                for index, entry in enumerate(sequences)
-                if entry.root_action.id == source_id
+                for index, root_action in enumerate(sequences)
+                if root_action.id == source_id
             ),
             None,
         )
@@ -837,8 +628,8 @@ class InputItemModel(QtCore.QAbstractListModel):
             target_index = next(
                 (
                     index
-                    for index, entry in enumerate(sequences)
-                    if entry.root_action.id == target_id
+                    for index, root_action in enumerate(sequences)
+                    if root_action.id == target_id
                 ),
                 None,
             )
@@ -860,11 +651,13 @@ class InputItemModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> InputItemBindingModel:
-        binding = self._input_item.action_sequences[index.row()]
-        if binding not in self._binding_cache:
-            self._binding_cache[binding] = InputItemBindingModel(binding, parent=self)
-        return self._binding_cache[binding]
+    ) -> ActionSequenceModel:
+        root_action = self._input_item.action_sequences[index.row()]
+        if root_action not in self._sequence_cache:
+            self._sequence_cache[root_action] = ActionSequenceModel(
+                self._input_item, root_action, parent=self
+            )
+        return self._sequence_cache[root_action]
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return InputItemModel.roles
@@ -1394,7 +1187,7 @@ class ProfileSettingsModel(QtCore.QObject):
 
 @ta.QmlElement
 class ProfileDeviceListModel(QtCore.QAbstractListModel):
-    """Model listing devices with bindings in the profile."""
+    """Model listing devices with mapped inputs in the profile."""
 
     selectedIndexChanged = QtCore.Signal()
 
@@ -1433,9 +1226,9 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
                 return device.name
             case "nameAndActions":
                 if device.name:
-                    return f"{device.name} - {device.num_bindings} actions"
+                    return f"{device.name} - {device.num_mapped_inputs} actions"
                 else:
-                    return f"{device.device_uuid} - {device.num_bindings} actions"
+                    return f"{device.device_uuid} - {device.num_mapped_inputs} actions"
             case "uuid":
                 return str(device.device_uuid)
 

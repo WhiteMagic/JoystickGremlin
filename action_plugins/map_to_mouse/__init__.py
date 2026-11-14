@@ -40,7 +40,7 @@ from gremlin.ui.action_model import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 # Axis values less than this valure are considered at rest, not triggering mouse motion
@@ -217,12 +217,12 @@ class MapToMouseModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return (
@@ -231,7 +231,7 @@ class MapToMouseModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -243,7 +243,9 @@ class MapToMouseModel(ActionModel):
         if mode != self._data.mode:
             self._data.mode = mode
             self.changed.emit()
-            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+            signal.inputItemChanged.emit(
+                self._sequence_model.parent().enumeration_index
+            )
 
     def _get_direction(self) -> int:
         return self._data.direction
@@ -293,7 +295,7 @@ class MapToMouseModel(ActionModel):
         """
         self._data.button = data[0].identifier
         self.changed.emit()
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        signal.inputItemChanged.emit(self._sequence_model.parent().enumeration_index)
 
     mode = QtCore.Property(str, fget=_get_mode, fset=_set_mode, notify=changed)
 

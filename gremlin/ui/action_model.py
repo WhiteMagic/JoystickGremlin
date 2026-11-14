@@ -30,7 +30,7 @@ from gremlin.util import resource_path
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
@@ -92,7 +92,7 @@ class ActionModel(QtCore.QObject):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
@@ -100,16 +100,13 @@ class ActionModel(QtCore.QObject):
         super().__init__(parent)
 
         self._data = data
-        self._binding_model = binding_model
+        self._sequence_model = sequence_model
         self._sequence_index = action_index
         self._parent_sequence_index = parent_index
 
-        self._behavior_changed_connection = self._binding_model.behaviorChanged.connect(
-            lambda: self.actionChanged.emit()
-        )
         # Bound-method slot corrupts memory when the model is freed by C++ parent.
         self._expansion_changed_connection = (
-            self._binding_model.expansionChanged.connect(
+            self._sequence_model.expansionChanged.connect(
                 lambda data: self._handle_expansion_changed(data)
             )
         )
@@ -129,11 +126,8 @@ class ActionModel(QtCore.QObject):
                 )
 
     def dispose(self) -> None:
-        """Disconnects from the binding model before being discarded."""
-        self._binding_model.behaviorChanged.disconnect(
-            self._behavior_changed_connection
-        )
-        self._binding_model.expansionChanged.disconnect(
+        """Disconnects from the sequence model before being discarded."""
+        self._sequence_model.expansionChanged.disconnect(
             self._expansion_changed_connection
         )
 
@@ -151,15 +145,15 @@ class ActionModel(QtCore.QObject):
 
     @property
     def input_type(self) -> InputType:
-        return self._binding_model.behavior_type
+        return self._sequence_model.input_type
 
     @property
     def library(self) -> Library:
-        return self._binding_model.input_item_binding.library
+        return self._sequence_model.input_item.library
 
     @QtCore.Property(type=InputType, notify=actionChanged)
     def inputType(self) -> InputType:
-        return self._binding_model.behavior_type
+        return self._sequence_model.input_type
 
     @QtCore.Property(type="QVariant", notify=actionChanged)
     def actionData(self) -> AbstractActionData:
@@ -179,7 +173,7 @@ class ActionModel(QtCore.QObject):
 
     @QtCore.Property(type=bool, notify=actionChanged)
     def hasChildren(self) -> bool:
-        return self._binding_model.has_child_actions(self._sequence_index)
+        return self._sequence_model.has_child_actions(self._sequence_index)
 
     @QtCore.Property(type=str, constant=True)
     def icon(self) -> str:
@@ -206,11 +200,11 @@ class ActionModel(QtCore.QObject):
 
     @QtCore.Property(type=str, notify=actionChanged)
     def rootActionId(self) -> str:
-        return str(self._binding_model.root_action.id)
+        return str(self._sequence_model.root_action.id)
 
     @QtCore.Property(type=bool, notify=actionChanged)
     def lastInContainer(self) -> bool:
-        return self._binding_model.is_last_action_in_container(self._sequence_index)
+        return self._sequence_model.is_last_action_in_container(self._sequence_index)
 
     @QtCore.Property(type=bool, constant=True)
     def canChangeActivation(self) -> bool:
@@ -259,7 +253,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        return self._binding_model.get_child_actions(self._sequence_index, selector)
+        return self._sequence_model.get_child_actions(self._sequence_index, selector)
 
     @QtCore.Slot(str, str)
     def appendAction(self, action_name: str, selector: str) -> None:
@@ -273,10 +267,10 @@ class ActionModel(QtCore.QObject):
             action_name, InputType.to_enum(self._action_behavior())
         )
         if action:
-            # Read before sync_data replaces every ActionModel behind this binding.
-            enumeration_index = self._binding_model.parent().enumeration_index
+            # Read before sync_data replaces every ActionModel behind this sequence.
+            enumeration_index = self._sequence_model.parent().enumeration_index
             self._data.insert_action(action, selector)
-            self._binding_model.sync_data()
+            self._sequence_model.sync_data()
             _emit_input_item_changed_later(enumeration_index)
         else:
             logging.getLogger("system").error(
@@ -293,10 +287,10 @@ class ActionModel(QtCore.QObject):
             position: boundary index within that container
         """
         # Read before the move, everything below runs after move_action has replaced
-        # every ActionModel behind this binding, self included.
-        enumeration_index = self._binding_model.parent().enumeration_index
+        # every ActionModel behind this sequence, self included.
+        enumeration_index = self._sequence_model.parent().enumeration_index
         try:
-            self._binding_model.move_action(
+            self._sequence_model.move_action(
                 source, self._sequence_index.index, container, position
             )
         except GremlinError:
@@ -315,9 +309,9 @@ class ActionModel(QtCore.QObject):
         Args:
             index: sequence index corresponding to the action to remove
         """
-        # Read before remove_action replaces every ActionModel behind this binding.
-        enumeration_index = self._binding_model.parent().enumeration_index
-        self._binding_model.remove_action(index)
+        # Read before remove_action replaces every ActionModel behind this sequence.
+        enumeration_index = self._sequence_model.parent().enumeration_index
+        self._sequence_model.remove_action(index)
         _emit_input_item_changed_later(enumeration_index)
 
     @property
@@ -348,9 +342,9 @@ class ActionModel(QtCore.QObject):
             self.actionChanged.emit()
             # If the label of a root action is changed update the input button as well
             # as those labels are displayed on it.
-            if self._data == self._binding_model.root_action:
+            if self._data == self._sequence_model.root_action:
                 signal.inputItemChanged.emit(
-                    self._binding_model.parent().enumeration_index
+                    self._sequence_model.parent().enumeration_index
                 )
 
     def _get_activate_on_press(self) -> bool:
@@ -367,7 +361,7 @@ class ActionModel(QtCore.QObject):
     def _set_expanded(self, value: bool) -> None:
         if self._data.expanded != value:
             self._data.expanded = value
-            self._binding_model.expansionChanged.emit(self._data)
+            self._sequence_model.expansionChanged.emit(self._data)
 
     def _handle_expansion_changed(self, data: AbstractActionData) -> None:
         if data is self._data:

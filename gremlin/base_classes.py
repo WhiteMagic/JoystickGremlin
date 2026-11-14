@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import logging
 import time
 import uuid
@@ -43,6 +44,14 @@ if TYPE_CHECKING:
     from gremlin.types import Event
 
 
+_virtual_identifiers = itertools.count(1)
+
+
+def next_virtual_identifier() -> int:
+    """Returns an identifier for virtual button events no other button uses."""
+    return next(_virtual_identifiers)
+
+
 class UserFeedback:
     class FeedbackType(Enum):
         Info = 1
@@ -70,7 +79,7 @@ class Value:
 
         Args:
             raw: the initial raw data
-            mode_type: how the binding receiving the value was reached
+            mode_type: how the action sequence receiving the value was reached
         """
         self._raw = raw
         self._current = raw
@@ -97,7 +106,7 @@ class Value:
 
     @property
     def mode_type(self) -> ModeType:
-        """Returns how the binding receiving the value was reached.
+        """Returns how the action sequence receiving the value was reached.
 
         Returns:
             Mode type of the value
@@ -137,17 +146,16 @@ class AbstractActionData(ABC):
     model = None
     properties: tuple[ActionProperty, ...] = ()
     input_types: tuple[InputType, ...] = ()
-    # Behavior given to child actions, None passes on the action's own behavior
+    # Behavior given to child actions, None passes on the action's own behavior.
     child_behavior_type: InputType | None = None
 
     def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         """Creates a new action data instance.
 
         Args:
-            behavior_type: type of behavior of this action
+            behavior_type: type of behavior the action is created for
         """
         self._id = uuid.uuid4()
-        self._behavior_type = behavior_type
         self._action_label = ""
         self._expanded = True
 
@@ -204,19 +212,6 @@ class AbstractActionData(ABC):
             Unique identifier of this action
         """
         return self._id
-
-    @property
-    def behavior_type(self) -> InputType:
-        """Returns the behavior type this action is configured for.
-
-        Returns:
-            InputType corresponding to the action's behavior
-        """
-        return self._behavior_type
-
-    @behavior_type.setter
-    def behavior_type(self, value: InputType) -> None:
-        self._behavior_type = value
 
     @property
     def action_label(self) -> str:
@@ -556,7 +551,8 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
     def reset(self) -> None:
         """Stops outputs that persist without further input events.
 
-        Called when a mode change routes the functor's input to another binding.
+        Called when a mode change routes the functor's input to another action
+        sequence.
         """
 
     def teardown(self) -> None:
@@ -708,10 +704,15 @@ class AbstractFunctor(ABC, Generic[T]):  # noqa: UP046
 def reset_functor_tree(functor: AbstractFunctor) -> None:
     """Calls the reset method on every functor in the functor's tree.
 
+    Stops below containers giving their children button behavior, i.e. buttons run until
+    released.
+
     Args:
         functor: root of the functor tree to reset
     """
     functor.reset()
+    if functor.data.child_behavior_type == InputType.JoystickButton:
+        return
     for children in functor.functors.values():
         for child in children:
             reset_functor_tree(child)

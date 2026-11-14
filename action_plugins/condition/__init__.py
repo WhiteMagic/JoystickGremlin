@@ -43,7 +43,7 @@ from . import condition as ca
 
 if TYPE_CHECKING:
     from gremlin.ui.action_model import SequenceIndex
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -72,10 +72,12 @@ class ConditionFunctor(AbstractFunctor):
         if not self._should_execute(value):
             return False
 
-        match self.data.behavior_type:
+        match event.event_type:
             case InputType.JoystickAxis:
                 return self._process_axis(event, value, properties)
-            case InputType.JoystickButton | InputType.Keyboard:
+            case (
+                InputType.JoystickButton | InputType.Keyboard | InputType.VirtualButton
+            ):
                 return self._process_button(event, value, properties)
             case InputType.JoystickHat:
                 return self._process_hat(event, value, properties)
@@ -221,12 +223,12 @@ class ConditionModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return (
@@ -235,7 +237,7 @@ class ConditionModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -267,7 +269,7 @@ class ConditionModel(ActionModel):
                 return
             # If the condition is a CurrentInput one set the input type
             if condition_type == ConditionType.CurrentInput:
-                cond.set_input_type(self._data.behavior_type)
+                cond.set_input_type(InputType.to_enum(self._action_behavior()))
             self._data.conditions.append(cond)
         self.conditionsChanged.emit()
 

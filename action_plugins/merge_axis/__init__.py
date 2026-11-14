@@ -45,7 +45,7 @@ from gremlin.ui.profile import (
 )
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.profile import ActionSequenceModel
 
 
 class MergeOperation(Enum):
@@ -198,12 +198,12 @@ class MergeAxisModel(ActionModel):
     def __init__(
         self,
         data: AbstractActionData,
-        binding_model: InputItemBindingModel,
+        sequence_model: ActionSequenceModel,
         action_index: SequenceIndex,
         parent_index: SequenceIndex,
         parent: QtCore.QObject,
     ) -> None:
-        super().__init__(data, binding_model, action_index, parent_index, parent)
+        super().__init__(data, sequence_model, action_index, parent_index, parent)
 
         self._operation_list: LabelValueSelectionModel | None = None
         self._merge_action_list: LabelValueSelectionModel | None = None
@@ -215,7 +215,7 @@ class MergeAxisModel(ActionModel):
         )
 
     def _action_behavior(self) -> str:
-        return self._binding_model.get_action_model_by_sidx(
+        return self._sequence_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -275,7 +275,7 @@ class MergeAxisModel(ActionModel):
             return
 
         # Remove current input item assignments from the action being deselected
-        item = self._binding_model.input_item_binding.input_item
+        item = self._sequence_model.input_item
         identifier = InputIdentifier(item.device_id, item.input_type, item.input_id)
 
         if self._data.axis_in1 == identifier:
@@ -284,12 +284,12 @@ class MergeAxisModel(ActionModel):
             self._data.axis_in2 = InputIdentifier()
 
         # Update the library and action entries
-        self._binding_model.append_action(
+        self._sequence_model.append_action(
             self.library.get_action(util.parse_id_or_uuid(uuid_str)),
             self.sequence_index,
         )
-        self._binding_model.remove_action(self.sequence_index)
-        self._binding_model.rootActionChanged.emit()
+        self._sequence_model.remove_action(self.sequence_index)
+        self._sequence_model.rootActionChanged.emit()
 
     def _get_axis(self, idx: int) -> InputIdentifier:
         return self._data.axis_in1 if idx == 1 else self._data.axis_in2
@@ -320,7 +320,7 @@ class MergeAxisModel(ActionModel):
     @QtCore.Slot()
     def newMergeAxis(self) -> None:
         action = MergeAxisData.create(
-            DataCreationMode.Create, self._binding_model.behavior_type
+            DataCreationMode.Create, self._sequence_model.input_type
         )
         action.label = "New Merge Axis 123"
 
