@@ -49,7 +49,6 @@ hidden_imports = [
     "action_plugins.merge_axis",
     "action_plugins.pause_resume",
     "action_plugins.play_sound",
-    "action_plugins.reference",
     "action_plugins.response_curve",
     "action_plugins.root",
     "action_plugins.run_command",
