@@ -6,10 +6,7 @@ import logging
 import os
 import sys
 import threading
-from abc import (
-    ABCMeta,
-    abstractmethod,
-)
+from typing import TYPE_CHECKING
 
 from gremlin import (
     audio_player,

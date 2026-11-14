@@ -56,6 +56,7 @@ hidden_imports = [
     "action_plugins.split_axis",
     "action_plugins.tempo",
     "action_plugins.text_to_speech",
+    "action_plugins.virtual_button",
     "gremlin.ui",
     "gremlin.ui.action_model",
     "gremlin.ui.backend",
