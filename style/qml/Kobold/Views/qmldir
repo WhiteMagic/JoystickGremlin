@@ -1,7 +1,7 @@
 module Kobold.Views
 import Kobold.Composites
 Helpers helpers.js
-BindingHeader        BindingHeader.qml
+ActionSequence        ActionSequence.qml
 DeviceInputList       DeviceInputList.qml
 KeyboardInputList     KeyboardInputList.qml
 LogicalDevice         LogicalDevice.qml
@@ -11,8 +11,8 @@ MainFailure           MainFailure.qml
 DeviceTabBar          DeviceTabBar.qml
 DeviceList            DeviceList.qml
 InputConfiguration    InputConfiguration.qml
-InputItemBinding      InputItemBinding.qml
 ProfileSettings       ProfileSettings.qml
+SequenceHeader        SequenceHeader.qml
 ScriptManager         ScriptManager.qml
 ScriptConfiguration   ScriptConfiguration.qml
 ErrorDialog           ErrorDialog.qml

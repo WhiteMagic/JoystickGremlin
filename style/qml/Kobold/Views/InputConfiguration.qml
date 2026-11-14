@@ -120,12 +120,12 @@ Item {
                     width: parent.width
                     spacing: Metrics.gapS
 
-                    InputItemBinding {
-                        id: _binding
+                    ActionSequence {
+                        id: _sequence
 
                         Layout.fillWidth: true
 
-                        inputBinding: modelData
+                        sequence: modelData
                         inputItemModel: _root.inputItemModel
                     }
 
