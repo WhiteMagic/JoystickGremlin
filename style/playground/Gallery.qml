@@ -4,8 +4,8 @@
 // The Kobold style gallery: every standalone-testable type -- the 22 style
 // templates plus the Kobold.Controls / Kobold.Composites leaves that need
 // nothing but QtQuick + Foundation. Types needing device/app init
-// (VJoySelector, LogicalDeviceSelector, InputCaptureButton, HatView,
-// InputBehavior) or the running app (ActionNode, InputButton, AxesStateCurrent,
+// (VJoySelector, LogicalDeviceSelector, InputCaptureButton, HatView)
+// or the running app (ActionNode, InputButton, AxesStateCurrent,
 // AxesStateSeries, ButtonState, every other Kobold.Views type) are out of scope
 // -- verified in the live app instead, not a gallery gap to close.
 
@@ -958,10 +958,10 @@ ScrollView {
             title: "Not demoed here"
 
             Caption {
-                text: "InputCaptureButton, LogicalDeviceSelector, VJoySelector, HatView, "
-                    + "InputBehavior wrap Python models that need a running EventListener / "
+                text: "InputCaptureButton, LogicalDeviceSelector, VJoySelector, HatView "
+                    + "wrap Python models that need a running EventListener / "
                     + "connected device / loaded profile (InputListenerModel, "
-                    + "LogicalDeviceSelectorModel, DeviceAxisState, InputItemBindingModel, ...). "
+                    + "LogicalDeviceSelectorModel, DeviceAxisState, ActionSequenceModel, ...). "
                     + "AxesStateCurrent, AxesStateSeries, ButtonState, ActionNode and InputButton "
                     + "need the app's `backend`/`signal` context objects and a real action tree. "
                     + "All verified in the live app instead."
