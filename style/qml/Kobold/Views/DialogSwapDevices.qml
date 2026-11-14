@@ -138,9 +138,9 @@ Window {
             }
 
             Button {
-                objectName: "swapBindingsButton"
+                objectName: "swapMappingsButton"
 
-                text: "Swap Bindings"
+                text: "Swap Mappings"
                 onClicked: () => {
                     _statusMessage.text = _root._tools.swapDevices(
                         _profileDeviceSelection.currentValue,

@@ -176,7 +176,7 @@ Window {
 
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
-                ToolTip.text: "- Select mode to create bindings in.
+                ToolTip.text: "- Select mode to create mappings in.
 - Select source physical devices and target vJoy devices.
 - Click \"Create 1:1 mappings\" button.
 
