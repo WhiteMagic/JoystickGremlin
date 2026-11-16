@@ -208,6 +208,7 @@ class JoystickGremlinBot:
         """Stops the profile execution."""
         # EventListener is session-wide; terminating it breaks later packages.
         self._runner.stop()
+        self._runner.wait_for_macros_to_terminate()
         vjoy.VJoyProxy.reset()
         audio_player.AudioPlayer().stop()
         tts.TTSManager().stop()

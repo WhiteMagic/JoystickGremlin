@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import threading
 from abc import (
     ABCMeta,
     abstractmethod,
@@ -413,6 +414,7 @@ class CodeRunner:
 
         self._profile = None
         self._running = False
+        self._macro_termination_thread: threading.Thread | None = None
 
     def is_running(self) -> bool:
         """Returns whether the code runner is executing code.
@@ -428,6 +430,7 @@ class CodeRunner:
         Args:
             profile: the profile to use when generating all the callbacks
         """
+        self.wait_for_macros_to_terminate()
         self._profile = profile
         self._reset_state()
 
@@ -516,16 +519,27 @@ class CodeRunner:
         user_script.periodic_registry.stop()
         user_script.periodic_registry.clear()
 
-        # Stop all manager classes.
-        macro.MacroManager().stop()
+        # Macros finish off the GUI thread, vJoy is released once they have ended.
+        self._macro_termination_thread = threading.Thread(
+            target=self._terminate_macros, daemon=True
+        )
+        self._macro_termination_thread.start()
         sendinput.MouseMotionManager().stop()
         audio_player.AudioPlayer().stop()
         tts.TTSManager().stop()
 
-        # Remove all claims on VJoy devices.
-        VJoyProxy.reset()
-
         self._profile = None
+
+    def wait_for_macros_to_terminate(self) -> None:
+        """Blocks until the macros of the last stop have ended and vJoy is released."""
+        if self._macro_termination_thread is not None:
+            self._macro_termination_thread.join()
+            self._macro_termination_thread = None
+
+    def _terminate_macros(self) -> None:
+        """Ends all macros, then relinquishes the vJoy devices they may use."""
+        macro.MacroManager().stop()
+        VJoyProxy.reset()
 
     def _reset_state(self) -> None:
         """Resets all states to their default values."""

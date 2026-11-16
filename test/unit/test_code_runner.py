@@ -89,6 +89,7 @@ def activation_calls(
     yield calls
 
     runner.stop()
+    runner.wait_for_macros_to_terminate()
 
 
 def test_initial_value_uses_axis_index_on_device_with_axis_gaps(

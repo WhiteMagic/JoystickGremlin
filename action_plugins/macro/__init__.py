@@ -588,14 +588,22 @@ class MacroFunctor(AbstractFunctor):
         value: Value,
         properties: list[ActionProperty] = [],
     ) -> bool:
-        is_hold = self.data.repeat_mode == MacroRepeatModes.Hold
-        # Ensure a held macro is terminated when a release event arrives.
-        if is_hold and not value.current:
-            macro.MacroManager().terminate_macro(self.macro)
+        manager = macro.MacroManager()
+        # Hold mode follows the input state, whatever the checkboxes say.
+        if self.data.repeat_mode == MacroRepeatModes.Hold:
+            # Foreign events only end an activation.
+            is_start = bool(value.current) and value.mode_type == types.ModeType.Native
+            if is_start:
+                manager.run_macro(self.macro)
+            elif not value.current:
+                manager.stop_macro(self.macro)
+            return is_start
         if self._should_execute(value):
-            macro.MacroManager().queue_macro(self.macro)
-            # Hold mode needs the release to stop, whatever the checkboxes say.
-            return self._requires_paired_event(value) or (is_hold and value.current)
+            if self.data.repeat_mode == MacroRepeatModes.Toggle:
+                manager.toggle_macro(self.macro)
+            else:
+                manager.run_macro(self.macro)
+            return self._requires_paired_event(value)
         return False
 
 

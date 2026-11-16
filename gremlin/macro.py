@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import collections
-import functools
+import itertools
 import logging
 import threading
 import time
@@ -12,6 +11,7 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Callable
 from typing import override
 from xml.etree import ElementTree
 
@@ -44,244 +44,304 @@ from gremlin.types import (
 )
 from vjoy.vjoy import VJoyProxy
 
-MacroEntry = collections.namedtuple("MacroEntry", ["macro", "state"])
+# Seconds macro sequences get to finish their current repetition when the manager stops.
+STOP_GRACE_PERIOD = 1.0
+
+
+def _preempts_others(macro: Macro) -> bool:
+    """Returns whether the macro pauses all other macros while it executes.
+
+    Args:
+        macro: the macro to check
+
+    Returns:
+        True if the macro is exclusive and preemptive
+    """
+    return macro.is_exclusive and macro.is_preempting
+
+
+def _with_default_pauses(
+    sequence: list[AbstractAction], delay: float
+) -> list[AbstractAction]:
+    """Returns the sequence with a pause between consecutive non-pause actions.
+
+    Args:
+        sequence: the actions of a macro
+        delay: duration in seconds of the inserted pauses
+
+    Returns:
+        Copy of the sequence including the inserted pauses
+    """
+    with_added_pauses: list[AbstractAction] = []
+    for current_action, next_action in itertools.pairwise(sequence):
+        with_added_pauses.append(current_action)
+        if not isinstance(current_action, PauseAction) and not isinstance(
+            next_action, PauseAction
+        ):
+            with_added_pauses.append(PauseAction(delay))
+    with_added_pauses.extend(sequence[-1:])
+    return with_added_pauses
+
+
+class MacroExecution:
+    """A single execution of a macro, from being triggered until it ends."""
+
+    def __init__(self, macro: Macro, execute: Callable[[MacroExecution], None]) -> None:
+        """Creates a new macro execution that has not started yet.
+
+        Args:
+            macro: the macro to execute
+            execute: function performing the execution on its own thread
+        """
+        self.macro = macro
+        # Ends the execution after its current repetition.
+        self.stop_requested = threading.Event()
+        # Aborts the execution as soon as possible.
+        self.abort_requested = threading.Event()
+        self.thread = threading.Thread(target=execute, args=(self,), daemon=True)
+
+    def request_abort(self) -> None:
+        """Ends the execution before its next action."""
+        self.abort_requested.set()
+        self.stop_requested.set()
 
 
 class MacroManager(metaclass=SingletonMetaclass):
-    """Manages the proper dispatching and scheduling of macros."""
+    """Manages the proper dispatching and scheduling of macros.
+
+    Commands arrive on the event handling thread and only change the bookkeeping. Each
+    macro executes in its own thread.
+    """
 
     def __init__(self) -> None:
         """Initializes the instance."""
-        self._queued_macros: list[MacroEntry] = []
-        self._scheduled_macro: dict[int, Macro] = {}
-        self._executing_macro: dict[int, bool] = {}
-        self._executing_macro_lock = threading.Lock()
-        self._queued_macros_lock = threading.Lock()
-
-        # Default delay between subsequent message dispatch. This is to get
-        # around some games not picking up messages if they are sent in too
-        # quick a succession.
-        self.default_delay = Configuration().value("action", "macro", "default-delay")
-
-        self._is_executing_preemptive = False
-        self._is_executing_exclusive = False
-        self._preemptive_condition = threading.Condition()
+        # Guards all bookkeeping, executions also wait on it while being preempted.
+        self._condition = threading.Condition()
+        self._waiting_macros: list[MacroExecution] = []
+        self._running_macros: dict[int, MacroExecution] = {}
         self._is_running = False
-        self._schedule_event = threading.Event()
-
-        self._run_scheduler_thread = None
 
     def start(self) -> None:
-        """Starts the scheduler."""
-        self._scheduled_macro = {}
-        self._executing_macro = {}
-        self._is_executing_preemptive = False
-        self._is_executing_exclusive = False
-        self._is_running = True
-        if self._run_scheduler_thread is None:
-            self._run_scheduler_thread = threading.Thread(target=self._run_scheduler)
-        if not self._run_scheduler_thread.is_alive():
-            self._run_scheduler_thread.start()
+        """Starts accepting macros."""
+        with self._condition:
+            self._is_running = True
 
     def stop(self) -> None:
-        """Stops the scheduler."""
-        self._is_running = False
-        if (
-            self._run_scheduler_thread is not None
-            and self._run_scheduler_thread.is_alive()
-        ):
-            # Terminate the scheduler.
-            self._schedule_event.set()
-            self._run_scheduler_thread.join()
-            self._run_scheduler_thread = None
+        """Stops all macros.
 
-            # Terminate any macro that is still active.
-            with self._executing_macro_lock:
-                for key in self._executing_macro:
-                    self._executing_macro[key] = False
+        Running macros get a grace period to finish their current repetition before
+        being aborted.
+        """
+        with self._condition:
+            self._is_running = False
+            self._waiting_macros.clear()
+            running_macros = list(self._running_macros.values())
+            for macro in running_macros:
+                macro.stop_requested.set()
+        self._join(running_macros)
 
-    def queue_macro(self, macro: Macro) -> None:
-        """Queues a macro in the schedule taking the repeat type into account.
+        with self._condition:
+            for macro in running_macros:
+                macro.request_abort()
+            self._condition.notify_all()
+        self._join(running_macros)
+
+        for macro in running_macros:
+            if macro.thread.is_alive():
+                logging.getLogger("system").warning(
+                    f"Macro {macro.macro.id} did not stop in time."
+                )
+        with self._condition:
+            self._running_macros.clear()
+
+    def run_macro(self, macro: Macro) -> None:
+        """Triggers an execution of the macro.
+
+        Every trigger results in an execution, except for an already active hold macro.
 
         Args:
-            macro: the macro to add to the scheduler
+            macro: the macro to execute
         """
-        if isinstance(macro.repeat, ToggleRepeat) and macro.id in self._scheduled_macro:
-            self.terminate_macro(macro)
-        else:
-            # Preprocess macro to contain pauses as necessary.
-            self._preprocess_macro(macro)
-            with self._queued_macros_lock:
-                self._queued_macros.append(MacroEntry(macro, True))
-            self._schedule_event.set()
+        with self._condition:
+            is_ignored = isinstance(macro.repeat, HoldRepeat) and self._is_active(macro)
+            if self._is_running and not is_ignored:
+                self._waiting_macros.append(MacroExecution(macro, self._execute))
+                self._dispatch_waiting()
 
-    def terminate_macro(self, macro: Macro) -> None:
-        """Adds a termination request for a macro to the execution queue.
+    def stop_macro(self, macro: Macro) -> None:
+        """Ends the macro after its current repetition and drops its waiting executions.
 
         Args:
-            macro: the macro to terminate
+            macro: the macro to stop
         """
-        with self._queued_macros_lock:
-            self._queued_macros.append(MacroEntry(macro, False))
-        self._schedule_event.set()
+        with self._condition:
+            self._stop(macro)
+            self._dispatch_waiting()
 
-    def _run_scheduler(self) -> None:
-        """Dispatches macros as required."""
-        while self._is_running:
-            # Wake up when the event triggers to proces the macro list.
-            self._schedule_event.wait()
-            self._schedule_event.clear()
-
-            # Run scheduled macros and ensure exclusive ones run separately from all
-            # other macros.
-            with self._queued_macros_lock:
-                entries_to_remove = []
-                has_exclusive = False
-                for entry in self._queued_macros:
-                    # Terminate macro if needed.
-                    if entry.state is False:
-                        if self._executing_macro.get(entry.macro.id):
-                            # Terminate currently running macro.
-                            with self._executing_macro_lock:
-                                self._executing_macro[entry.macro.id] = False
-
-                            # Remove all queued up macros with the same id as they
-                            # should have been impossible to queue up in the first
-                            # place.
-                            removal_list = []
-                            for queue_entry in self._queued_macros:
-                                if queue_entry.macro.id == entry.macro.id:
-                                    removal_list.append(queue_entry)
-                            for queue_entry in removal_list:
-                                self._queued_macros.remove(queue_entry)
-                    # Don't run a queued macro if the same instance is already running.
-                    elif entry.macro.id in self._scheduled_macro:
-                        continue
-                    # Handle exclusive and pre-empting macros.
-                    elif entry.macro.is_exclusive:
-                        has_exclusive = True
-
-                        # Can only preempt if no other macro is currently performing a
-                        # preemptive macro.
-                        if entry.macro.is_preempting:
-                            if not self._is_executing_preemptive:
-                                self._is_executing_preemptive = True
-                                self._is_executing_exclusive = True
-                                self._dispatch_macro(entry.macro)
-                                entries_to_remove.append(entry)
-                        # Non-preemptive exclusive macros wait for currently running
-                        # macros to finish before being dispatched.
-                        elif len(self._scheduled_macro) == 0:
-                            self._is_executing_exclusive = True
-                            self._dispatch_macro(entry.macro)
-                            entries_to_remove.append(entry)
-                    # When no exclusive macro is running dispatch all queued up macros.
-                    elif not has_exclusive and not self._is_executing_exclusive:
-                        self._dispatch_macro(entry.macro)
-                        entries_to_remove.append(entry)
-
-                # Remove all entries we've processed.
-                for entry in entries_to_remove:
-                    if entry in self._queued_macros:
-                        self._queued_macros.remove(entry)
-
-    def _dispatch_macro(self, macro: Macro) -> None:
-        """Dispatches a single macro to be run.
+    def toggle_macro(self, macro: Macro) -> None:
+        """Stops the macro if it is active and triggers an execution of it otherwise.
 
         Args:
-            macro: the macro to dispatch
+            macro: the macro to toggle
         """
-        if macro.id not in self._scheduled_macro:
-            self._scheduled_macro[macro.id] = macro
-            threading.Thread(
-                target=functools.partial(self._execute_macro, macro)
-            ).start()
-        else:
-            logging.getLogger("system").warning(
-                "Attempting to dispatch an already running macro."
+        with self._condition:
+            if self._is_active(macro):
+                self._stop(macro)
+            elif self._is_running:
+                self._waiting_macros.append(MacroExecution(macro, self._execute))
+            self._dispatch_waiting()
+
+    def _is_active(self, macro: Macro) -> bool:
+        """Returns whether the macro waits to start or executes without a stop request.
+
+        Args:
+            macro: the macro to check
+
+        Returns:
+            True if the macro is active from the user's point of view
+        """
+        execution = self._running_macros.get(macro.id)
+        is_waiting = any(waiting.macro is macro for waiting in self._waiting_macros)
+        return is_waiting or (
+            execution is not None and not execution.stop_requested.is_set()
+        )
+
+    def _stop(self, macro: Macro) -> None:
+        """Drops waiting executions of the macro and requests its running one to stop.
+
+        Args:
+            macro: the macro to stop
+        """
+        self._waiting_macros = [
+            execution
+            for execution in self._waiting_macros
+            if execution.macro is not macro
+        ]
+        execution = self._running_macros.get(macro.id)
+        if execution is not None:
+            execution.stop_requested.set()
+
+    def _dispatch_waiting(self) -> None:
+        """Starts every waiting execution taking ordering and exclusivity rules into
+        account.
+
+        Executions of one macro start in order, everything queued behind an exclusive
+        macro waits. Requires the lock to be held.
+        """
+        is_behind_exclusive = False
+        still_waiting = []
+        for execution in self._waiting_macros:
+            if self._can_start(execution, is_behind_exclusive):
+                self._running_macros[execution.macro.id] = execution
+                execution.thread.start()
+            else:
+                still_waiting.append(execution)
+            is_behind_exclusive = is_behind_exclusive or execution.macro.is_exclusive
+        self._waiting_macros = still_waiting
+
+    def _can_start(self, execution: MacroExecution, is_behind_exclusive: bool) -> bool:
+        """Returns whether the waiting execution may start now.
+
+        Args:
+            execution: the waiting execution to check
+            is_behind_exclusive: True if an exclusive execution waits ahead of this one
+
+        Returns:
+            True if the execution may start
+        """
+        running_macros = [other.macro for other in self._running_macros.values()]
+        is_free = execution.macro.id not in self._running_macros
+        if _preempts_others(execution.macro):
+            return is_free and not any(
+                _preempts_others(running_macro) for running_macro in running_macros
             )
+        if execution.macro.is_exclusive:
+            return is_free and len(running_macros) == 0
+        return (
+            is_free
+            and not is_behind_exclusive
+            and not any(running_macro.is_exclusive for running_macro in running_macros)
+        )
 
-    def _wait_while_paused(self, macro: Macro) -> None:
-        """Blocks the calling thread while a different macro is executing preemptively
-        and exclusively.
+    def _execute(self, execution: MacroExecution) -> None:
+        """Executes the macro's repetitions, called on the execution's thread.
 
         Args:
-            macro: the macro whose thread is calling this method
+            execution: the execution to perform
         """
-        with self._preemptive_condition:
-            self._preemptive_condition.wait_for(
-                lambda: not self._is_executing_preemptive or macro.is_preempting
+        try:
+            sequence = _with_default_pauses(
+                execution.macro.sequence,
+                Configuration().value("action", "macro", "default-delay"),
             )
+            repeat = execution.macro.repeat
+            match repeat:
+                case CountRepeat():
+                    limit = repeat.count
+                case HoldRepeat() | ToggleRepeat():
+                    limit = None
+                case _:
+                    limit = 1
+            delay = repeat.delay if repeat is not None else 0.0
 
-    def _execute_macro(self, macro: Macro) -> None:
-        """Executes a given macro in a separate thread.
+            repetition = 0
+            while limit is None or repetition < limit:
+                if repetition > 0 and execution.stop_requested.wait(delay):
+                    break
+                self._execute_sequence(execution, sequence)
+                repetition += 1
+        finally:
+            with self._condition:
+                if self._running_macros.get(execution.macro.id) is execution:
+                    del self._running_macros[execution.macro.id]
+                self._condition.notify_all()
+                self._dispatch_waiting()
 
-        This method will run all provided actions and once they all have been executed
-        will remove the macro from the set of active macros and inform the scheduler of
-        the completion.
+    def _execute_sequence(
+        self, execution: MacroExecution, sequence: list[AbstractAction]
+    ) -> None:
+        """Executes one repetition of the sequence.
 
         Args:
-            macro: the macro object to be executed
+            execution: the execution the sequence belongs to
+            sequence: the actions to execute
         """
-        # Handle macros with a repeat mode
-        if macro.repeat is not None:
-            delay = macro.repeat.delay
-
-            with self._executing_macro_lock:
-                self._executing_macro[macro.id] = True
-
-            # Handle count repeat mode
-            if isinstance(macro.repeat, CountRepeat):
-                count = 0
-                while count < macro.repeat.count and self._executing_macro[macro.id]:
-                    for action in macro.sequence:
-                        self._wait_while_paused(macro)
-                        action()
-                    count += 1
-                    time.sleep(delay)
-
-            # Handle continuous repeat modes
-            elif type(macro.repeat) in [HoldRepeat, ToggleRepeat]:
-                while self._executing_macro.get(macro.id, False):
-                    for action in macro.sequence:
-                        self._wait_while_paused(macro)
-                        action()
-                    time.sleep(delay)
-
-        # Handle simple one shot macros.
-        else:
-            for action in macro.sequence:
-                self._wait_while_paused(macro)
+        for action in sequence:
+            self._wait_while_preempted(execution)
+            if execution.abort_requested.is_set():
+                break
+            if isinstance(action, PauseAction):
+                execution.abort_requested.wait(action.duration)
+            else:
                 action()
 
-        # Remove macro from active set, notify manager, and remove any potential
-        # callbacks.
-        self._scheduled_macro.pop(macro.id, None)
-        if macro.is_exclusive:
-            self._is_executing_exclusive = False
-            if macro.is_preempting:
-                with self._preemptive_condition:
-                    self._is_executing_preemptive = False
-                    self._preemptive_condition.notify_all()
-        with self._executing_macro_lock:
-            if macro.id in self._executing_macro:
-                self._executing_macro[macro.id] = False
-        self._schedule_event.set()
-
-    def _preprocess_macro(self, macro: Macro) -> None:
-        """Inserts pauses as necessary into the macro.
+    def _wait_while_preempted(self, execution: MacroExecution) -> None:
+        """Blocks while a different macro executes preemptively.
 
         Args:
-            macro: the macro instance to modify
+            execution: the execution whose thread calls this method
         """
-        new_sequence = [macro.sequence[0]]
-        for a1, a2 in zip(macro.sequence[:-1], macro.sequence[1:]):
-            if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
-                new_sequence.append(a2)
-            else:
-                new_sequence.append(PauseAction(self.default_delay))
-                new_sequence.append(a2)
-        macro._sequence = new_sequence
+        with self._condition:
+            self._condition.wait_for(
+                lambda: (
+                    execution.abort_requested.is_set()
+                    or _preempts_others(execution.macro)
+                    or not any(
+                        _preempts_others(other.macro)
+                        for other in self._running_macros.values()
+                    )
+                )
+            )
+
+    def _join(self, executions: list[MacroExecution]) -> None:
+        """Waits up to the grace period for the executions' threads to end.
+
+        Args:
+            executions: the executions to wait for
+        """
+        deadline = time.monotonic() + STOP_GRACE_PERIOD
+        for execution in executions:
+            execution.thread.join(max(0.0, deadline - time.monotonic()))
 
 
 class Macro:
@@ -292,10 +352,10 @@ class Macro:
 
     def __init__(self) -> None:
         """Creates a new macro instance."""
-        self._sequence = []
+        self._sequence: list[AbstractAction] = []
         self._id = Macro._next_macro_id
         Macro._next_macro_id += 1
-        self.repeat = None
+        self.repeat: AbstractRepeat | None = None
         self.is_exclusive = False
         self.is_preempting = False
 

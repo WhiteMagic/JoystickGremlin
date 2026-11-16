@@ -17,6 +17,7 @@ from PySide6 import (
 import dill
 import gremlin.device_initialization
 import gremlin.event_handler
+import gremlin.keyboard
 import gremlin.macro
 import gremlin.sendinput
 import gremlin.ui.backend
@@ -124,6 +125,8 @@ def package_outputs() -> Generator[Outputs]:
     with (
         mock.patch.object(gremlin.macro, "send_key_down") as key_down,
         mock.patch.object(gremlin.macro, "send_key_up") as key_up,
+        mock.patch.object(gremlin.keyboard, "send_key_down", key_down),
+        mock.patch.object(gremlin.keyboard, "send_key_up", key_up),
         mock.patch.object(gremlin.sendinput, "_send_input") as send_input,
         mock.patch.multiple(
             AudioPlayer, start=mock.DEFAULT, stop=mock.DEFAULT, enqueue=mock.DEFAULT
