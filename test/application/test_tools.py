@@ -61,16 +61,16 @@ def _inputs(device: dill.DeviceSummary) -> set[tuple[InputType, int]]:
     )
 
 
-def _bound_actions(
+def _assigned_actions(
     device: dill.DeviceSummary, mode: str = "Default"
 ) -> dict[tuple[InputType, int], list[AbstractActionData]]:
-    """Returns the top-level actions of each of the device's bound inputs in mode."""
+    """Returns the top-level actions of each of the device's mapped inputs in mode."""
     profile = gremlin.ui.backend.Backend().profile
     return {
         (item.input_type, item.input_id): [
             action
-            for binding in item.action_sequences
-            for action in binding.root_action.get_actions()[0]
+            for root_action in item.action_sequences
+            for action in root_action.get_actions()[0]
         ]
         for item in profile.inputs.get(device.device_guid.uuid, [])
         if item.mode == mode and item.action_sequences
@@ -82,7 +82,7 @@ def _mapped_inputs(
 ) -> set[tuple[InputType, int]]:
     return {
         key
-        for key, actions in _bound_actions(device, mode).items()
+        for key, actions in _assigned_actions(device, mode).items()
         if any(isinstance(action, MapToVjoyData) for action in actions)
     }
 
@@ -94,7 +94,7 @@ def _descriptions(device: dill.DeviceSummary) -> dict[tuple[InputType, int], lis
             for action in actions
             if isinstance(action, DescriptionData)
         ]
-        for key, actions in _bound_actions(device).items()
+        for key, actions in _assigned_actions(device).items()
     }
 
 
@@ -196,7 +196,7 @@ def test_swap_devices(ui: UiDriver, empty_profile: pathlib.Path) -> None:
         )
         ui.select(ui.find_item("physicalDeviceCombo", dialog), THROTTLE.name)
         status = ui.find_item("statusLabel", dialog)
-        ui.click(ui.find_item("swapBindingsButton", dialog))
+        ui.click(ui.find_item("swapMappingsButton", dialog))
         ui.wait_until(lambda: status.property("text").startswith("Swapped"))
 
     assert _descriptions(STICK) == {throttle_input: ["throttle"]}

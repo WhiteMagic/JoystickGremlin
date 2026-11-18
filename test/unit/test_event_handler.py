@@ -13,23 +13,23 @@ from gremlin.mode_manager import (
     ModeManager,
 )
 from gremlin.types import (
+    ActionSequenceCallback,
     Event,
     HatDirection,
-    InputBindingCallback,
     InputType,
     ModeType,
 )
 
 _DEVICE_GUID = uuid.UUID("6a0c4f3e-2b1d-4e8a-9f75-c3d2e1b0a987")
 
-type Callback = InputBindingCallback | Callable[[Event], None]
-type Bind = Callable[[Event, list[Callback]], None]
+type Callback = ActionSequenceCallback | Callable[[Event], None]
+type Register = Callable[[Event, list[Callback]], None]
 
 
-class _RecordingBinding:
-    """Stands in for a profile binding, answering with a fixed sequence."""
+class _RecordingCallback:
+    """Stands in for an action sequence callback, answering with a fixed sequence."""
 
-    # Required by InputBindingCallback, otherwise the handler calls it as a script.
+    # Required by ActionSequenceCallback, otherwise the handler calls it as a script.
     always_execute = True
 
     def __init__(self, answers: list[bool]) -> None:
@@ -48,8 +48,8 @@ class _RecordingBinding:
 
 
 @pytest.fixture
-def bind(monkeypatch: pytest.MonkeyPatch) -> Iterator[Bind]:
-    """Provides a function binding callbacks to an input in the event's mode.
+def register(monkeypatch: pytest.MonkeyPatch) -> Iterator[Register]:
+    """Provides a function registering callbacks for an input in the event's mode.
 
     The current mode starts as A.
     """
@@ -101,14 +101,18 @@ def _hat_event(mode: str, direction: HatDirection) -> Event:
     )
 
 
-def test_pending_binding_gets_next_event_of_other_mode_as_foreign(bind: Bind) -> None:
-    binding = _RecordingBinding([True, False])
-    bind(_button_event("A", True), [binding])
+def test_pending_callback_gets_next_event_of_other_mode_as_foreign(
+    register: Register,
+) -> None:
+    callback = _RecordingCallback([True, False])
+    register(_button_event("A", True), [callback])
 
     EventHandler().process_event(_button_event("A", True))
     EventHandler().process_event(_button_event("B", False))
 
-    assert [(event.is_pressed, mode_type) for event, mode_type in binding.received] == [
+    assert [
+        (event.is_pressed, mode_type) for event, mode_type in callback.received
+    ] == [
         (True, ModeType.Native),
         (False, ModeType.Foreign),
     ]
@@ -117,46 +121,50 @@ def test_pending_binding_gets_next_event_of_other_mode_as_foreign(bind: Bind) ->
 @pytest.mark.parametrize(
     ("current_mode", "mode_type"),
     [
-        pytest.param("A", ModeType.Native, id="also_bound"),
+        pytest.param("A", ModeType.Native, id="also_registered"),
         pytest.param("B", ModeType.Foreign, id="only_pending"),
     ],
 )
-def test_pending_binding_gets_each_event_once(
-    bind: Bind,
+def test_pending_callback_gets_each_event_once(
+    register: Register,
     monkeypatch: pytest.MonkeyPatch,
     current_mode: str,
     mode_type: ModeType,
 ) -> None:
-    binding = _RecordingBinding([True])
-    bind(_axis_event("A", 0.0), [binding])
+    callback = _RecordingCallback([True])
+    register(_axis_event("A", 0.0), [callback])
     EventHandler().process_event(_axis_event("A", 0.7))
     _set_current_mode(monkeypatch, current_mode)
-    binding.received.clear()
+    callback.received.clear()
 
     EventHandler().process_event(_axis_event(current_mode, 0.75))
     EventHandler().process_event(_axis_event(current_mode, 0.8))
 
     assert [
         (event.value, received_mode_type)
-        for event, received_mode_type in binding.received
+        for event, received_mode_type in callback.received
     ] == [(0.75, mode_type), (0.8, mode_type)]
 
 
-def test_binding_answering_false_gets_no_further_foreign_event(bind: Bind) -> None:
-    binding = _RecordingBinding([True, False])
-    bind(_button_event("A", True), [binding])
+def test_callback_answering_false_gets_no_further_foreign_event(
+    register: Register,
+) -> None:
+    callback = _RecordingCallback([True, False])
+    register(_button_event("A", True), [callback])
     EventHandler().process_event(_button_event("A", True))
     EventHandler().process_event(_button_event("B", False))
-    binding.received.clear()
+    callback.received.clear()
 
     EventHandler().process_event(_button_event("B", True))
 
-    assert binding.received == []
+    assert callback.received == []
 
 
-def test_script_callback_gets_release_in_other_mode_once(bind: Bind) -> None:
+def test_script_callback_gets_release_in_other_mode_once(register: Register) -> None:
     received: list[bool | None] = []
-    bind(_button_event("A", True), [lambda event: received.append(event.is_pressed)])
+    register(
+        _button_event("A", True), [lambda event: received.append(event.is_pressed)]
+    )
 
     EventHandler().process_event(_button_event("A", True))
     EventHandler().process_event(_button_event("B", False))
@@ -166,10 +174,10 @@ def test_script_callback_gets_release_in_other_mode_once(bind: Bind) -> None:
 
 
 def test_script_callback_gets_centre_for_hat_direction_in_other_mode(
-    bind: Bind,
+    register: Register,
 ) -> None:
     received: list[float | HatDirection | None] = []
-    bind(
+    register(
         _hat_event("A", HatDirection.North),
         [lambda event: received.append(event.value)],
     )
@@ -180,14 +188,14 @@ def test_script_callback_gets_centre_for_hat_direction_in_other_mode(
     assert received == [HatDirection.North, HatDirection.Center]
 
 
-def test_clear_forgets_pending_bindings(bind: Bind) -> None:
-    binding = _RecordingBinding([True])
-    bind(_button_event("A", True), [binding])
+def test_clear_forgets_pending_callbacks(register: Register) -> None:
+    callback = _RecordingCallback([True])
+    register(_button_event("A", True), [callback])
     EventHandler().process_event(_button_event("A", True))
     handler = EventHandler()
 
     handler.clear()
-    binding.received.clear()
+    callback.received.clear()
     handler.process_event(_button_event("B", False))
 
-    assert binding.received == []
+    assert callback.received == []

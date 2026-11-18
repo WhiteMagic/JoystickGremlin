@@ -21,7 +21,7 @@ from test.application.ui_interaction import (
 )
 
 
-def test_bindings_per_device(ui: UiDriver, empty_profile: pathlib.Path) -> None:
+def test_action_sequences_per_device(ui: UiDriver, empty_profile: pathlib.Path) -> None:
     # The slider is the throttle's fourth axis, but has axis index 7.
     descriptions = [
         (STICK, InputType.JoystickButton, 1, "stick button"),
@@ -32,7 +32,7 @@ def test_bindings_per_device(ui: UiDriver, empty_profile: pathlib.Path) -> None:
         add_description(ui, text)
 
     save_and_reload(ui, empty_profile)
-    # Each selection switches the device, so the shown binding is a reloaded one.
+    # Each selection switches the device, so the shown sequence is a reloaded one.
     for device, input_type, input_id, text in descriptions:
         select_physical_input(ui, device, input_type, input_id)
         find_description(ui, text)

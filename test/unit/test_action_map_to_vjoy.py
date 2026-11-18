@@ -28,7 +28,6 @@ from gremlin.base_classes import Value
 from gremlin.error import GremlinError
 from gremlin.profile import (
     InputItem,
-    InputItemBinding,
     Library,
     Profile,
 )
@@ -40,24 +39,23 @@ _ACTION_MAP_AXIS = "action_map_to_vjoy_axis.xml"
 def _profile_with_mappings(
     monkeypatch: pytest.MonkeyPatch,
     input_type: types.InputType,
-    bound_ids: list[int],
-    unbound_ids: list[int] | None = None,
+    assigned_ids: list[int],
+    unassigned_ids: list[int] | None = None,
 ) -> None:
-    """Sets a current profile mapping vJoy 1 inputs by bound or library-only actions."""
+    """Sets a current profile mapping vJoy 1 inputs by assigned or library actions."""
     profile = Profile()
     monkeypatch.setattr(shared_state, "current_profile", profile)
     input_item = InputItem(profile.library)
-    binding = InputItemBinding(input_item)
-    binding.root_action = RootData(input_type)
-    input_item.action_sequences.append(binding)
+    root_action = RootData(input_type)
+    input_item.action_sequences.append(root_action)
     profile.inputs[uuid.uuid4()] = [input_item]
 
-    for input_id in bound_ids + (unbound_ids or []):
+    for input_id in assigned_ids + (unassigned_ids or []):
         action = MapToVjoyData(input_type)
         action.vjoy_input_id = input_id
         profile.library.add_action(action)
-        if input_id in bound_ids:
-            binding.root_action.insert_action(action, "children")
+        if input_id in assigned_ids:
+            root_action.insert_action(action, "children")
 
 
 def test_ctor(joystick_init: None) -> None:
@@ -138,7 +136,7 @@ def test_to_xml() -> None:
 
 
 @pytest.mark.parametrize(
-    ("input_type", "bound_ids", "unbound_ids", "expected_id"),
+    ("input_type", "assigned_ids", "unassigned_ids", "expected_id"),
     [
         (types.InputType.JoystickButton, [1, 2, 3, 5], [], 4),
         (types.InputType.JoystickButton, [1], [2], 2),
@@ -146,16 +144,16 @@ def test_to_xml() -> None:
         (types.InputType.JoystickAxis, [1, 2, 3], [], 6),
         (types.InputType.JoystickHat, [1], [], 2),
     ],
-    ids=["gap", "unbound ignored", "all used", "axis gap", "hat"],
+    ids=["gap", "unassigned ignored", "all used", "axis gap", "hat"],
 )
 def test_create_selects_first_unused_input(
     monkeypatch: pytest.MonkeyPatch,
     input_type: types.InputType,
-    bound_ids: list[int],
-    unbound_ids: list[int],
+    assigned_ids: list[int],
+    unassigned_ids: list[int],
     expected_id: int,
 ) -> None:
-    _profile_with_mappings(monkeypatch, input_type, bound_ids, unbound_ids)
+    _profile_with_mappings(monkeypatch, input_type, assigned_ids, unassigned_ids)
 
     action = MapToVjoyData.create(types.DataCreationMode.Create, input_type)
 

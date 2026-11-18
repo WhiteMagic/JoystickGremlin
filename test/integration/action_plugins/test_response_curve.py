@@ -77,16 +77,13 @@ def profile_setup(
     logical_axis_1 = logical_device_for_test.create(
         types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS_LABEL
     )
-    # Add input item and its binding.
+    # Add input item and its action sequence.
     input_item = profile.InputItem(profile_for_test.library)
     input_item.device_id = dill.UUID_LogicalDevice
     input_item.input_id = logical_axis_1.id
     input_item.input_type = types.InputType.JoystickAxis
     input_item.mode = mode_manager.ModeManager().current.name
-    input_item_binding = profile.InputItemBinding(input_item)
-    input_item_binding.root_action = root_action
-    input_item_binding.behavior = types.InputType.JoystickAxis
-    input_item.action_sequences.append(input_item_binding)
+    input_item.action_sequences.append(root_action)
     profile_for_test.inputs.setdefault(dill.UUID_LogicalDevice, []).append(input_item)
 
 

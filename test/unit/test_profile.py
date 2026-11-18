@@ -17,6 +17,7 @@ import pytest
 
 # Ensure config entries are generated
 import gremlin.plugin_manager
+from action_plugins.root import RootData
 from gremlin import (
     device_initialization,
     shared_state,
@@ -63,7 +64,7 @@ def test_library_remove_unused_recursive() -> None:
     assert library.has_action(top.id)
 
 
-def test_bound_actions_by_type() -> None:
+def test_assigned_actions_by_type() -> None:
     from action_plugins.chain import ChainData
     from action_plugins.description import DescriptionData
     from action_plugins.map_to_vjoy import MapToVjoyData
@@ -84,15 +85,14 @@ def test_bound_actions_by_type() -> None:
         p.library.add_action(action)
 
     for children in [[direct, chain, DescriptionData()], [shared]]:
-        binding = profile.InputItemBinding(input_item)
-        binding.root_action = RootData()
+        root_action = RootData()
         for child in children:
-            binding.root_action.insert_action(child, "children")
-        input_item.action_sequences.append(binding)
+            root_action.insert_action(child, "children")
+        input_item.action_sequences.append(root_action)
 
-    bound_ids = [action.id for action in p.bound_actions_by_type(MapToVjoyData)]
+    assigned_ids = [action.id for action in p.assigned_actions_by_type(MapToVjoyData)]
 
-    assert sorted(bound_ids) == sorted([direct.id, nested.id, shared.id])
+    assert sorted(assigned_ids) == sorted([direct.id, nested.id, shared.id])
 
 
 def test_simple_action(xml_dir: pathlib.Path) -> None:
@@ -105,9 +105,9 @@ def test_simple_action(xml_dir: pathlib.Path) -> None:
 
     action_sequences = p.inputs[guid][0].action_sequences
     assert len(action_sequences) == 1
-    assert isinstance(action_sequences[0], gremlin.profile.InputItemBinding)
+    assert isinstance(action_sequences[0], RootData)
 
-    actions = action_sequences[0].root_action.get_actions()[0]
+    actions = action_sequences[0].get_actions()[0]
     assert len(actions) == 3
     assert actions[0].tag == "description"
     assert actions[0].description == "This is a test"
@@ -126,21 +126,6 @@ def test_simple_action(xml_dir: pathlib.Path) -> None:
     assert actions[2].id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
 
 
-def test_behavior_type_restored_on_load(xml_dir: pathlib.Path) -> None:
-    gremlin.plugin_manager.PluginManager()
-
-    p = Profile()
-    p.from_xml(xml_dir / "profile_behavior_type.xml")
-
-    axis_item, hat_item = p.inputs[get_fake_device_guid(is_virtual=False).uuid]
-    axis_condition = axis_item.action_sequences[0].root_action.get_actions()[0][0]
-    hat_buttons = hat_item.action_sequences[0].root_action.get_actions()[0][0]
-    hat_condition = hat_buttons.get_actions("North")[0][0]
-
-    assert axis_condition.behavior_type == InputType.JoystickAxis
-    assert hat_condition.behavior_type == InputType.JoystickButton
-
-
 def test_unsaved_changes_non_ascii(
     xml_dir: pathlib.Path, tmp_path: pathlib.Path
 ) -> None:
@@ -149,7 +134,7 @@ def test_unsaved_changes_non_ascii(
     p = Profile()
     p.from_xml(xml_dir / "profile_simple.xml")
     guid = get_fake_device_guid(is_virtual=False).uuid
-    action = p.inputs[guid][0].action_sequences[0].root_action.get_actions()[0][0]
+    action = p.inputs[guid][0].action_sequences[0].get_actions()[0][0]
     # UTF-8 encoding of "Ł" contains 0x81 which cp1252 cannot decode.
     action.description = "Łódź 中文"
 

@@ -204,6 +204,7 @@ def test_swap_uuid(xml_dir: pathlib.Path) -> None:
 class _BranchRecorder:
     def __init__(self) -> None:
         self.values: list[bool | float | HatDirection] = []
+        self.data = DescriptionData()
         self.functors: dict = {}
         self.reset_count = 0
 
@@ -254,6 +255,17 @@ def test_functor_button_release_follows_press() -> None:
     _send(functor, InputType.JoystickButton, False)
     assert true_branch.values == [True, False]
     assert false_branch.values == [True, False]
+
+
+def test_functor_virtual_button_release_follows_press() -> None:
+    truth = [True]
+    functor, true_branch, false_branch = _make_functor(InputType.JoystickButton, truth)
+
+    _send(functor, InputType.VirtualButton, True)
+    truth[0] = False
+    _send(functor, InputType.VirtualButton, False)
+    assert true_branch.values == [True, False]
+    assert false_branch.values == []
 
 
 def test_functor_button_release_without_press_evaluates() -> None:

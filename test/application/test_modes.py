@@ -21,7 +21,7 @@ from test.application.ui_interaction import (
 
 
 def _select_mode(ui: UiDriver, name: str) -> None:
-    """Selects the mode being configured and waits for its bindings to show."""
+    """Selects the mode being configured and waits for its action sequences to show."""
     ui.select(ui.find_item("modeSelectorCombo"), name)
     ui_state = gremlin.ui.backend.Backend().ui_state
     wait_for_input_debounce(ui, lambda: ui_state.currentMode == name)
@@ -126,9 +126,11 @@ def test_duplicate_name_rejected(ui: UiDriver, empty_profile: pathlib.Path) -> N
         ui.close_window(field)
 
 
-def test_bindings_stay_in_their_mode(ui: UiDriver, empty_profile: pathlib.Path) -> None:
+def test_action_sequences_stay_in_their_mode(
+    ui: UiDriver, empty_profile: pathlib.Path
+) -> None:
     add_mode(ui, "Second")
-    add_mode(ui, "Unbound")
+    add_mode(ui, "Unmapped")
     label = add_and_select_logical_input(ui, "Button")
     add_description(ui, "default")
     _select_mode(ui, "Second")
@@ -140,7 +142,7 @@ def test_bindings_stay_in_their_mode(ui: UiDriver, empty_profile: pathlib.Path) 
     _assert_only_description(ui, "default")
     _select_mode(ui, "Second")
     _assert_only_description(ui, "second")
-    _select_mode(ui, "Unbound")
+    _select_mode(ui, "Unmapped")
     ui.wait_for_value(lambda: ui.find_all("actionNode_Description"), [])
 
 
@@ -153,7 +155,7 @@ def test_rename_selected_mode(ui: UiDriver, empty_profile: pathlib.Path) -> None
     with manage_modes(ui) as dialog:
         _rename_mode(ui, dialog, "Second", "Renamed")
     _assert_selected_mode(ui, "Renamed")
-    # Only a newly selected input looks its bindings up by the mode's name.
+    # Only a newly selected input looks its action sequences up by the mode's name.
     second_label = add_and_select_logical_input(ui, "Button")
     add_description(ui, "after rename")
 

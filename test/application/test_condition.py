@@ -226,7 +226,7 @@ def test_keyboard(
 def test_current_input(
     ui: UiDriver, empty_profile: pathlib.Path, input_type_name: str
 ) -> None:
-    # The comparator follows the type of the bound input.
+    # The comparator follows the type of the action's input.
     label, action = _add_condition_action(ui, input_type_name)
     row = _add_condition(ui, action, "Current Input")
     _set_comparator(ui, row, input_type_name, DEFAULT_COMPARATOR)
@@ -280,7 +280,7 @@ def test_multiple_conditions(ui: UiDriver, empty_profile: pathlib.Path) -> None:
     ui.click(ui.find_item("deleteConditionButton", keyboard_row))
     ui.wait_until(lambda: not ui.find_all("condition_2", action))
     ui.select(ui.find_item("logicalOperatorCombo", action), "Any")
-    # Adding an action rebuilds every action node of the binding.
+    # Adding an action rebuilds every action node of the action sequence.
     add_description(ui, "when true", action, "When true")
     add_description(ui, "when false", find_action(ui, ACTION), "When false")
 

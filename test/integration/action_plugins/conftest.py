@@ -103,8 +103,7 @@ def _activate_gremlin(
     """Activates Gremlin using the profile created by profile_setup.
 
     profile_setup is a fixture that should be created by individual tests,
-    creating the necessary LogicalDevice objects, actions, and
-    InputItemBindings.
+    creating the necessary LogicalDevice objects, actions, and action sequences.
     """
     del profile_setup
     backend_ = backend.Backend()
