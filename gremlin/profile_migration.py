@@ -137,7 +137,8 @@ def _v14_insert_virtual_button(
     Args:
         library: library element of the profile
         root_action: root action node receiving the Virtual Button action
-        properties: name, value, and type of each of the virtual button's settings
+        virtual_button_properties: name, value, and type of each of the virtual
+            button's settings
     """
     root_children = root_action.find("actions")
     if root_children is None:
@@ -180,6 +181,7 @@ def migrate_profile(root: ElementTree.Element, fpath: Path) -> None:
 
     Args:
         root: root element of the profile's XML document
+        fpath: path of the profile file, used in the upgrade log message
     """
     version = int(root.get("version", "0"))
     for source_version, target_version, upgrade in _UPGRADES:
