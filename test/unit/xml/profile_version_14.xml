@@ -1,0 +1,192 @@
+<profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <inputs>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>e4a10000-0000-4000-8000-000000000001</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>axis</input-type>
+            <input-id>2</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>e4a10000-0000-4000-8000-000000000002</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+            <action-configuration>
+                <root-action>e4a10000-0000-4000-8000-000000000003</root-action>
+                <behavior>button</behavior>
+                <virtual-button>
+                    <lower-limit>0.25</lower-limit>
+                    <upper-limit>0.75</upper-limit>
+                    <axis-button-direction>below</axis-button-direction>
+                </virtual-button>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>hat</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>e4a10000-0000-4000-8000-000000000004</root-action>
+                <behavior>button</behavior>
+                <virtual-button>
+                    <hat-direction>north</hat-direction>
+                    <hat-direction>south</hat-direction>
+                </virtual-button>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <library>
+        <action id="e4a10000-0000-4000-8000-000000000001" type="root">
+            <actions>
+                <action-id>e4b10000-0000-4000-8000-000000000001</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Landing gear</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4a10000-0000-4000-8000-000000000002" type="root">
+            <actions>
+                <action-id>e4b10000-0000-4000-8000-000000000002</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4a10000-0000-4000-8000-000000000003" type="root">
+            <actions>
+                <action-id>e4b10000-0000-4000-8000-000000000003</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4a10000-0000-4000-8000-000000000004" type="root">
+            <actions>
+                <action-id>e4b10000-0000-4000-8000-000000000004</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4a10000-0000-4000-8000-000000000005" type="root">
+            <actions>
+                <action-id>e4b10000-0000-4000-8000-000000000005</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Deleted sequence</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4b10000-0000-4000-8000-000000000005" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>leftover</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4b10000-0000-4000-8000-000000000001" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>gear lever</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4b10000-0000-4000-8000-000000000002" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>throttle</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4b10000-0000-4000-8000-000000000003" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>afterburner</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="e4b10000-0000-4000-8000-000000000004" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>trim</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+</profile>
