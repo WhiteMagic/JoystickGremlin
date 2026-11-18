@@ -143,7 +143,6 @@ class ActionSequenceModel(QtCore.QObject):
     """Model representing an action sequence of an input item."""
 
     rootActionChanged = QtCore.Signal()
-    inputTypeChanged = QtCore.Signal()
     userFeedbackChanged = QtCore.Signal()
     expansionChanged = QtCore.Signal(object)
 

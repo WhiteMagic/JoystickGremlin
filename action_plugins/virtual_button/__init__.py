@@ -8,6 +8,7 @@ from abc import (
 )
 from typing import (
     TYPE_CHECKING,
+    cast,
     override,
 )
 from xml.etree import ElementTree
@@ -86,11 +87,12 @@ class VirtualButton(metaclass=ABCMeta):
         """Forgets the last input value seen by the button."""
 
     @abstractmethod
-    def __call__(self, event: Event) -> list[bool]:
+    def __call__(self, event: Event, value: Value) -> list[bool]:
         """Process the input event and updates the value as needed.
 
         Args:
             event: The input event to process
+            value: the value of the event as modified by preceding actions
 
         Returns:
             List of states to process
@@ -111,8 +113,8 @@ class VirtualAxisButton(VirtualButton):
         """Forgets the last axis value, the next one carries no direction."""
         self._last_value = None
 
-    def __call__(self, event: Event) -> list[bool]:
-        value = event.value if event.value is not None else 0.0
+    def __call__(self, event: Event, value: Value) -> list[bool]:
+        position = cast(float, value.current) if value.current is not None else 0.0
         forced_activation = False
         direction = AxisButtonDirection.Anywhere
 
@@ -121,21 +123,21 @@ class VirtualAxisButton(VirtualButton):
             # measurements
             if (
                 self._last_value < self._lower_limit
-                and value > self._upper_limit
+                and position > self._upper_limit
                 or self._last_value > self._upper_limit
-                and value < self._lower_limit
+                and position < self._lower_limit
             ):
                 forced_activation = True
 
             # Determine direction in which the axis is moving
-            if self._last_value < value:
+            if self._last_value < position:
                 direction = AxisButtonDirection.Below
-            elif self._last_value > value:
+            elif self._last_value > position:
                 direction = AxisButtonDirection.Above
 
-        self._last_value = value
+        self._last_value = position
 
-        inside_range = self._lower_limit <= value <= self._upper_limit
+        inside_range = self._lower_limit <= position <= self._upper_limit
         valid_direction = (
             direction == self._direction
             or self._direction == AxisButtonDirection.Anywhere
@@ -157,7 +159,7 @@ class VirtualHatButton(VirtualButton):
         super().__init__()
         self._directions = directions
 
-    def __call__(self, event: Event) -> list[bool]:
+    def __call__(self, event: Event, value: Value) -> list[bool]:
         is_pressed = event.value in self._directions
         action = "press" if is_pressed else "release"
         has_changed = self._fsm.perform(action)[0]
@@ -191,7 +193,7 @@ class VirtualButtonFunctor(AbstractFunctor):
                 Value(is_pressed, value.mode_type),
                 properties,
             )
-            for is_pressed in button(event)
+            for is_pressed in button(event, value)
         ]
         children_waiting = answers[-1] if answers else self.waiting_for_event()
 
