@@ -16,7 +16,7 @@ _PROFILE_FOR_ANALYSIS = "profile_for_analysis.xml"
 
 
 def get_sequence_types(sequence: list) -> list[str]:
-    return [action.tag for action in sequence]
+    return [action.tag for action, _ in sequence]
 
 
 def test_extract_sequences(xml_dir: pathlib.Path) -> None:
@@ -31,7 +31,7 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     axis_input = input_items[0]
     axis_root = axis_input.action_sequences[0]
     assert axis_root is not None
-    axis_sequences = _extract_sequences(axis_root)
+    axis_sequences = _extract_sequences(axis_root, axis_input.input_type)
     assert len(axis_sequences) == 1
     assert get_sequence_types(axis_sequences[0]) == [
         "root",
@@ -43,7 +43,7 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     button_input = input_items[1]
     button_root = button_input.action_sequences[0]
     assert button_root is not None
-    button_sequences = _extract_sequences(button_root)
+    button_sequences = _extract_sequences(button_root, button_input.input_type)
     assert len(button_sequences) == 2
     assert get_sequence_types(button_sequences[0]) == [
         "root",

@@ -16,9 +16,10 @@ from gremlin.types import InputType
 if TYPE_CHECKING:
     from action_plugins.root import RootData
 
-AnalysisFunction = Callable[
-    [list[list[AbstractActionData]], InputType], list[UserFeedback]
-]
+# Actions along one path through an action tree, each with the behavior it runs under.
+type ActionPath = list[tuple[AbstractActionData, InputType]]
+
+AnalysisFunction = Callable[[list[ActionPath], InputType], list[UserFeedback]]
 
 
 # Definition of action tags. Actions are not imported due to their significant
@@ -48,7 +49,7 @@ def action_sequence_feedback(
             return cached_feedback
 
     feedback = []
-    paths = _extract_sequences(root_action)
+    paths = _extract_sequences(root_action, input_type)
     for fn in analysis_functions:
         feedback.extend(fn(paths, input_type))
     feedback = list(set(feedback))
@@ -57,7 +58,7 @@ def action_sequence_feedback(
 
 
 def _map_to_mouse_analysis(
-    paths: list[list[AbstractActionData]], behavior: InputType
+    paths: list[ActionPath], behavior: InputType
 ) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Map to Mouse action:
 
@@ -69,7 +70,7 @@ def _map_to_mouse_analysis(
 
     feedback = []
     for path in paths:
-        path_tags = _path_as_tags(path)
+        path_tags = _path_as_tags(path, behavior)
 
         try:
             mm_index = path_tags.index(TAG_MAP_TO_MOUSE)
@@ -90,9 +91,7 @@ def _map_to_mouse_analysis(
     return feedback
 
 
-def _vjoy_analysis(
-    paths: list[list[AbstractActionData]], behavior: InputType
-) -> list[UserFeedback]:
+def _vjoy_analysis(paths: list[ActionPath], behavior: InputType) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Map to vJoy action:
 
     - Warn when a Map to vJoy action is used with an axis value modifying action
@@ -103,7 +102,7 @@ def _vjoy_analysis(
 
     feedback = []
     for path in paths:
-        path_tags = _path_as_tags(path)
+        path_tags = _path_as_tags(path, behavior)
 
         try:
             vjoy_index = path_tags.index(TAG_VJOY)
@@ -126,7 +125,7 @@ def _vjoy_analysis(
 
 
 def _dual_axis_response_curve_analysis(
-    paths: list[list[AbstractActionData]], behavior: InputType
+    paths: list[ActionPath], behavior: InputType
 ) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Dual Axis Deadzone action:
 
@@ -138,7 +137,7 @@ def _dual_axis_response_curve_analysis(
 
     feedback = []
     for path in paths:
-        path_tags = _path_as_tags(path)
+        path_tags = _path_as_tags(path, behavior)
 
         if TAG_RESPONSE_CURVE in path_tags and TAG_DUAL_AXIS_DEADZONE in path_tags:
             feedback.append(
@@ -152,11 +151,33 @@ def _dual_axis_response_curve_analysis(
     return feedback
 
 
-def _path_as_tags(path: list[AbstractActionData]) -> list[str]:
-    return [action.tag for action in path]
+def _path_as_tags(path: ActionPath, behavior: InputType) -> list[str]:
+    return [action.tag for action, entry_behavior in path if entry_behavior == behavior]
 
 
-def _extract_sequences(root: AbstractActionData) -> list[list[AbstractActionData]]:
+def _action_behaviors(
+    action: AbstractActionData, behavior: InputType
+) -> dict[uuid.UUID, InputType]:
+    """Returns the behaviors of all actions in this action subtree.
+
+    Args:
+        action: root of the action tree
+        behavior: behavior the action operates under
+
+    Returns:
+        Behavior of each action in the tree, keyed by action id
+    """
+    behaviors = {action.id: behavior}
+    child_behavior = action.child_behavior_type or behavior
+    for child in action.get_actions()[0]:
+        behaviors.update(_action_behaviors(child, child_behavior))
+    return behaviors
+
+
+def _extract_sequences(
+    root: AbstractActionData, input_type: InputType
+) -> list[ActionPath]:
+    behaviors = _action_behaviors(root, input_type)
     complete_paths = []
 
     # Each entry in the stack has the following information:
@@ -164,7 +185,7 @@ def _extract_sequences(root: AbstractActionData) -> list[list[AbstractActionData
     stack = [(root, [], [])]
     while stack:
         action, path, siblings = stack.pop()
-        path.append(action)
+        path.append((action, behaviors[action.id]))
         selectors = action._valid_selectors()
 
         if not selectors:
