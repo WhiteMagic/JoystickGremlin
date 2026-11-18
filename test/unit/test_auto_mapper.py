@@ -395,7 +395,7 @@ def test_auto_map(
                 [1],
                 auto_mapper.AutoMapperOptions(),
             )
-            == "Created 2 mappings, retained 9 previous bindings."
+            == "Created 2 mappings, retained 9 previous mappings."
         )
     with subtests.test("EmptyMode"):
         assert (
@@ -404,5 +404,5 @@ def test_auto_map(
                 [1],
                 auto_mapper.AutoMapperOptions(mode="EmptyMode"),
             )
-            == "Created 13 mappings, retained 0 previous bindings."
+            == "Created 13 mappings, retained 0 previous mappings."
         )

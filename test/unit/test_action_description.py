@@ -20,13 +20,12 @@ from action_plugins.root import RootData
 from gremlin.error import GremlinError
 from gremlin.profile import (
     InputItem,
-    InputItemBinding,
     Library,
     Profile,
 )
 from gremlin.ui.action_model import SequenceIndex
 from gremlin.ui.profile import (
-    InputItemBindingModel,
+    ActionSequenceModel,
     InputItemModel,
 )
 
@@ -67,14 +66,16 @@ def test_actions(xml_dir: pathlib.Path) -> None:
 def test_model_setter_getter() -> None:
     p = Profile()
     ii = InputItem(p.library)
-    iib = InputItemBinding(ii)
-    iib.root_action = RootData()
-    iibm = InputItemBindingModel(iib)
+    sequence_model = ActionSequenceModel(ii, RootData())
     owner = InputItemModel(ii, 0)
-    iibm.setParent(owner)
+    sequence_model.setParent(owner)
     a = DescriptionData()
     m = DescriptionModel(
-        a, iibm, SequenceIndex(None, None, 0), SequenceIndex(None, None, 1), None
+        a,
+        sequence_model,
+        SequenceIndex(None, None, 0),
+        SequenceIndex(None, None, 1),
+        None,
     )
 
     assert a.description == ""
@@ -104,14 +105,16 @@ def test_model_from_xml(xml_dir: pathlib.Path) -> None:
 def test_model_to_xml() -> None:
     p = Profile()
     ii = InputItem(p.library)
-    iib = InputItemBinding(ii)
-    iib.root_action = RootData()
-    iibm = InputItemBindingModel(iib)
+    sequence_model = ActionSequenceModel(ii, RootData())
     owner = InputItemModel(ii, 0)
-    iibm.setParent(owner)
+    sequence_model.setParent(owner)
     a = DescriptionData()
     m = DescriptionModel(
-        a, iibm, SequenceIndex(None, None, 0), SequenceIndex(None, None, 1), None
+        a,
+        sequence_model,
+        SequenceIndex(None, None, 0),
+        SequenceIndex(None, None, 1),
+        None,
     )
 
     m.description = "Test"

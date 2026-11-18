@@ -29,7 +29,7 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
         input_items.extend(input_list)
 
     axis_input = input_items[0]
-    axis_root = axis_input.action_sequences[0].root_action
+    axis_root = axis_input.action_sequences[0]
     assert axis_root is not None
     axis_sequences = _extract_sequences(axis_root)
     assert len(axis_sequences) == 1
@@ -41,7 +41,7 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     ]
 
     button_input = input_items[1]
-    button_root = button_input.action_sequences[0].root_action
+    button_root = button_input.action_sequences[0]
     assert button_root is not None
     button_sequences = _extract_sequences(button_root)
     assert len(button_sequences) == 2

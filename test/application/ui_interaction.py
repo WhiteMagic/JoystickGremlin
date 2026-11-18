@@ -199,8 +199,8 @@ def add_child_action(
 ) -> QtQuick.QQuickItem:
     """Adds an action to the parent's slot labelled slot.
 
-    Adding an action rebuilds every action node of the binding, so this returns the
-    parent's new node.
+    Adding an action rebuilds every action node of the action sequence, so this
+    returns the parent's new node.
     """
     parent_name = parent.objectName().removeprefix("actionNode_")
     _add_action(ui, name, parent, slot)
