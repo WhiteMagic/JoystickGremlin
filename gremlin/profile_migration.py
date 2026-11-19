@@ -167,6 +167,17 @@ def _v14_insert_virtual_button(
     library.insert(list(library).index(root_action) + 1, virtual_button)
 
 
+def _create_backup_on_migration(fpath: Path, version: int) -> None:
+    """Creates a backup of the profile file if required.
+
+    Args:
+        fpath: path of the profile file to back up
+        version: version of the profile file
+    """
+    if version in [entry[0] for entry in _UPGRADES]:
+        fpath.copy(fpath.with_suffix(f".xml.r{version}"))
+
+
 # Sequentially ordered list of profile upgrades, each turning a profile of the
 # first version into one of the second.
 _UPGRADES = [
@@ -184,6 +195,7 @@ def migrate_profile(root: ElementTree.Element, fpath: Path) -> None:
         fpath: path of the profile file, used in the upgrade log message
     """
     version = int(root.get("version", "0"))
+    _create_backup_on_migration(Path(fpath), version)
     for source_version, target_version, upgrade in _UPGRADES:
         if version == source_version:
             upgrade(root)
